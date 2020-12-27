@@ -5,6 +5,9 @@ go 1.15
 require (
 	github.com/eclipse/paho.mqtt.golang v1.3.0
 	github.com/kr/pretty v0.2.1
+	github.com/prometheus/client_golang v1.9.0
 	github.com/urfave/cli/v2 v2.3.0
-	gopkg.in/yaml.v2 v2.2.3
+	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect
+	google.golang.org/protobuf v1.25.0 // indirect
+	gopkg.in/yaml.v2 v2.3.0
 )
