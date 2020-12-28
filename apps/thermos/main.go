@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 )
@@ -13,9 +14,14 @@ func main() {
 }
 
 func run() error {
+	debug := false
+	flag.BoolVar(&debug, "debug", false, "enables the debug mode")
+	flag.Parse()
+
 	thermos := New(
 		"/home/greg/dev/homed/data/",
 		"tcp://192.168.100.50:1883",
+		debug,
 	)
 	if err := thermos.loadRooms(); err != nil {
 		return err

@@ -1,12 +1,18 @@
 package homed
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 // SensorType reprensents a sensor type
 type SensorType string
 
 // SensorTypes
 var (
+	SensorTypeUnknown     SensorType = "unknown"
 	SensorTypeTemperature SensorType = "temperature"
 	SensorTypeHumidity    SensorType = "humidity"
 	SensorTypeWifiSignal  SensorType = "wifi_signal"
@@ -14,10 +20,42 @@ var (
 
 // Sensor represents a sensor
 type Sensor struct {
-	Device *Device    `yaml:"-"`
-	Name   string     `yaml:"name"`
-	Type   SensorType `yaml:"type"`
-	Value  string     `yaml:"-"`
+	Device        *Device              `yaml:"-"`
+	Name          string               `yaml:"name"`
+	Type          SensorType           `yaml:"type"`
+	Value         float64              `yaml:"-"`
+	PromCollector prometheus.Collector `yaml:"-"`
+}
+
+// Update updates the sensor
+func (s *Sensor) Update(value string) error {
+	if s.PromCollector == nil {
+		if s.Device == nil {
+			return ErrMissingDevice
+		}
+
+		s.PromCollector = prometheus.NewGaugeFunc(prometheus.GaugeOpts{
+			Name: "homed_" + string(s.Type),
+			ConstLabels: prometheus.Labels{
+				"device": string(s.Device.Name),
+				"sensor": string(s.Name),
+			},
+		},
+			func() float64 { return s.Value },
+		)
+
+		if err := prometheus.Register(s.PromCollector); err != nil {
+			return err
+		}
+	}
+
+	v, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return err
+	}
+	s.Value = v
+
+	return nil
 }
 
 // Duplicate creates a copy of the sensor

@@ -11,6 +11,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	homed "github.com/gregdel/homed/lib"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 )
 
 // Thermos controls the temperature
@@ -22,13 +23,15 @@ type Thermos struct {
 
 	httpServer *http.Server
 
+	logger *zap.Logger
+
 	sensorMap map[string]*homed.Sensor
 
 	mqttClient mqtt.Client
 }
 
 // New returns a new thermos
-func New(configPath, mqttBroker string) *Thermos {
+func New(configPath, mqttBroker string, debug bool) *Thermos {
 	opts := mqtt.NewClientOptions().AddBroker(mqttBroker)
 	client := mqtt.NewClient(opts)
 
@@ -39,11 +42,24 @@ func New(configPath, mqttBroker string) *Thermos {
 		Handler: mux,
 	}
 
-	return &Thermos{
+	thermos := &Thermos{
 		Homed:      homed.New(configPath),
 		mqttClient: client,
 		httpServer: httpServer,
 	}
+
+	var err error
+	if debug {
+		thermos.logger, err = zap.NewDevelopment()
+	} else {
+		thermos.logger, err = zap.NewProduction()
+	}
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	return thermos
 }
 
 func (t *Thermos) loadRooms() error {
@@ -68,18 +84,25 @@ func (t *Thermos) loadRooms() error {
 func (t *Thermos) handleMessage(c mqtt.Client, m mqtt.Message) {
 	sensor, ok := t.sensorMap[m.Topic()]
 	if !ok {
-		fmt.Printf("Topic %s not found in sensorMap\n", m.Topic())
+		t.logger.Warn("Topic not found", zap.String("topic", m.Topic()))
 		return
 	}
 
-	sensor.Value = string(m.Payload())
-	// fmt.Printf(
-	// 	"Updating sensor %s:%s to %s\n",
-	// 	sensor.Device.Name,
-	// 	sensor.Name,
-	// 	sensor.Value,
-	// )
-	t.printState()
+	if err := sensor.Update(string(m.Payload())); err != nil {
+		t.logger.Warn(
+			"failed to update sensor",
+			zap.String("error", err.Error()))
+		return
+
+	}
+
+	t.logger.Debug(
+		"Updating sensor",
+		zap.String("device", sensor.Device.Name),
+		zap.String("sensor", sensor.Name),
+		zap.Float64("value", sensor.Value),
+	)
+	t.logger.Sync()
 }
 
 func (t *Thermos) printState() {
@@ -91,7 +114,7 @@ func (t *Thermos) printState() {
 				}
 
 				fmt.Printf(
-					"%s (%s): %s\n",
+					"%s (%s): %f\n",
 					room.Name,
 					device.Name,
 					sensor.Value,
@@ -121,14 +144,14 @@ func (t *Thermos) Run() error {
 		}
 	}
 
-	fmt.Printf("Connecting to MQTT\n")
+	t.logger.Info("Connecting to MQTT")
 	token := t.mqttClient.Connect()
 	if token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
 
 	for topic := range t.sensorMap {
-		fmt.Printf("Subscibing to %s\n", topic)
+		t.logger.Info("Subscribing to topic", zap.String("topic", topic))
 		token = t.mqttClient.Subscribe(topic, 0, t.handleMessage)
 		if token.Wait() && token.Error() != nil {
 			return token.Error()
@@ -140,8 +163,10 @@ func (t *Thermos) Run() error {
 		t.httpServer.Shutdown(context.Background())
 	}()
 
+	t.logger.Info("Starting HTTP server")
 	t.httpServer.ListenAndServe()
 
+	t.logger.Info("Disconnecting from the MQTT broker")
 	t.mqttClient.Disconnect(250)
 
 	return nil
