@@ -15,14 +15,15 @@ func main() {
 
 func run() error {
 	debug := false
+	var config string
+	var mqttBroker string
+
+	flag.StringVar(&config, "config", "~/.homed", "homed configuration directory")
+	flag.StringVar(&mqttBroker, "mqttBroker", "tcp://127.0.0.1:1883", "MQTT broker configuration")
 	flag.BoolVar(&debug, "debug", false, "enables the debug mode")
 	flag.Parse()
 
-	thermos := New(
-		"/home/greg/dev/homed/data/",
-		"tcp://192.168.100.50:1883",
-		debug,
-	)
+	thermos := New(config, mqttBroker, debug)
 	if err := thermos.loadRooms(); err != nil {
 		return err
 	}
