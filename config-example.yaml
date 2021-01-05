@@ -1,0 +1,22 @@
+debug: true
+mqtt:
+  broker: tcp://192.168.100.50:1883
+http:
+  addr: ":9091"
+
+devices:
+- name: device_1
+  room: room_1
+  sensors:
+  - type: temperature
+    mqtt_topic: home/devices/device_1/sensor/temperature/state
+  - type: humidity
+    mqtt_topic: home/devices/device_1/sensor/humidity/state
+  - type: wifi_signal
+    mqtt_topic: home/devices/device_1/sensor/wifi_signal/state
+
+- name: device_2
+  room: room_2
+  sensors:
+  - type: zigbee2mqtt_tuya
+    mqtt_topic: zigbee2mqtt/device_2
