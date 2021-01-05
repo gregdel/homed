@@ -1,9 +1,6 @@
 package homed
 
 import (
-	"fmt"
-	"strconv"
-
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -19,95 +16,42 @@ var (
 )
 
 // Sensor represents a sensor
-type Sensor struct {
-	Device        *Device              `yaml:"-"`
-	Name          string               `yaml:"name"`
-	Type          SensorType           `yaml:"type"`
-	Value         float64              `yaml:"-"`
-	PromCollector prometheus.Collector `yaml:"-"`
+type Sensor interface {
+	MQTTTopic() string
+	SetDevice(*Device)
+	SetMQTTTopic(string)
+	Type() SensorType
+	Update(string) error
 }
 
-// Update updates the sensor
-func (s *Sensor) Update(value string) error {
-	if s.PromCollector == nil {
-		if s.Device == nil {
-			return ErrMissingDevice
-		}
+// BaseSensor represents a basic sensor
+type BaseSensor struct {
+	device        *Device
+	mqttTopic     string
+	promCollector prometheus.Collector `yaml:"-"`
+}
 
-		s.PromCollector = prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-			Name: "homed_" + string(s.Type),
-			ConstLabels: prometheus.Labels{
-				"device": string(s.Device.Name),
-				"sensor": string(s.Name),
-			},
-		},
-			func() float64 { return s.Value },
-		)
+// MQTTTopic implements the Sensor interface
+func (s *BaseSensor) MQTTTopic() string {
+	return s.mqttTopic
+}
 
-		if err := prometheus.Register(s.PromCollector); err != nil {
-			return err
-		}
-	}
+// SetMQTTTopic implements the Sensor interface
+func (s *BaseSensor) SetMQTTTopic(value string) {
+	s.mqttTopic = value
+}
 
-	v, err := strconv.ParseFloat(value, 64)
-	if err != nil {
-		return err
-	}
-	s.Value = v
+// Type implements the Sensor interface
+func (s *BaseSensor) Type() SensorType {
+	return SensorTypeUnknown
+}
 
+// Update implements the Sensor interface
+func (s *BaseSensor) Update(_ string) error {
 	return nil
 }
 
-// Duplicate creates a copy of the sensor
-func (s *Sensor) Duplicate() *Sensor {
-	return &Sensor{
-		Name: s.Name,
-		Type: s.Type,
-	}
-}
-
-func (s *Sensor) configFormat() interface{} {
-	return s
-}
-
-func (s *Sensor) toConfig() (interface{}, error) {
-	return s, nil
-}
-
-func (s *Sensor) fromConfig(data interface{}, homed *Homed) error {
-	config, ok := data.(*Sensor)
-	if !ok {
-		return ErrInvalidConfigFormat
-	}
-
-	s = config
-	return nil
-}
-
-// FileName implements the File interface
-func (s *Sensor) FileName() string {
-	return s.Name
-}
-
-// FileType implements the File interface
-func (s *Sensor) FileType() FileType {
-	return FileTypeSensor
-}
-
-// MQTTTopic returns the MQTT topic of the sensor
-func (s *Sensor) MQTTTopic() (string, error) {
-	if s.Device == nil {
-		return "", ErrMissingDevice
-	}
-
-	return fmt.Sprintf(
-		"home/devices/%s/sensor/%s/state",
-		s.Device.Name,
-		string(s.Type),
-	), nil
-}
-
-// NewSensor returns a new sensor
-func NewSensor(name string) *Sensor {
-	return &Sensor{Name: name}
+// SetDevice implements the Sensor interface
+func (s *BaseSensor) SetDevice(d *Device) {
+	s.device = d
 }

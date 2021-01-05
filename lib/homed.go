@@ -1,125 +1,158 @@
 package homed
 
 import (
+	"context"
+	"net/http"
 	"os"
-	"path/filepath"
+	"os/signal"
+	"syscall"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 )
 
 // Homed needs to be used to load data efficiently
 type Homed struct {
 	basePath string
 
-	data map[FileType]map[string]File
+	logger *zap.Logger
+
+	httpServer *http.Server
+
+	mqttClient mqtt.Client
+
+	rooms   map[string]*Room
+	devices map[string]*Device
+
+	topicSensors map[string]Sensor
+}
+
+// Rooms TODO delete
+func (h *Homed) Rooms() map[string]*Room {
+	return h.rooms
 }
 
 // New returns a new Homed
-func New(basePath string) *Homed {
-	return &Homed{
-		basePath: basePath,
-		data:     map[FileType]map[string]File{},
-	}
-}
+func New(configPath string) (*Homed, error) {
+	homed := &Homed{
+		rooms:   map[string]*Room{},
+		devices: map[string]*Device{},
 
-func (h *Homed) filePath(file File) string {
-	return filepath.Join(
-		h.basePath,
-		string(file.FileType()),
-		file.FileName()+".yaml",
-	)
-}
-
-// Add adds data in the cache
-func (h *Homed) Add(file File) error {
-	t := file.FileType()
-	name := file.FileName()
-
-	if _, ok := h.data[t]; !ok {
-		h.data[t] = map[string]File{}
+		topicSensors: map[string]Sensor{},
 	}
 
-	h.data[t][name] = file
-	return nil
-}
+	config := &Config{}
+	if err := readFile(configPath, config); err != nil {
+		return nil, err
+	}
 
-// Get gets data from the cache
-func (h *Homed) Get(fileType FileType, name string) (File, error) {
-	var file File
 	var err error
-
-	_, ok := h.data[fileType]
-	if !ok {
-		file, err = h.Load(name, fileType)
+	if config.Debug {
+		homed.logger, err = zap.NewDevelopment()
+	} else {
+		homed.logger, err = zap.NewProduction()
 	}
-
 	if err != nil {
 		return nil, err
 	}
 
-	if file == nil {
-		file, ok = h.data[fileType][name]
+	for _, d := range config.Devices {
+		_, ok := homed.devices[d.Name]
+		if ok {
+			return nil, ErrDuplicateDevice
+		}
+
+		room, ok := homed.rooms[d.Room]
 		if !ok {
-			file, err = h.Load(name, fileType)
+			room = NewRoom(d.Room)
+			homed.rooms[d.Room] = room
+		}
+
+		device := NewDevice(d.Name)
+		device.Room = room
+		homed.devices[device.Name] = device
+		room.AddDevice(device)
+
+		for _, s := range d.Sensors {
+			// Add the sensor to the device
+			sensor, err := device.AddSensor(s.Type, s.Topic)
+			if err != nil {
+				homed.logger.Warn(err.Error())
+				continue
+			}
+
+			sensor.SetDevice(device)
+			homed.topicSensors[s.Topic] = sensor
 		}
 	}
 
-	if err != nil {
-		return nil, err
+	opts := mqtt.NewClientOptions().AddBroker(config.MQTT.Broker)
+	homed.mqttClient = mqtt.NewClient(opts)
+
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+	homed.httpServer = &http.Server{
+		Addr:    config.HTTP.Addr,
+		Handler: mux,
 	}
 
-	if err := h.Add(file); err != nil {
-		return nil, err
-	}
-
-	return file, nil
+	return homed, nil
 }
 
-// Load loads the file
-func (h *Homed) Load(name string, fileType FileType) (File, error) {
-	file, err := NewFile(name, fileType)
-	if err != nil {
-		return nil, err
+func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
+	sensor, ok := h.topicSensors[m.Topic()]
+	if !ok {
+		h.logger.Warn("Topic not found", zap.String("topic", m.Topic()))
+		return
 	}
 
-	data := file.configFormat()
-	path := h.filePath(file)
-	err = readFile(path, data)
-	if err != nil {
-		return nil, err
+	payload := string(m.Payload())
+	if err := sensor.Update(payload); err != nil {
+		h.logger.Warn(
+			"failed to update sensor",
+			zap.String("error", err.Error()))
+		return
+
 	}
 
-	// Add the file in the cache to avoid loops
-	if err := h.Add(file); err != nil {
-		return nil, err
-	}
-
-	return file, file.fromConfig(data, h)
+	h.logger.Debug(
+		"Updating sensor",
+		zap.String("topic", m.Topic()),
+		zap.String("value", payload),
+	)
+	h.logger.Sync()
 }
 
-// Save saves a file
-func (h *Homed) Save(file File) error {
-	config, err := file.toConfig()
-	if err != nil {
-		return err
+// Run runs the app
+func (h *Homed) Run() error {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	h.logger.Info("Connecting to MQTT")
+	token := h.mqttClient.Connect()
+	if token.Wait() && token.Error() != nil {
+		return token.Error()
 	}
 
-	return writeFile(h.filePath(file), true, config)
-}
-
-// ListFiles lists the files in a configuration directory
-func (h *Homed) ListFiles(fileType FileType) ([]string, error) {
-	roomDir := filepath.Join(h.basePath, string(fileType))
-	names := []string{}
-	return names, filepath.Walk(roomDir, func(path string, f os.FileInfo, err error) error {
-		if f == nil || f.IsDir() {
-			return nil
+	for topic := range h.topicSensors {
+		h.logger.Info("Subscribing to topic", zap.String("topic", topic))
+		token = h.mqttClient.Subscribe(topic, 0, h.handleMessage)
+		if token.Wait() && token.Error() != nil {
+			return token.Error()
 		}
+	}
 
-		names = append(names, removeExt(f.Name()))
-		return nil
-	})
-}
+	go func() {
+		<-sigs
+		h.httpServer.Shutdown(context.Background())
+	}()
 
-// Delete deletes a file
-func (h *Homed) Delete(file File) error {
-	return deleteFile(h.filePath(file))
+	h.logger.Info("Starting HTTP server")
+	h.httpServer.ListenAndServe()
+
+	h.logger.Info("Disconnecting from the MQTT broker")
+	h.mqttClient.Disconnect(250)
+
+	return nil
 }
