@@ -24,14 +24,22 @@ func (d *Device) AddSensor(sensorType, topic string) (Sensor, error) {
 		sensor = NewSensorHumidity()
 	case "wifi_signal":
 		sensor = NewSensorWifiSignal()
+	case "zigbee2mqtt_tuya":
+		sensor = NewSensorZigbee2MQTTTuya()
 	default:
 		return nil, fmt.Errorf("homed: invalid sensor type: %s", sensorType)
 	}
 	sensor.SetMQTTTopic(topic)
+	sensor.SetDevice(d)
 
 	if d.Sensors == nil {
 		d.Sensors = []Sensor{}
 	}
+
+	if err := sensor.Init(); err != nil {
+		return nil, err
+	}
+
 	d.Sensors = append(d.Sensors, sensor)
 
 	return sensor, nil

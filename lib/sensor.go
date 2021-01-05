@@ -1,18 +1,15 @@
 package homed
 
-import (
-	"github.com/prometheus/client_golang/prometheus"
-)
-
 // SensorType reprensents a sensor type
 type SensorType string
 
 // SensorTypes
 var (
-	SensorTypeUnknown     SensorType = "unknown"
-	SensorTypeTemperature SensorType = "temperature"
-	SensorTypeHumidity    SensorType = "humidity"
-	SensorTypeWifiSignal  SensorType = "wifi_signal"
+	SensorTypeUnknown         SensorType = "unknown"
+	SensorTypeTemperature     SensorType = "temperature"
+	SensorTypeHumidity        SensorType = "humidity"
+	SensorTypeWifiSignal      SensorType = "wifi_signal"
+	SensorTypeZigbee2MQTTTuya SensorType = "zigbee2mqtt_tuya"
 )
 
 // Sensor represents a sensor
@@ -21,14 +18,14 @@ type Sensor interface {
 	SetDevice(*Device)
 	SetMQTTTopic(string)
 	Type() SensorType
-	Update(string) error
+	Update([]byte) error
+	Init() error
 }
 
 // BaseSensor represents a basic sensor
 type BaseSensor struct {
-	device        *Device
-	mqttTopic     string
-	promCollector prometheus.Collector `yaml:"-"`
+	device    *Device
+	mqttTopic string
 }
 
 // MQTTTopic implements the Sensor interface
@@ -46,8 +43,13 @@ func (s *BaseSensor) Type() SensorType {
 	return SensorTypeUnknown
 }
 
+// Init implements the Sensor interface
+func (s *BaseSensor) Init() error {
+	return nil
+}
+
 // Update implements the Sensor interface
-func (s *BaseSensor) Update(_ string) error {
+func (s *BaseSensor) Update(_ []byte) error {
 	return nil
 }
 

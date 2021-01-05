@@ -22,32 +22,31 @@ func (s *SensorHumidity) Type() SensorType {
 	return SensorTypeHumidity
 }
 
-// Update implements the Sensor interface
-func (s *SensorHumidity) Update(value string) error {
-	if s.promCollector == nil {
-		if s.device == nil {
-			return ErrMissingDevice
-		}
+// Init implements the Sensor interface
+func (s *SensorHumidity) Init() error {
+	if s.device == nil {
+		return ErrMissingDevice
+	}
 
-		s.promCollector = prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-			Name: "homed_" + string(s.Type()),
+	c := prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: "homed_humidity",
 			ConstLabels: prometheus.Labels{
 				"device": string(s.device.Name),
 			},
 		},
-			func() float64 { return s.Value },
-		)
+		func() float64 { return s.Value },
+	)
 
-		if err := prometheus.Register(s.promCollector); err != nil {
-			return err
-		}
-	}
+	return prometheus.Register(c)
+}
 
-	v, err := strconv.ParseFloat(value, 64)
+// Update implements the Sensor interface
+func (s *SensorHumidity) Update(value []byte) error {
+	v, err := strconv.ParseFloat(string(value), 64)
 	if err != nil {
 		return err
 	}
 	s.Value = v
-
 	return nil
 }

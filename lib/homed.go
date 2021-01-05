@@ -82,7 +82,6 @@ func New(configPath string) (*Homed, error) {
 				continue
 			}
 
-			sensor.SetDevice(device)
 			homed.topicSensors[s.Topic] = sensor
 		}
 	}
@@ -107,8 +106,7 @@ func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
 		return
 	}
 
-	payload := string(m.Payload())
-	if err := sensor.Update(payload); err != nil {
+	if err := sensor.Update(m.Payload()); err != nil {
 		h.logger.Warn(
 			"failed to update sensor",
 			zap.String("error", err.Error()))
@@ -119,7 +117,7 @@ func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
 	h.logger.Debug(
 		"Updating sensor",
 		zap.String("topic", m.Topic()),
-		zap.String("value", payload),
+		zap.String("value", string(m.Payload())),
 	)
 	h.logger.Sync()
 }
