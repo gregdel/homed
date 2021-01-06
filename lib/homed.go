@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/kr/pretty"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
@@ -83,6 +84,17 @@ func New(configPath string) (*Homed, error) {
 			}
 
 			homed.topicSensors[s.Topic] = sensor
+		}
+
+		for _, a := range d.Actions {
+			// Add the action to the device
+			action, err := device.AddAction(a.Type, a.Topic)
+			if err != nil {
+				homed.logger.Warn(err.Error())
+				continue
+			}
+
+			pretty.Println(action)
 		}
 	}
 

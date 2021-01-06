@@ -23,6 +23,10 @@ type Config struct {
 			Type  string `yaml:"type"`
 			Topic string `yaml:"mqtt_topic"`
 		} `yaml:"sensors"`
+		Actions []struct {
+			Type  string `yaml:"type"`
+			Topic string `yaml:"mqtt_topic"`
+		} `yaml:"actions"`
 	} `yaml:"devices"`
 }
 
