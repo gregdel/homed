@@ -9,7 +9,6 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/kr/pretty"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
 
@@ -101,11 +100,8 @@ func New(configPath string) (*Homed, error) {
 	opts := mqtt.NewClientOptions().AddBroker(config.MQTT.Broker)
 	homed.mqttClient = mqtt.NewClient(opts)
 
-	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.Handler())
-	homed.httpServer = &http.Server{
-		Addr:    config.HTTP.Addr,
-		Handler: mux,
+	if err := homed.initHTTP(config.HTTP.Addr); err != nil {
+		return nil, err
 	}
 
 	return homed, nil
