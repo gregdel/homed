@@ -28,11 +28,16 @@ func (s *SensorTemperature) Init() error {
 		return ErrMissingDevice
 	}
 
+	if s.device.Room == nil {
+		return ErrMissingRoom
+	}
+
 	c := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "homed_temperature",
 			ConstLabels: prometheus.Labels{
 				"device": string(s.device.Name),
+				"room":   string(s.device.Room.Name),
 			},
 		},
 		func() float64 { return s.Value },
