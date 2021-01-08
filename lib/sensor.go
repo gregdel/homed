@@ -7,6 +7,7 @@ type SensorType string
 var (
 	SensorTypeUnknown         SensorType = "unknown"
 	SensorTypeTemperature     SensorType = "temperature"
+	SensorTypeRTL433          SensorType = "rtl_433"
 	SensorTypeStatus          SensorType = "device_status"
 	SensorTypeHumidity        SensorType = "humidity"
 	SensorTypeWifiSignal      SensorType = "wifi_signal"

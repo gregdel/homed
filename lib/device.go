@@ -29,6 +29,8 @@ func (d *Device) AddSensor(sensorType, topic string) (Sensor, error) {
 		sensor = NewSensorZigbee2MQTTTuya()
 	case "device_status":
 		sensor = NewSensorStatus()
+	case "rtl_433":
+		sensor = NewSensorRTL433()
 	default:
 		return nil, fmt.Errorf("homed: invalid sensor type: %s", sensorType)
 	}
