@@ -7,6 +7,7 @@ type SensorType string
 var (
 	SensorTypeUnknown         SensorType = "unknown"
 	SensorTypeTemperature     SensorType = "temperature"
+	SensorTypeStatus          SensorType = "device_status"
 	SensorTypeHumidity        SensorType = "humidity"
 	SensorTypeWifiSignal      SensorType = "wifi_signal"
 	SensorTypeZigbee2MQTTTuya SensorType = "zigbee2mqtt_tuya"
