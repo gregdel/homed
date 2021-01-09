@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gregdel/homed/lib/sensors"
 	"github.com/kr/pretty"
 	"go.uber.org/zap"
 )
@@ -25,7 +26,7 @@ type Homed struct {
 	rooms   map[string]*Room
 	devices map[string]*Device
 
-	topicSensors map[string]Sensor
+	topicSensors map[string]sensors.Sensor
 }
 
 // Rooms TODO delete
@@ -39,7 +40,7 @@ func New(configPath string) (*Homed, error) {
 		rooms:   map[string]*Room{},
 		devices: map[string]*Device{},
 
-		topicSensors: map[string]Sensor{},
+		topicSensors: map[string]sensors.Sensor{},
 	}
 
 	config := &Config{}

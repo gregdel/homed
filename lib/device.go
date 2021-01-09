@@ -1,12 +1,17 @@
 package homed
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/gregdel/homed/lib/sensors"
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 // Device represents a device
 type Device struct {
 	Room    *Room
 	Name    string
-	Sensors []Sensor
+	Sensors []sensors.Sensor
 	Actions []Action
 }
 
@@ -16,33 +21,40 @@ func NewDevice(name string) *Device {
 }
 
 // AddSensor adds a sensor to the device
-func (d *Device) AddSensor(sensorType, topic string) (Sensor, error) {
-	var sensor Sensor
+func (d *Device) AddSensor(sensorType, topic string) (sensors.Sensor, error) {
+	var sensor sensors.Sensor
 	switch sensorType {
 	case "temperature":
-		sensor = NewSensorTemperature()
+		sensor = sensors.NewTemperature()
 	case "humidity":
-		sensor = NewSensorHumidity()
+		sensor = sensors.NewHumidity()
 	case "wifi_signal":
-		sensor = NewSensorWifiSignal()
+		sensor = sensors.NewWifiSignal()
 	case "zigbee2mqtt_tuya":
-		sensor = NewSensorZigbee2MQTTTuya()
+		sensor = sensors.NewZigbee2MQTTTuya()
 	case "device_status":
-		sensor = NewSensorStatus()
+		sensor = sensors.NewStatus()
 	case "rtl_433":
-		sensor = NewSensorRTL433()
+		sensor = sensors.NewRTL433()
 	default:
 		return nil, fmt.Errorf("homed: invalid sensor type: %s", sensorType)
 	}
-	sensor.SetMQTTTopic(topic)
-	sensor.SetDevice(d)
 
 	if d.Sensors == nil {
-		d.Sensors = []Sensor{}
+		d.Sensors = []sensors.Sensor{}
 	}
 
-	if err := sensor.Init(); err != nil {
-		return nil, err
+	labels := prometheus.Labels{"device": d.Name}
+	if d.Room != nil {
+		labels["room"] = string(d.Room.Name)
+	}
+
+	collectors := sensor.Collectors(labels)
+	for _, c := range collectors {
+		if err := prometheus.Register(c); err != nil {
+			return nil, err
+		}
+
 	}
 
 	d.Sensors = append(d.Sensors, sensor)

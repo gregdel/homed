@@ -1,4 +1,4 @@
-package homed
+package sensors
 
 import (
 	"encoding/json"
@@ -6,46 +6,40 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// SensorRTL433 is a sensor that handles rtl_433 signals
-type SensorRTL433 struct {
+// RTL433 is a sensor that handles rtl_433 signals
+type RTL433 struct {
 	BaseSensor
 
 	BoilerState bool
 }
 
-// NewSensorRTL433 returns a new humidity sensor
-func NewSensorRTL433() *SensorRTL433 {
-	return &SensorRTL433{}
+// NewRTL433 returns a new humidity sensor
+func NewRTL433() *RTL433 {
+	return &RTL433{}
 }
 
 // Type implements the Sensor interface
-func (s *SensorRTL433) Type() SensorType {
-	return SensorTypeRTL433
+func (s *RTL433) Type() Type {
+	return TypeRTL433
 }
 
-// Init implements the Sensor interface
-func (s *SensorRTL433) Init() error {
-	if s.device == nil {
-		return ErrMissingDevice
+// Collectors implements the Sensor interface
+func (s *RTL433) Collectors(labels prometheus.Labels) []prometheus.Collector {
+	return []prometheus.Collector{
+		prometheus.NewGaugeFunc(
+			prometheus.GaugeOpts{Name: "homed_boiler_state"},
+			func() float64 {
+				if s.BoilerState {
+					return 1
+				}
+				return 0
+			},
+		),
 	}
-
-	c := prometheus.NewGaugeFunc(
-		prometheus.GaugeOpts{
-			Name: "homed_boiler_state",
-		},
-		func() float64 {
-			if s.BoilerState {
-				return 1
-			}
-			return 0
-		},
-	)
-
-	return prometheus.Register(c)
 }
 
 // Update implements the Sensor interface
-func (s *SensorRTL433) Update(value []byte) error {
+func (s *RTL433) Update(value []byte) error {
 	data := struct {
 		Model string `json:"model"`
 		Rows  []struct {

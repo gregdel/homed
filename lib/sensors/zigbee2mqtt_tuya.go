@@ -1,4 +1,4 @@
-package homed
+package sensors
 
 import (
 	"encoding/json"
@@ -6,8 +6,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// SensorZigbee2MQTTTuya is a sensor that handles temperatures
-type SensorZigbee2MQTTTuya struct {
+// Zigbee2MQTTTuya is a sensor that handles temperatures
+type Zigbee2MQTTTuya struct {
 	BaseSensor `json:"-"`
 
 	HeatingSetpoint float64 `json:"current_heating_setpoint"`
@@ -16,34 +16,20 @@ type SensorZigbee2MQTTTuya struct {
 	BatteryLow      bool    `json:"battery_low"`
 }
 
-// NewSensorZigbee2MQTTTuya returns a new wifi signal sensor
-func NewSensorZigbee2MQTTTuya() *SensorZigbee2MQTTTuya {
-	return &SensorZigbee2MQTTTuya{}
+// NewZigbee2MQTTTuya returns a new wifi signal sensor
+func NewZigbee2MQTTTuya() *Zigbee2MQTTTuya {
+	return &Zigbee2MQTTTuya{}
 }
 
 // Type implements the Sensor interface
-func (s *SensorZigbee2MQTTTuya) Type() SensorType {
-	return SensorTypeZigbee2MQTTTuya
+func (s *Zigbee2MQTTTuya) Type() Type {
+	return TypeZigbee2MQTTTuya
 }
 
-// Init implements the Sensor interface
-func (s *SensorZigbee2MQTTTuya) Init() error {
-	if s.device == nil {
-		return ErrMissingDevice
-	}
-
-	if s.device.Room == nil {
-		return ErrMissingRoom
-	}
-
-	labels := prometheus.Labels{
-		"device": string(s.device.Name),
-		"room":   string(s.device.Room.Name),
-	}
-
+// Collectors implements the Sensor interface
+func (s *Zigbee2MQTTTuya) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	prefix := "homed_zigbee2mqtt_tuya_"
-
-	collectors := []prometheus.Collector{
+	return []prometheus.Collector{
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{
 				Name:        prefix + "temperature",
@@ -78,17 +64,9 @@ func (s *SensorZigbee2MQTTTuya) Init() error {
 			},
 		),
 	}
-
-	for _, collector := range collectors {
-		if err := prometheus.Register(collector); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // Update implements the Sensor interface
-func (s *SensorZigbee2MQTTTuya) Update(value []byte) error {
+func (s *Zigbee2MQTTTuya) Update(value []byte) error {
 	return json.Unmarshal(value, s)
 }
