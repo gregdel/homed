@@ -6,6 +6,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+func init() {
+	register(TypeZigbee2MQTTTuya, NewZigbee2MQTTTuya)
+}
+
 // Zigbee2MQTTTuya is a sensor that handles temperatures
 type Zigbee2MQTTTuya struct {
 	BaseSensor `json:"-"`
@@ -17,7 +21,7 @@ type Zigbee2MQTTTuya struct {
 }
 
 // NewZigbee2MQTTTuya returns a new wifi signal sensor
-func NewZigbee2MQTTTuya() *Zigbee2MQTTTuya {
+func NewZigbee2MQTTTuya() Sensor {
 	return &Zigbee2MQTTTuya{}
 }
 

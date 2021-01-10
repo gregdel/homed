@@ -6,6 +6,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+func init() {
+	register(TypeTemperature, NewTemperature)
+}
+
 // Temperature is a sensor that handles temperatures
 type Temperature struct {
 	BaseSensor
@@ -13,7 +17,7 @@ type Temperature struct {
 }
 
 // NewTemperature returns a new temperature sensor
-func NewTemperature() *Temperature {
+func NewTemperature() Sensor {
 	return &Temperature{}
 }
 

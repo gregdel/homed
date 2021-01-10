@@ -6,6 +6,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+func init() {
+	register(TypeStatus, NewStatus)
+}
+
 // Status is a sensor that reports the status of a device
 type Status struct {
 	BaseSensor
@@ -13,7 +17,7 @@ type Status struct {
 }
 
 // NewStatus returns a new status sensor
-func NewStatus() *Status {
+func NewStatus() Sensor {
 	return &Status{}
 }
 

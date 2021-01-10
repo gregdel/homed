@@ -6,6 +6,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+func init() {
+	register(TypeRTL433, NewRTL433)
+}
+
 // RTL433 is a sensor that handles rtl_433 signals
 type RTL433 struct {
 	BaseSensor
@@ -14,7 +18,7 @@ type RTL433 struct {
 }
 
 // NewRTL433 returns a new humidity sensor
-func NewRTL433() *RTL433 {
+func NewRTL433() Sensor {
 	return &RTL433{}
 }
 

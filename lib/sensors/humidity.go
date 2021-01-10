@@ -6,6 +6,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+func init() {
+	register(TypeHumidity, NewHumidity)
+}
+
 // Humidity is a sensor that handles temperatures
 type Humidity struct {
 	BaseSensor
@@ -13,7 +17,7 @@ type Humidity struct {
 }
 
 // NewHumidity returns a new humidity sensor
-func NewHumidity() *Humidity {
+func NewHumidity() Sensor {
 	return &Humidity{}
 }
 

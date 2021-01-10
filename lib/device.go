@@ -22,22 +22,9 @@ func NewDevice(name string) *Device {
 
 // AddSensor adds a sensor to the device
 func (d *Device) AddSensor(sensorType, topic string) (sensors.Sensor, error) {
-	var sensor sensors.Sensor
-	switch sensorType {
-	case "temperature":
-		sensor = sensors.NewTemperature()
-	case "humidity":
-		sensor = sensors.NewHumidity()
-	case "wifi_signal":
-		sensor = sensors.NewWifiSignal()
-	case "zigbee2mqtt_tuya":
-		sensor = sensors.NewZigbee2MQTTTuya()
-	case "device_status":
-		sensor = sensors.NewStatus()
-	case "rtl_433":
-		sensor = sensors.NewRTL433()
-	default:
-		return nil, fmt.Errorf("homed: invalid sensor type: %s", sensorType)
+	sensor, err := sensors.New(sensorType)
+	if err != nil {
+		return nil, err
 	}
 
 	if d.Sensors == nil {

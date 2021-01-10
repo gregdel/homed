@@ -6,6 +6,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+func init() {
+	register(TypeWifiSignal, NewWifiSignal)
+}
+
 // WifiSignal is a sensor that handles temperatures
 type WifiSignal struct {
 	BaseSensor
@@ -13,7 +17,7 @@ type WifiSignal struct {
 }
 
 // NewWifiSignal returns a new wifi signal sensor
-func NewWifiSignal() *WifiSignal {
+func NewWifiSignal() Sensor {
 	return &WifiSignal{}
 }
 
