@@ -1,7 +1,6 @@
 package homed
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/gregdel/homed/lib/sensors"
@@ -10,70 +9,28 @@ import (
 
 // Device represents a device
 type Device struct {
-	Room    *Room
-	Name    string
-	Sensors []sensors.Sensor
-	Actions []Action
+	Room    *Room           `json:"-"`
+	Name    string          `json:"name"`
+	Sensors sensors.Sensors `json:"sensors"`
+	Actions []Action        `json:"-"`
 }
 
 // NewDevice creates a new device
 func NewDevice(name string) *Device {
-	return &Device{Name: name}
-}
-
-// MarshalJSON implements the json.Marshaler interface
-func (d *Device) MarshalJSON() ([]byte, error) {
-	type sensorWithType struct {
-		sensors.Sensor `json:"values"`
-		Type           string `json:"type"`
+	return &Device{
+		Name:    name,
+		Sensors: sensors.New(),
 	}
-
-	s := make([]sensorWithType, len(d.Sensors))
-	for i := 0; i < len(d.Sensors); i++ {
-		s[i] = sensorWithType{
-			Sensor: d.Sensors[i],
-			Type:   string(d.Sensors[i].Type()),
-		}
-	}
-
-	out := struct {
-		Name    string           `json:"name"`
-		Sensors []sensorWithType `json:"sensors"`
-	}{
-		Name:    d.Name,
-		Sensors: s,
-	}
-
-	return json.Marshal(out)
 }
 
 // AddSensor adds a sensor to the device
-func (d *Device) AddSensor(sensorType, topic string) (sensors.Sensor, error) {
-	sensor, err := sensors.New(sensorType)
-	if err != nil {
-		return nil, err
-	}
-
-	if d.Sensors == nil {
-		d.Sensors = []sensors.Sensor{}
-	}
-
+func (d *Device) AddSensor(sensorType string) (sensors.Sensor, error) {
 	labels := prometheus.Labels{"device": d.Name}
 	if d.Room != nil {
 		labels["room"] = string(d.Room.Name)
 	}
 
-	collectors := sensor.Collectors(labels)
-	for _, c := range collectors {
-		if err := prometheus.Register(c); err != nil {
-			return nil, err
-		}
-
-	}
-
-	d.Sensors = append(d.Sensors, sensor)
-
-	return sensor, nil
+	return d.Sensors.Add(sensorType, labels)
 }
 
 // AddAction adds an action to the device

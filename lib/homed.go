@@ -77,7 +77,7 @@ func New(configPath string) (*Homed, error) {
 
 		for _, s := range d.Sensors {
 			// Add the sensor to the device
-			sensor, err := device.AddSensor(s.Type, s.Topic)
+			sensor, err := device.AddSensor(s.Type)
 			if err != nil {
 				homed.logger.Warn(err.Error())
 				continue
