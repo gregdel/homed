@@ -12,9 +12,7 @@ func init() {
 
 // RTL433 is a sensor that handles rtl_433 signals
 type RTL433 struct {
-	BaseSensor
-
-	BoilerState bool
+	BoilerState bool `json:"boiler_state"`
 }
 
 // NewRTL433 returns a new humidity sensor

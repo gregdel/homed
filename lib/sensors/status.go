@@ -12,8 +12,7 @@ func init() {
 
 // Status is a sensor that reports the status of a device
 type Status struct {
-	BaseSensor
-	Online bool
+	Online bool `json:"online"`
 }
 
 // NewStatus returns a new status sensor
