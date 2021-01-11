@@ -1,6 +1,7 @@
 package homed
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/gregdel/homed/lib/sensors"
@@ -18,6 +19,32 @@ type Device struct {
 // NewDevice creates a new device
 func NewDevice(name string) *Device {
 	return &Device{Name: name}
+}
+
+// MarshalJSON implements the json.Marshaler interface
+func (d *Device) MarshalJSON() ([]byte, error) {
+	type sensorWithType struct {
+		sensors.Sensor `json:"values"`
+		Type           string `json:"type"`
+	}
+
+	s := make([]sensorWithType, len(d.Sensors))
+	for i := 0; i < len(d.Sensors); i++ {
+		s[i] = sensorWithType{
+			Sensor: d.Sensors[i],
+			Type:   string(d.Sensors[i].Type()),
+		}
+	}
+
+	out := struct {
+		Name    string           `json:"name"`
+		Sensors []sensorWithType `json:"sensors"`
+	}{
+		Name:    d.Name,
+		Sensors: s,
+	}
+
+	return json.Marshal(out)
 }
 
 // AddSensor adds a sensor to the device

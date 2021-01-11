@@ -2,9 +2,8 @@ package homed
 
 // Room represent a room
 type Room struct {
-	Name string
-
-	Devices []*Device
+	Name    string    `json:"name"`
+	Devices []*Device `json:"devices"`
 }
 
 // NewRoom returns a new room
