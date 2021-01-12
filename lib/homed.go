@@ -134,6 +134,7 @@ func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
 // Run runs the app
 func (h *Homed) Run() error {
 	sigs := make(chan os.Signal, 1)
+	done := make(chan struct{})
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	h.logger.Info("Connecting to MQTT")
@@ -152,8 +153,12 @@ func (h *Homed) Run() error {
 
 	go func() {
 		<-sigs
+		close(done)
 		h.httpServer.Shutdown(context.Background())
 	}()
+
+	// Start the temperature control function
+	go h.temperatureControl(done)
 
 	h.logger.Info("Starting HTTP server")
 	h.httpServer.ListenAndServe()
