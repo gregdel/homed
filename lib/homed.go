@@ -8,8 +8,7 @@ import (
 	"syscall"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gregdel/homed/lib/sensors"
-	"github.com/kr/pretty"
+	"github.com/gregdel/homed/lib/components"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +25,7 @@ type Homed struct {
 	rooms   map[string]*Room
 	devices map[string]*Device
 
-	topicSensors map[string]sensors.Sensor
+	topicComponents map[string]components.Component
 }
 
 // Rooms TODO delete
@@ -40,7 +39,7 @@ func New(configPath string) (*Homed, error) {
 		rooms:   map[string]*Room{},
 		devices: map[string]*Device{},
 
-		topicSensors: map[string]sensors.Sensor{},
+		topicComponents: map[string]components.Component{},
 	}
 
 	config := &Config{}
@@ -75,26 +74,14 @@ func New(configPath string) (*Homed, error) {
 		homed.devices[device.Name] = device
 		room.AddDevice(device)
 
-		for _, s := range d.Sensors {
-			// Add the sensor to the device
-			sensor, err := device.AddSensor(s.Type)
+		for _, cfg := range d.Components {
+			component, err := device.AddComponent(cfg)
 			if err != nil {
 				homed.logger.Warn(err.Error())
 				continue
 			}
 
-			homed.topicSensors[s.Topic] = sensor
-		}
-
-		for _, a := range d.Actions {
-			// Add the action to the device
-			action, err := device.AddAction(a.Type, a.Topic)
-			if err != nil {
-				homed.logger.Warn(err.Error())
-				continue
-			}
-
-			pretty.Println(action)
+			homed.topicComponents[cfg.StateTopic] = component
 		}
 	}
 
@@ -109,28 +96,28 @@ func New(configPath string) (*Homed, error) {
 }
 
 func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
-	sensor, ok := h.topicSensors[m.Topic()]
+	component, ok := h.topicComponents[m.Topic()]
 	if !ok {
 		h.logger.Warn("Topic not found", zap.String("topic", m.Topic()))
 		return
 	}
 
-	if err := sensor.Update(m.Payload()); err != nil {
+	if err := component.Update(m.Payload()); err != nil {
 		h.logger.Warn(
-			"failed to update sensor",
+			"failed to update component",
 			zap.String("error", err.Error()))
 		return
 	}
 
-	if err := sensor.PostUpdate(); err != nil {
+	if err := component.PostUpdate(); err != nil {
 		h.logger.Warn(
-			"failed to run the sensor post update",
+			"failed to run the component post update",
 			zap.String("error", err.Error()))
 		return
 	}
 
 	h.logger.Debug(
-		"Updating sensor",
+		"Updating component",
 		zap.String("topic", m.Topic()),
 		zap.String("value", string(m.Payload())),
 	)
@@ -149,7 +136,7 @@ func (h *Homed) Run() error {
 		return token.Error()
 	}
 
-	for topic := range h.topicSensors {
+	for topic := range h.topicComponents {
 		h.logger.Info("Subscribing to topic", zap.String("topic", topic))
 		token = h.mqttClient.Subscribe(topic, 0, h.handleMessage)
 		if token.Wait() && token.Error() != nil {

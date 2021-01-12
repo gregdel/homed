@@ -1,4 +1,4 @@
-package sensors
+package components
 
 import (
 	"encoding/json"
@@ -10,24 +10,24 @@ func init() {
 	register(TypeRTL433, NewRTL433)
 }
 
-// RTL433 is a sensor that handles rtl_433 signals
+// RTL433 is a component that handles rtl_433 signals
 type RTL433 struct {
-	baseSensor
+	baseComponent
 
 	BoilerState bool `json:"boiler_state"`
 }
 
-// NewRTL433 returns a new humidity sensor
-func NewRTL433() Sensor {
+// NewRTL433 returns a new humidity component
+func NewRTL433() Component {
 	return &RTL433{}
 }
 
-// Type implements the Sensor interface
+// Type implements the Component interface
 func (s *RTL433) Type() Type {
 	return TypeRTL433
 }
 
-// Collectors implements the Sensor interface
+// Collectors implements the Component interface
 func (s *RTL433) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		prometheus.NewGaugeFunc(
@@ -42,7 +42,7 @@ func (s *RTL433) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	}
 }
 
-// Update implements the Sensor interface
+// Update implements the Component interface
 func (s *RTL433) Update(value []byte) error {
 	data := struct {
 		Model string `json:"model"`

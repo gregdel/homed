@@ -1,8 +1,6 @@
 package homed
 
-import (
-	"github.com/gregdel/homed/lib/sensors"
-)
+import "github.com/gregdel/homed/lib/components"
 
 // Room represent a room
 type Room struct {
@@ -26,19 +24,19 @@ func (r *Room) AddDevice(device *Device) {
 
 // Temperature returns the temperature in the room
 func (r *Room) Temperature() float64 {
-	// For now, we only return the first value of the sensor type "Temperature"
+	// For now, we only return the first value of the component type "Temperature"
 
 	for _, device := range r.Devices {
-		for _, sensor := range device.Sensors {
-			if sensor.Type() == sensors.TypeTemperature {
+		for _, component := range device.Components {
+			if component.Type() == components.TypeTemperature {
 				// get the value and publish it to mqtt
 
-				s, ok := sensor.(*sensors.Temperature)
+				c, ok := component.(*components.Temperature)
 				if !ok {
 					break
 				}
 
-				return s.Value
+				return c.Value
 			}
 		}
 	}

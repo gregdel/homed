@@ -7,7 +7,7 @@ http:
 devices:
 - name: device_1
   room: room_1
-  sensors:
+  components:
   - type: temperature
     mqtt_topic: home/devices/device_1/sensor/temperature/state
   - type: humidity
@@ -17,6 +17,7 @@ devices:
 
 - name: device_2
   room: room_2
-  sensors:
-  - type: zigbee2mqtt_tuya
-    mqtt_topic: zigbee2mqtt/device_2
+  components:
+  - type: tuya_trv
+    state_topic: zigbee2mqtt/device_2
+    command_topic: zigbee2mqtt/device_2/set/current_heating_setpoint

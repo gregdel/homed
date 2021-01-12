@@ -1,4 +1,4 @@
-package sensors
+package components
 
 import (
 	"encoding/json"
@@ -7,12 +7,12 @@ import (
 )
 
 func init() {
-	register(TypeZigbee2MQTTTuya, NewZigbee2MQTTTuya)
+	register(TypeTuyaTRV, NewTuyaTRV)
 }
 
-// Zigbee2MQTTTuya is a sensor that handles temperatures
-type Zigbee2MQTTTuya struct {
-	baseSensor
+// TuyaTRV is a component that handles temperatures
+type TuyaTRV struct {
+	baseComponent
 
 	HeatingSetpoint float64 `json:"current_heating_setpoint"`
 	Temperature     float64 `json:"local_temperature"`
@@ -20,19 +20,19 @@ type Zigbee2MQTTTuya struct {
 	BatteryLow      bool    `json:"battery_low"`
 }
 
-// NewZigbee2MQTTTuya returns a new wifi signal sensor
-func NewZigbee2MQTTTuya() Sensor {
-	return &Zigbee2MQTTTuya{}
+// NewTuyaTRV returns a new component for Tuya TRVs
+func NewTuyaTRV() Component {
+	return &TuyaTRV{}
 }
 
-// Type implements the Sensor interface
-func (s *Zigbee2MQTTTuya) Type() Type {
-	return TypeZigbee2MQTTTuya
+// Type implements the Component interface
+func (s *TuyaTRV) Type() Type {
+	return TypeTuyaTRV
 }
 
-// Collectors implements the Sensor interface
-func (s *Zigbee2MQTTTuya) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	prefix := "homed_zigbee2mqtt_tuya_"
+// Collectors implements the Component interface
+func (s *TuyaTRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
+	prefix := "homed_tuya_trv"
 	return []prometheus.Collector{
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{
@@ -70,7 +70,7 @@ func (s *Zigbee2MQTTTuya) Collectors(labels prometheus.Labels) []prometheus.Coll
 	}
 }
 
-// Update implements the Sensor interface
-func (s *Zigbee2MQTTTuya) Update(value []byte) error {
+// Update implements the Component interface
+func (s *TuyaTRV) Update(value []byte) error {
 	return json.Unmarshal(value, s)
 }

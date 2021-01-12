@@ -1,4 +1,4 @@
-package sensors
+package components
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
@@ -8,23 +8,23 @@ func init() {
 	register(TypeWifiSignal, NewWifiSignal)
 }
 
-// WifiSignal is a sensor that handles temperatures
+// WifiSignal is a component that handles temperatures
 type WifiSignal struct {
-	baseSensor
-	float64Sensor
+	baseComponent
+	float64Component
 }
 
-// NewWifiSignal returns a new wifi signal sensor
-func NewWifiSignal() Sensor {
+// NewWifiSignal returns a new wifi signal component
+func NewWifiSignal() Component {
 	return &WifiSignal{}
 }
 
-// Type implements the Sensor interface
+// Type implements the Component interface
 func (s *WifiSignal) Type() Type {
 	return TypeWifiSignal
 }
 
-// Collectors implements the Sensor interface
+// Collectors implements the Component interface
 func (s *WifiSignal) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return singleCollector(s, labels, func() float64 { return s.Value })
 }

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gregdel/homed/lib/components"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -17,16 +18,9 @@ type Config struct {
 		Addr string `yaml:"addr"`
 	} `yaml:"http"`
 	Devices []struct {
-		Name    string `yaml:"name"`
-		Room    string `yaml:"room"`
-		Sensors []struct {
-			Type  string `yaml:"type"`
-			Topic string `yaml:"mqtt_topic"`
-		} `yaml:"sensors"`
-		Actions []struct {
-			Type  string `yaml:"type"`
-			Topic string `yaml:"mqtt_topic"`
-		} `yaml:"actions"`
+		Name       string              `yaml:"name"`
+		Room       string              `yaml:"room"`
+		Components []components.Config `yaml:"components"`
 	} `yaml:"devices"`
 }
 

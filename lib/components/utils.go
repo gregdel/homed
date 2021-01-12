@@ -1,4 +1,4 @@
-package sensors
+package components
 
 import (
 	"strconv"
@@ -15,7 +15,7 @@ func updateFloat64(input []byte, output *float64) error {
 	return nil
 }
 
-func singleCollector(s Sensor, labels prometheus.Labels, fn func() float64) []prometheus.Collector {
+func singleCollector(s Component, labels prometheus.Labels, fn func() float64) []prometheus.Collector {
 	return []prometheus.Collector{
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{
