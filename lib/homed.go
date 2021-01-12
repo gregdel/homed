@@ -22,10 +22,11 @@ type Homed struct {
 
 	mqttClient mqtt.Client
 
-	rooms   map[string]*Room
-	devices map[string]*Device
+	rooms      map[string]*Room
+	devices    map[string]*Device
+	components map[string]components.Component
 
-	topicComponents map[string]components.Component
+	stateTopics map[string]components.Component
 }
 
 // Rooms TODO delete
@@ -36,10 +37,11 @@ func (h *Homed) Rooms() map[string]*Room {
 // New returns a new Homed
 func New(configPath string) (*Homed, error) {
 	homed := &Homed{
-		rooms:   map[string]*Room{},
-		devices: map[string]*Device{},
+		rooms:      map[string]*Room{},
+		devices:    map[string]*Device{},
+		components: map[string]components.Component{},
 
-		topicComponents: map[string]components.Component{},
+		stateTopics: map[string]components.Component{},
 	}
 
 	config := &Config{}
@@ -81,7 +83,8 @@ func New(configPath string) (*Homed, error) {
 				continue
 			}
 
-			homed.topicComponents[cfg.StateTopic] = component
+			homed.stateTopics[cfg.StateTopic] = component
+			homed.components[component.ID().String()] = component
 		}
 	}
 
@@ -96,7 +99,7 @@ func New(configPath string) (*Homed, error) {
 }
 
 func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
-	component, ok := h.topicComponents[m.Topic()]
+	component, ok := h.stateTopics[m.Topic()]
 	if !ok {
 		h.logger.Warn("Topic not found", zap.String("topic", m.Topic()))
 		return
@@ -136,7 +139,7 @@ func (h *Homed) Run() error {
 		return token.Error()
 	}
 
-	for topic := range h.topicComponents {
+	for topic := range h.stateTopics {
 		h.logger.Info("Subscribing to topic", zap.String("topic", topic))
 		token = h.mqttClient.Subscribe(topic, 0, h.handleMessage)
 		if token.Wait() && token.Error() != nil {

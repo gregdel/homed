@@ -5,11 +5,13 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 )
 
 type baseComponent struct {
 	commandTopic string
 
+	UUID      uuid.UUID  `json:"uuid"`
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
@@ -32,6 +34,16 @@ func (bs *baseComponent) ReadOnly() bool {
 // SetCommandTopic implements the Component interface
 func (bs *baseComponent) SetCommandTopic(topic string) {
 	bs.commandTopic = topic
+}
+
+// setID implements the Component interface
+func (bs *baseComponent) setID(uuid uuid.UUID) {
+	bs.UUID = uuid
+}
+
+// ID implements the Component interface
+func (bs *baseComponent) ID() uuid.UUID {
+	return bs.UUID
 }
 
 // WriteCommand implements the Component interface

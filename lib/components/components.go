@@ -3,6 +3,7 @@ package components
 import (
 	"encoding/json"
 
+	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -35,7 +36,6 @@ func (s Components) MarshalJSON() ([]byte, error) {
 }
 
 // Add adds a component to the component slice
-// TODO: check if we need to return the component
 func (s *Components) Add(cfg Config, labels prometheus.Labels) (Component, error) {
 	component, err := newComponent(cfg.Type)
 	if err != nil {
@@ -51,6 +51,12 @@ func (s *Components) Add(cfg Config, labels prometheus.Labels) (Component, error
 	}
 
 	component.SetCommandTopic(cfg.CommandTopic)
+
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
+	component.setID(uuid)
 
 	*s = append(*s, component)
 	return component, nil

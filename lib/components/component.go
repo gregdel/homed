@@ -2,6 +2,7 @@ package components
 
 import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -36,4 +37,9 @@ type Component interface {
 	SetCommandTopic(string)
 	// WriteCommand writes a command to a mqtt topic
 	WriteCommand(client mqtt.Client, data []byte) error
+	// ID returns the component id
+	ID() uuid.UUID
+
+	// setId sets the id of a component
+	setID(uuid uuid.UUID)
 }

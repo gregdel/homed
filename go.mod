@@ -4,6 +4,8 @@ go 1.15
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.3.0
+	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/google/uuid v1.1.4
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/kr/pretty v0.2.1
 	github.com/prometheus/client_golang v1.9.0
