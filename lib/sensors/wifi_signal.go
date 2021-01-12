@@ -10,6 +10,7 @@ func init() {
 
 // WifiSignal is a sensor that handles temperatures
 type WifiSignal struct {
+	baseSensor
 	float64Sensor
 }
 

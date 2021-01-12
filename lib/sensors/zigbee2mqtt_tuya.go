@@ -12,6 +12,8 @@ func init() {
 
 // Zigbee2MQTTTuya is a sensor that handles temperatures
 type Zigbee2MQTTTuya struct {
+	baseSensor
+
 	HeatingSetpoint float64 `json:"current_heating_setpoint"`
 	Temperature     float64 `json:"local_temperature"`
 	Position        float64 `json:"position"`

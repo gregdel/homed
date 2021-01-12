@@ -21,5 +21,6 @@ var (
 type Sensor interface {
 	Type() Type
 	Update([]byte) error
+	PostUpdate() error
 	Collectors(labels prometheus.Labels) []prometheus.Collector
 }

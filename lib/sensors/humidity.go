@@ -10,6 +10,7 @@ func init() {
 
 // Humidity is a sensor that handles temperatures
 type Humidity struct {
+	baseSensor
 	float64Sensor
 }
 

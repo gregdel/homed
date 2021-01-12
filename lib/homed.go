@@ -120,7 +120,13 @@ func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
 			"failed to update sensor",
 			zap.String("error", err.Error()))
 		return
+	}
 
+	if err := sensor.PostUpdate(); err != nil {
+		h.logger.Warn(
+			"failed to run the sensor post update",
+			zap.String("error", err.Error()))
+		return
 	}
 
 	h.logger.Debug(

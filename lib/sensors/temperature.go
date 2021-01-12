@@ -10,6 +10,7 @@ func init() {
 
 // Temperature is a sensor that handles temperatures
 type Temperature struct {
+	baseSensor
 	float64Sensor
 }
 
