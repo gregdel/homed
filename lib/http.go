@@ -18,6 +18,7 @@ func (h *Homed) initHTTP(addr string) error {
 	router.PUT("/components/:id", h.updateComponent)
 	router.GET("/data", h.jsonData)
 	router.GET("/events", h.websocketEvents)
+	router.NotFound = http.FileServer(http.Dir("frontend/build"))
 	h.httpServer = &http.Server{
 		Addr:    addr,
 		Handler: router,

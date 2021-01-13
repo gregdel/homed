@@ -1,2 +1,4 @@
 config.yaml
 homed
+frontend/node_modules/
+frontend/build/
