@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -15,6 +17,7 @@ func (h *Homed) initHTTP(addr string) error {
 	router.Handler("GET", "/metrics", promhttp.Handler())
 	router.PUT("/components/:id", h.updateComponent)
 	router.GET("/data", h.jsonData)
+	router.GET("/events", h.websocketEvents)
 	h.httpServer = &http.Server{
 		Addr:    addr,
 		Handler: router,
@@ -58,5 +61,52 @@ func (h *Homed) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 	if err != nil {
 		fmt.Fprintf(w, "failed to write mqtt command: %s", err.Error())
 		return
+	}
+}
+
+func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	const (
+		// Ping every 30 seconds, must be less than pongWait
+		pingWait = 10 * time.Second
+		// Time allowed to read the next pong message from the client
+		pongWait = 15 * time.Second
+		// Time allowed to write to the client
+		writeWait = 10 * time.Second
+	)
+
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+
+	// Upgrade the request for websockets
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Fprintf(w, "got error upgrading request: %s", err.Error())
+		if _, ok := err.(websocket.HandshakeError); !ok {
+			fmt.Fprintf(w, "handshake error")
+		}
+		return
+	}
+	defer ws.Close()
+
+	// The pong handler only postpone the read deadline
+	ws.SetPongHandler(func(string) error {
+		_ = ws.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
+	uuid, err := h.registerWebsocket(ws)
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+		return
+	}
+	defer h.unregisterWebsocket(uuid)
+
+	for {
+		_, _, err := ws.ReadMessage()
+		if err != nil {
+			break
+		}
 	}
 }

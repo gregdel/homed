@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gorilla/websocket"
 	"github.com/gregdel/homed/lib/components"
 	"go.uber.org/zap"
 )
@@ -19,6 +20,7 @@ type Homed struct {
 	logger *zap.Logger
 
 	httpServer *http.Server
+	websockets map[string]*websocket.Conn
 
 	mqttClient mqtt.Client
 
@@ -37,6 +39,8 @@ func (h *Homed) Rooms() map[string]*Room {
 // New returns a new Homed
 func New(configPath string) (*Homed, error) {
 	homed := &Homed{
+		websockets: map[string]*websocket.Conn{},
+
 		rooms:      map[string]*Room{},
 		devices:    map[string]*Device{},
 		components: map[string]components.Component{},
@@ -118,6 +122,8 @@ func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
 			zap.String("error", err.Error()))
 		return
 	}
+
+	h.publishToWebsocket(component)
 
 	h.logger.Debug(
 		"Updating component",

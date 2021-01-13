@@ -15,21 +15,27 @@ func New() Components {
 	return []Component{}
 }
 
+// ComponentJSON represents the JSONn structure of a Component
+type ComponentJSON struct {
+	Component `json:"values"`
+	Type      string `json:"type"`
+	ReadOnly  bool   `json:"read_only"`
+}
+
+// NewComponentJSON returns a ComponentJSON from a Component
+func NewComponentJSON(c Component) ComponentJSON {
+	return ComponentJSON{
+		Component: c,
+		Type:      string(c.Type()),
+		ReadOnly:  c.ReadOnly(),
+	}
+}
+
 // MarshalJSON implements the json.Marshaler interface
 func (s Components) MarshalJSON() ([]byte, error) {
-	type componentWithType struct {
-		Component `json:"values"`
-		Type      string `json:"type"`
-		ReadOnly  bool   `json:"read_only"`
-	}
-
-	components := make([]componentWithType, len(s))
+	components := make([]ComponentJSON, len(s))
 	for i := 0; i < len(s); i++ {
-		components[i] = componentWithType{
-			Component: s[i],
-			Type:      string(s[i].Type()),
-			ReadOnly:  s[i].ReadOnly(),
-		}
+		components[i] = NewComponentJSON(s[i])
 	}
 
 	return json.Marshal(components)
