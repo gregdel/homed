@@ -2,6 +2,10 @@ import { produce } from "immer";
 
 const defaultState = {
   components: new Map(),
+  temperatureControl: {
+    rooms: new Map(),
+    boiler: "",
+  },
 };
 
 export default (state = defaultState, action) =>
@@ -16,11 +20,23 @@ export default (state = defaultState, action) =>
           devices.map((device) => {
             var components = device.components;
             components.map((component) => {
-              draft.components.set(component.values.uuid, {
+              const uuid = component.values.uuid;
+
+              draft.components.set(uuid, {
                 room: room.name,
                 device: device.name,
                 ...component,
               });
+
+              // Keep the temperature controled rooms in a different map
+              if (component.type === "homed_temperature") {
+                draft.temperatureControl.rooms.set(room.name, uuid);
+              }
+
+              // Keep the temperature controled rooms in a different map
+              if (component.type === "boiler") {
+                draft.temperatureControl.boiler = uuid;
+              }
             });
           });
         });

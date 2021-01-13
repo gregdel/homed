@@ -10,8 +10,9 @@ import { TuyaTRV } from "./TuyaTRV";
 import { WifiSignal } from "./WifiSignal";
 import { RTL433 } from "./RTL433";
 import { Boiler } from "./Boiler";
+import { HomedTemperature } from "./HomedTemperature";
 
-import { Row, Card } from "antd";
+import { Row, Col, Card } from "antd";
 
 export const HomedComponents = () => {
   const HomedComponents = useSelector((state) => state.stuff.components);
@@ -19,13 +20,13 @@ export const HomedComponents = () => {
   var items = [];
   HomedComponents.forEach((value, key) => {
     items.push(
-      // <Col key={key} flex={1}>
-      <HomedComponent key={key} uuid={key} {...value} />
-      // </Col>
+      <Col key={key} xs={24} sm={12} lg={8}>
+        <HomedComponent key={key} uuid={key} {...value} />
+      </Col>
     );
   });
 
-  return <Row gutter={16}>{items}</Row>;
+  return <Row gutter={[10, 10]}>{items}</Row>;
 };
 
 export const HomedComponent = ({ uuid, room, device, type, values }) => {
@@ -52,6 +53,9 @@ export const HomedComponent = ({ uuid, room, device, type, values }) => {
     case "boiler":
       typedComponent = <Boiler {...values} />;
       break;
+    case "homed_temperature":
+      typedComponent = <HomedTemperature {...values} />;
+      break;
     default:
       typedComponent = <>Unhandled {type}</>;
       break;
@@ -65,11 +69,7 @@ export const HomedComponent = ({ uuid, room, device, type, values }) => {
 
   const title = `${room} - ${type} - ${device}`;
   return (
-    <Card
-      style={{ width: 300, margin: "0.5em" }}
-      title={title}
-      extra={prettyDate}
-    >
+    <Card title={title} extra={prettyDate}>
       {typedComponent}
     </Card>
   );
