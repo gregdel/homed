@@ -25,21 +25,33 @@ var (
 type Component interface {
 	// Type represents the component type
 	Type() Type
+
 	// Update is called every time a new mqtt payload is received on the state
 	// topic
 	Update([]byte) error
+
 	// PostUpdate is a function called after the Update function
 	PostUpdate() error
+
 	// Collector returns the prometheus collectors to register for the component
 	Collectors(labels prometheus.Labels) []prometheus.Collector
+
 	// ReadOnly tells if the component is readonly
 	ReadOnly() bool
-	// SetCommandTopic sets the command topic for the component
-	SetCommandTopic(string)
-	// WriteCommand writes a command to a mqtt topic
+	// Internal() tells if the component is internal
+	Internal() bool
+
+	// WriteCommand writes a command to a mqtt topic (for external components)
 	WriteCommand(client mqtt.Client, data []byte) error
+	// ExecCommand executes a command (for internal components)
+	ExecCommand(client mqtt.Client, data []byte) error
+
 	// ID returns the component id
 	ID() uuid.UUID
+
+	SetStateTopic(string)
+	SetCommandTopic(string)
+	SetInternal(bool)
 
 	// setId sets the id of a component
 	setID(uuid uuid.UUID)

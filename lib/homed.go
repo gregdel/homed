@@ -29,6 +29,7 @@ type Homed struct {
 	components map[string]components.Component
 
 	stateTopics map[string]components.Component
+	cmdTopics   map[string]components.Component
 }
 
 // Rooms TODO delete
@@ -46,6 +47,7 @@ func New(configPath string) (*Homed, error) {
 		components: map[string]components.Component{},
 
 		stateTopics: map[string]components.Component{},
+		cmdTopics:   map[string]components.Component{},
 	}
 
 	config := &Config{}
@@ -85,6 +87,10 @@ func New(configPath string) (*Homed, error) {
 			if err != nil {
 				homed.logger.Warn(err.Error(), zap.String("device_name", device.Name))
 				continue
+			}
+
+			if component.Internal() {
+				homed.cmdTopics[cfg.CommandTopic] = component
 			}
 
 			homed.stateTopics[cfg.StateTopic] = component
@@ -133,6 +139,28 @@ func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
 	h.logger.Sync()
 }
 
+func (h *Homed) handleCommand(c mqtt.Client, m mqtt.Message) {
+	component, ok := h.cmdTopics[m.Topic()]
+	if !ok {
+		h.logger.Warn("Topic not found", zap.String("topic", m.Topic()))
+		return
+	}
+
+	if err := component.ExecCommand(c, m.Payload()); err != nil {
+		h.logger.Warn(
+			"failed to write component command",
+			zap.String("error", err.Error()))
+		return
+	}
+
+	h.logger.Debug(
+		"Writing component command",
+		zap.String("topic", m.Topic()),
+		zap.String("value", string(m.Payload())),
+	)
+	h.logger.Sync()
+}
+
 // Run runs the app
 func (h *Homed) Run() error {
 	sigs := make(chan os.Signal, 1)
@@ -146,8 +174,16 @@ func (h *Homed) Run() error {
 	}
 
 	for topic := range h.stateTopics {
-		h.logger.Info("Subscribing to topic", zap.String("topic", topic))
+		h.logger.Info("Subscribing to status topic", zap.String("topic", topic))
 		token = h.mqttClient.Subscribe(topic, 0, h.handleMessage)
+		if token.Wait() && token.Error() != nil {
+			return token.Error()
+		}
+	}
+
+	for topic := range h.cmdTopics {
+		h.logger.Info("Subscribing to command topic", zap.String("topic", topic))
+		token = h.mqttClient.Subscribe(topic, 0, h.handleCommand)
 		if token.Wait() && token.Error() != nil {
 			return token.Error()
 		}

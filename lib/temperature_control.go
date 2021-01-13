@@ -38,7 +38,7 @@ func (h *Homed) temperatureControl(done <-chan struct{}) {
 
 func (h *Homed) temperatureMQTTUpdate(fields zap.Field) {
 	for _, room := range h.rooms {
-		topic := "home/homed/temperature/rooms/" + room.Name + "/current"
+		topic := "home/homed/temperature/rooms/" + room.Name + "/state"
 
 		temperature := room.Temperature()
 		if temperature == 0 {

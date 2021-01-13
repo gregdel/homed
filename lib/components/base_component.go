@@ -10,6 +10,8 @@ import (
 
 type baseComponent struct {
 	commandTopic string
+	stateTopic   string
+	internal     bool
 
 	UUID      uuid.UUID  `json:"uuid"`
 	UpdatedAt *time.Time `json:"updated_at"`
@@ -36,6 +38,16 @@ func (bs *baseComponent) SetCommandTopic(topic string) {
 	bs.commandTopic = topic
 }
 
+// SetStateTopic implements the Component interface
+func (bs *baseComponent) SetStateTopic(topic string) {
+	bs.stateTopic = topic
+}
+
+// SetInternal implements the Component interface
+func (bs *baseComponent) SetInternal(internal bool) {
+	bs.internal = internal
+}
+
 // setID implements the Component interface
 func (bs *baseComponent) setID(uuid uuid.UUID) {
 	bs.UUID = uuid
@@ -44,6 +56,11 @@ func (bs *baseComponent) setID(uuid uuid.UUID) {
 // ID implements the Component interface
 func (bs *baseComponent) ID() uuid.UUID {
 	return bs.UUID
+}
+
+// Internal implements the Component interface
+func (bs *baseComponent) Internal() bool {
+	return bs.internal
 }
 
 // WriteCommand implements the Component interface
@@ -59,6 +76,15 @@ func (bs *baseComponent) WriteCommand(client mqtt.Client, data []byte) error {
 	token := client.Publish(bs.commandTopic, 0, false, data)
 	if token.Wait() && token.Error() != nil {
 		return token.Error()
+	}
+
+	return nil
+}
+
+// ExecCommand implements the Component interface
+func (bs *baseComponent) ExecCommand(client mqtt.Client, data []byte) error {
+	if !bs.internal {
+		return fmt.Errorf("components: only internal components have exec commands")
 	}
 
 	return nil

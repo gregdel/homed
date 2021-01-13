@@ -56,7 +56,10 @@ func (s *Components) Add(cfg Config, labels prometheus.Labels) (Component, error
 
 	}
 
+	// TODO: find a better solution
 	component.SetCommandTopic(cfg.CommandTopic)
+	component.SetStateTopic(cfg.StateTopic)
+	component.SetInternal(cfg.Internal)
 
 	uuid, err := uuid.NewRandom()
 	if err != nil {
