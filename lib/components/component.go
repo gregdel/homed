@@ -11,13 +11,14 @@ type Type string
 
 // Types
 var (
-	TypeTemperature  Type = "temperature"
-	TypeRTL433       Type = "rtl_433"
-	TypeDeviceStatus Type = "device_status"
-	TypeHumidity     Type = "humidity"
-	TypeWifiSignal   Type = "wifi_signal"
-	TypeTuyaTRV      Type = "tuya_trv"
-	TypeBoiler       Type = "boiler"
+	TypeHomedTemperature Type = "homed_temperature"
+	TypeTemperature      Type = "temperature"
+	TypeRTL433           Type = "rtl_433"
+	TypeDeviceStatus     Type = "device_status"
+	TypeHumidity         Type = "humidity"
+	TypeWifiSignal       Type = "wifi_signal"
+	TypeTuyaTRV          Type = "tuya_trv"
+	TypeBoiler           Type = "boiler"
 )
 
 // Component represents a component

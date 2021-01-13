@@ -83,7 +83,7 @@ func New(configPath string) (*Homed, error) {
 		for _, cfg := range d.Components {
 			component, err := device.AddComponent(cfg)
 			if err != nil {
-				homed.logger.Warn(err.Error())
+				homed.logger.Warn(err.Error(), zap.String("device_name", device.Name))
 				continue
 			}
 

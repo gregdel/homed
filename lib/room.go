@@ -25,21 +25,25 @@ func (r *Room) AddDevice(device *Device) {
 // Temperature returns the temperature in the room
 func (r *Room) Temperature() float64 {
 	// For now, we only return the first value of the component type "Temperature"
+	var temperature float64
+	var controlled bool
 
 	for _, device := range r.Devices {
 		for _, component := range device.Components {
+			if component.Type() == components.TypeHomedTemperature {
+				controlled = true
+			}
+
 			if component.Type() == components.TypeTemperature {
-				// get the value and publish it to mqtt
+				c := component.(*components.Temperature)
+				temperature = c.Value
+			}
 
-				c, ok := component.(*components.Temperature)
-				if !ok {
-					break
-				}
-
-				return c.Value
+			if controlled && temperature != 0 {
+				break
 			}
 		}
 	}
 
-	return 0
+	return temperature
 }
