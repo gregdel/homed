@@ -10,7 +10,6 @@ import { TuyaTRV } from "./TuyaTRV";
 import { WifiSignal } from "./WifiSignal";
 import { RTL433 } from "./RTL433";
 import { Boiler } from "./Boiler";
-import { HomedTemperature } from "./HomedTemperature";
 
 import { Row, Col, Card } from "antd";
 
@@ -54,8 +53,8 @@ export const HomedComponent = ({ uuid, room, device, type, values }) => {
       typedComponent = <Boiler {...values} />;
       break;
     case "homed_temperature":
-      typedComponent = <HomedTemperature {...values} />;
-      break;
+      // Don't display the homed temperature here
+      return null;
     default:
       typedComponent = <>Unhandled {type}</>;
       break;

@@ -4,17 +4,15 @@ import { useSelector, useDispatch } from "react-redux";
 
 import { componentUpdate } from "../../actions/homedComponents";
 
-import { Typography, Slider } from "antd";
-const { Title } = Typography;
+import { Slider } from "antd";
 
 export const HomedTemperature = ({ uuid }) => {
   const dispatch = useDispatch();
-  const data = useSelector((state) => state.stuff.components.get(uuid));
-  if (!data) {
-    return null;
-  }
+  const { current, target, mode } = useSelector(
+    (state) => state.stuff.components.get(uuid).values
+  );
 
-  const [newTarget, setNewTarget] = useState(data.values.target);
+  const [newTarget, setNewTarget] = useState(target);
 
   const onChange = (value) => {
     setNewTarget(value);
@@ -26,9 +24,18 @@ export const HomedTemperature = ({ uuid }) => {
 
   return (
     <>
-      <Title level={1}>{data.values.current}°C</Title>
-      <Title level={4}>Set to {data.values.target}°C</Title>
-      <Title level={4}>Mode {data.values.mode}</Title>
+      <div style={{ fontSize: "4em" }}>
+        <span>{current}°C</span>
+      </div>
+
+      <div style={{ fontSize: "1em" }}>
+        <span>Heating to {target}°C</span>
+      </div>
+
+      <div style={{ fontSize: "1em" }}>
+        <span>Mode {mode}</span>
+      </div>
+
       <Slider
         min={5}
         max={35}

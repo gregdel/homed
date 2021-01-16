@@ -15,7 +15,9 @@ const { Content } = Layout;
 import { WsHandler } from "./websocket";
 import { AppMenu } from "./components/Menu";
 import { Dashboard } from "./components/TemperatureControl/Dashboard";
+import { Tuya } from "./components/TemperatureControl/Tuya";
 import { HomedComponents } from "./components/HomedComponents/Components";
+import { Schedule } from "./components/Schedule/Schedule";
 
 import store, { history } from "./store";
 import { fetchStuff } from "./actions/stuff";
@@ -34,6 +36,8 @@ const App = () => (
               <Switch>
                 <Route path="/all" exact component={HomedComponents} />
                 <Route path="/temperature" exact component={Dashboard} />
+                <Route path="/tuya" exact component={Tuya} />
+                <Route path="/schedule" exact component={Schedule} />
                 <Route render={() => <Redirect to="/temperature" />} />
               </Switch>
             </Content>
@@ -59,7 +63,7 @@ const DataFetcher = ({ children }) => {
   );
 };
 DataFetcher.propTypes = {
-  children: PropTypes.object,
+  children: PropTypes.any,
 };
 
 ReactDOM.render(<App />, document.getElementById("app"));

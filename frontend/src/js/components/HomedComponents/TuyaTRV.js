@@ -1,27 +1,27 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
-import { Row, Col, Typography, Slider, Progress } from "antd";
-const { Title } = Typography;
+import { Row, Col, Slider, Progress } from "antd";
 
 import Icon from "@mdi/react";
 import { mdiBattery, mdiBattery10 } from "@mdi/js";
 
 import { componentUpdate } from "../../actions/homedComponents";
 
-export const TuyaTRV = ({
-  uuid,
-  battery_low,
-  current_heating_setpoint,
-  local_temperature,
-  position,
-}) => {
+export const TuyaTRV = ({ uuid }) => {
   const dispatch = useDispatch();
-  const [target, setTarget] = useState(current_heating_setpoint);
+  const {
+    local_temperature: localTemperature,
+    battery_log: batteryLow,
+    current_heating_setpoint: currentHeatingSetpoint,
+    position,
+  } = useSelector((state) => state.stuff.components.get(uuid).values);
+
+  const [target, setTarget] = useState(currentHeatingSetpoint);
 
   var marks = {};
-  marks[local_temperature] = local_temperature + "°C";
+  marks[localTemperature] = localTemperature + "°C";
 
   const onChange = (value) => {
     setTarget(value);
@@ -33,20 +33,25 @@ export const TuyaTRV = ({
 
   return (
     <>
-      <Row gutter={1}>
-        <Col flex={1}>
+      <Row justify="space-between" align="middle">
+        <Col>
           <Icon
-            path={battery_low ? mdiBattery10 : mdiBattery}
+            path={batteryLow ? mdiBattery10 : mdiBattery}
             size={1}
             rotate={90}
           />
         </Col>
-        <Col flex={2}>
-          <Progress percent={position} steps={5} />
-        </Col>
+        <Progress percent={position} steps={5} />
       </Row>
-      <Title level={1}>{local_temperature}°C</Title>
-      <Title level={3}>Set to {target}°C</Title>
+
+      <div style={{ fontSize: "4em" }}>
+        <span>{localTemperature}°C</span>
+      </div>
+
+      <div style={{ fontSize: "1em" }}>
+        <span>Heating to {target}°C</span>
+      </div>
+
       <Slider
         min={5}
         max={35}
@@ -62,8 +67,4 @@ export const TuyaTRV = ({
 
 TuyaTRV.propTypes = {
   uuid: PropTypes.string.isRequired,
-  battery_low: PropTypes.bool.isRequired,
-  current_heating_setpoint: PropTypes.number.isRequired,
-  local_temperature: PropTypes.number.isRequired,
-  position: PropTypes.number.isRequired,
 };

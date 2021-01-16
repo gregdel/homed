@@ -9,10 +9,10 @@ import rootReducer from "./reducers/index";
 const middlewares = [thunk];
 
 // Only use in development mode (set in webpack)
-if (process.env.NODE_ENV === "development") {
-  const { logger } = require("redux-logger");
-  middlewares.push(logger);
-}
+// if (process.env.NODE_ENV === "development") {
+//   const { logger } = require("redux-logger");
+//   middlewares.push(logger);
+// }
 
 // Export the store
 const store = createStore(
