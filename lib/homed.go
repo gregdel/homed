@@ -30,6 +30,8 @@ type Homed struct {
 
 	stateTopics map[string]components.Component
 	cmdTopics   map[string]components.Component
+
+	temperatureController *temperatureController
 }
 
 // Rooms TODO delete
@@ -105,6 +107,10 @@ func New(configPath string) (*Homed, error) {
 		return nil, err
 	}
 
+	if err := homed.initTemperatureController(); err != nil {
+		return nil, err
+	}
+
 	return homed, nil
 }
 
@@ -131,11 +137,11 @@ func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
 
 	h.publishToWebsocket(component)
 
-	h.logger.Debug(
-		"Updating component",
-		zap.String("topic", m.Topic()),
-		zap.String("value", string(m.Payload())),
-	)
+	// h.logger.Debug(
+	// 	"Updating component",
+	// 	zap.String("topic", m.Topic()),
+	// 	zap.String("value", string(m.Payload())),
+	// )
 	h.logger.Sync()
 }
 
@@ -196,13 +202,15 @@ func (h *Homed) Run() error {
 	}()
 
 	// Start the temperature control function
-	go h.temperatureControl(done)
+	go h.startTemperatureControl(done)
 
 	h.logger.Info("Starting HTTP server")
 	h.httpServer.ListenAndServe()
 
 	h.logger.Info("Disconnecting from the MQTT broker")
 	h.mqttClient.Disconnect(250)
+
+	h.saveTemperatureSchedules()
 
 	return nil
 }

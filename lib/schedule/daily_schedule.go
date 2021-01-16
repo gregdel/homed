@@ -21,8 +21,8 @@ type TimeSlot struct {
 	// Required
 	Start Time `json:"start"`
 	// Optional
-	Stop  *Time `json:"stop"`
-	Value int   `json:"value"`
+	Stop  *Time   `json:"stop"`
+	Value float64 `json:"value"`
 }
 
 // DailySchedule holds a sorted slice of time slots

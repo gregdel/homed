@@ -2,6 +2,7 @@ package components
 
 import (
 	"encoding/json"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/prometheus/client_golang/prometheus"
@@ -22,9 +23,10 @@ var (
 
 // HomedTemperatureData represents the data of HomedTemperature
 type HomedTemperatureData struct {
-	Current float64              `json:"current"`
-	Target  float64              `json:"target"`
-	Mode    HomedTemperatureMode `json:"mode"`
+	Current     float64              `json:"current"`
+	Target      float64              `json:"target"`
+	Mode        HomedTemperatureMode `json:"mode"`
+	ManualUntil *time.Time           `json:"manual_until,omitempty"`
 }
 
 // HomedTemperature is a component that handles temperatures
@@ -80,6 +82,11 @@ func (s *HomedTemperature) ExecCommand(client mqtt.Client, cmd []byte) error {
 		return err
 	}
 
+	return s.PublishState(client)
+}
+
+// PublishState publishes the mqtt state of the component
+func (s *HomedTemperature) PublishState(client mqtt.Client) error {
 	// Publish the current state
 	data, err := json.Marshal(s.HomedTemperatureData)
 	if err != nil {

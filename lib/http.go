@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/gregdel/homed/lib/schedule"
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -18,6 +20,11 @@ func (h *Homed) initHTTP(addr string) error {
 	router.PUT("/components/:id", h.updateComponent)
 	router.GET("/data", h.jsonData)
 	router.GET("/events", h.websocketEvents)
+
+	router.GET("/schedules/:roomName", h.httpGetSchedule)
+	router.POST("/schedules/:roomName/:weekday", h.httpPostSchedule)
+	router.DELETE("/schedules/:roomName/:weekday/:uuid", h.httpDeleteSchedule)
+
 	router.NotFound = http.FileServer(http.Dir("frontend/build"))
 	h.httpServer = &http.Server{
 		Addr:    addr,
@@ -110,4 +117,83 @@ func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 			break
 		}
 	}
+}
+
+func (h *Homed) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
+	if !ok {
+		fmt.Fprintf(w, "failed to find schedule")
+		return
+	}
+
+	err := json.NewEncoder(w).Encode(s)
+	if err != nil {
+		fmt.Fprintf(w, "failed to encode data: %s", err.Error())
+		return
+	}
+}
+
+func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	ts := schedule.TimeSlot{}
+	err := json.NewDecoder(r.Body).Decode(&ts)
+	if err != nil {
+		fmt.Fprintf(w, "failed to decode data: %s", err.Error())
+		return
+	}
+
+	weekdayStr := ps.ByName("weekday")
+	weekday, err := strconv.Atoi(weekdayStr)
+	if err != nil {
+		fmt.Fprintf(w, "failed to parse weekday: %s", err.Error())
+		return
+	}
+
+	if weekday < 0 || weekday > 6 {
+		fmt.Fprintf(w, "invalid weekday")
+		return
+	}
+
+	s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
+	if !ok {
+		fmt.Fprintf(w, "failed to find schedule")
+		return
+	}
+
+	err = s.Add(time.Weekday(weekday), &ts)
+	if err != nil {
+		fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
+		return
+	}
+
+	h.saveTemperatureSchedules()
+}
+
+func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	weekdayStr := ps.ByName("weekday")
+	uuid := ps.ByName("uuid")
+
+	weekday, err := strconv.Atoi(weekdayStr)
+	if err != nil {
+		fmt.Fprintf(w, "failed to parse weekday: %s", err.Error())
+		return
+	}
+
+	if weekday < 0 || weekday > 6 {
+		fmt.Fprintf(w, "invalid weekday")
+		return
+	}
+
+	s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
+	if !ok {
+		fmt.Fprintf(w, "failed to find schedule")
+		return
+	}
+
+	err = s.Delete(time.Weekday(weekday), uuid)
+	if err != nil {
+		fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
+		return
+	}
+
+	h.saveTemperatureSchedules()
 }

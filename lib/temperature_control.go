@@ -1,22 +1,82 @@
 package homed
 
 import (
-	"encoding/json"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
+	"github.com/gregdel/homed/lib/schedule"
 	"go.uber.org/zap"
 )
 
-func (h *Homed) temperatureControl(done <-chan struct{}) {
+// Update the computed temperature of every room
+// Check and update the target temperature from a schedule
+// Check if the boiler state needs to be up
+
+// If the target is manually updated:
+// manual_until: (compute the next scheduled change || manual)
+type temperatureController struct {
+	boiler *components.Boiler
+
+	// Wether we're in a rising or falling phase of the hysteresis algorithm
+	rising bool
+
+	rooms     map[string]*components.HomedTemperature
+	schedules map[string]*schedule.Schedule
+	tuyas     map[string][]*components.TuyaTRV
+}
+
+func newTemperatureController() *temperatureController {
+	return &temperatureController{
+		rooms:     map[string]*components.HomedTemperature{},
+		tuyas:     map[string][]*components.TuyaTRV{},
+		schedules: map[string]*schedule.Schedule{},
+	}
+}
+
+func (h *Homed) initTemperatureController() error {
+	tc := newTemperatureController()
+	for _, room := range h.rooms {
+		for _, device := range room.Devices {
+			for _, component := range device.Components {
+				switch component.Type() {
+				case components.TypeBoiler:
+					tc.boiler = component.(*components.Boiler)
+				case components.TypeHomedTemperature:
+					tc.schedules[room.Name] = schedule.New()
+					tc.rooms[room.Name] = component.(*components.HomedTemperature)
+				case components.TypeTuyaTRV:
+					if len(tc.tuyas[room.Name]) == 0 {
+						tc.tuyas[room.Name] = []*components.TuyaTRV{}
+					}
+					tc.tuyas[room.Name] = append(
+						tc.tuyas[room.Name],
+						component.(*components.TuyaTRV),
+					)
+				}
+			}
+		}
+	}
+
+	h.temperatureController = tc
+
+	h.loadTemperatureSchedules()
+
+	return nil
+}
+
+func (h *Homed) startTemperatureControl(done <-chan struct{}) {
 	fields := zap.String("app", "temperature_control")
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 
-	h.logger.Info("Starting temperature control", fields)
+	h.logger.Info("Starting the temperature controller", fields)
 
 	// TODO: remove this first round
-	h.temperatureMQTTUpdate(fields)
+	h.updateRoomsTemperatures()
+	h.setRoomsTemperatures()
+	h.setBoilerState()
 
 	exit := false
 	for {
@@ -29,72 +89,157 @@ func (h *Homed) temperatureControl(done <-chan struct{}) {
 			exit = true
 			break
 		case <-ticker.C:
-			h.temperatureMQTTUpdate(fields)
+			h.updateRoomsTemperatures()
+			h.setRoomsTemperatures()
+			h.setBoilerState()
 		}
 	}
 
 	h.logger.Info("Exiting temperature control", fields)
 }
 
-func (h *Homed) temperatureMQTTUpdate(fields zap.Field) {
-	for _, room := range h.rooms {
-		topic := "home/homed/temperature/rooms/" + room.Name + "/state"
-
-		temperature := room.Temperature()
-		if temperature == 0 {
+func (h *Homed) updateRoomsTemperatures() {
+	for roomName, component := range h.temperatureController.rooms {
+		room, ok := h.rooms[roomName]
+		if !ok {
+			h.logger.Info("failed to find room", zap.String("room", roomName))
 			continue
 		}
 
-		data := components.HomedTemperatureData{
-			Current: temperature,
-			Target:  h.temperatureTarget(),
-		}
-
-		payload, err := json.Marshal(data)
-		if err != nil {
-			h.logger.Warn(err.Error(), fields)
+		// Update the current room temperature
+		currentTemperature := room.Temperature()
+		if currentTemperature == 0 {
 			continue
 		}
+		component.Current = currentTemperature
 
-		// Publish the temperature of the room
-		token := h.mqttClient.Publish(topic, 0, true, payload)
-		if token.Wait() && token.Error() != nil {
-			h.logger.Warn(token.Error().Error(), fields)
+		if err := component.PublishState(h.mqttClient); err != nil {
+			h.logger.Warn(err.Error(), zap.String("room", roomName))
 			continue
 		}
 	}
 }
 
-func (h *Homed) temperatureTarget() float64 {
-	var target float64 = 14
-	var weekend bool
-
-	now := time.Now()
-
-	day := now.Weekday()
-	if day == time.Saturday || day == time.Sunday {
-		weekend = true
+func (h *Homed) setBoilerState() {
+	if h.temperatureController.boiler != nil {
+		return
 	}
 
-	hour := now.Hour()
-	if !weekend {
-		if hour >= 10 || hour < 22 {
-			return 18
+	boiler := h.temperatureController.boiler
+
+	expectedBoilerState := false
+	hysteresis := 0.3
+
+	for _, component := range h.temperatureController.rooms {
+		current := component.Current
+		min := component.Target - hysteresis
+		max := component.Target + hysteresis
+
+		if current > max {
+			h.temperatureController.rising = false
 		}
 
-	} else {
-		if hour >= 8 || hour < 10 {
-			return 18
+		if current < min {
+			h.temperatureController.rising = true
 		}
 
-		if hour >= 12 || hour < 13 {
-			return 18
-		}
-
-		if hour >= 18 || hour < 22 {
-			return 18
+		if h.temperatureController.rising && (current < max) {
+			expectedBoilerState = true
 		}
 	}
 
-	return target
+	if boiler.On == expectedBoilerState {
+		return
+	}
+
+	h.logger.Info("changing boiler state", zap.Bool("state", expectedBoilerState))
+	data := []byte("OFF")
+	if expectedBoilerState {
+		data = []byte("ON")
+	}
+
+	err := h.temperatureController.boiler.WriteCommand(h.mqttClient, data)
+	if err != nil {
+		h.logger.Error(err.Error())
+	}
+}
+
+func (h *Homed) setRoomsTemperatures() {
+	for roomName, component := range h.temperatureController.rooms {
+		if component.Mode != components.HomedTemperatureModeAuto {
+			continue
+		}
+
+		// Update the target state
+		component.Target = h.temperatureTarget(roomName)
+		if err := component.PublishState(h.mqttClient); err != nil {
+			h.logger.Warn(err.Error(), zap.String("room", roomName))
+			continue
+		}
+
+		h.logger.Info("should configure the tuya to the target", zap.Float64("target", component.Target))
+
+		// tuyas, ok := h.temperatureController.tuyas[roomName]
+		// if !ok {
+		// 	continue
+		// }
+
+		// data, err := json.Marshal(components.TuyaTRV{HeatingSetpoint: component.Target})
+		// if err != nil {
+		// 	h.logger.Warn(err.Error())
+		// 	continue
+		// }
+
+		// for _, tuya := range tuyas {
+		// 	err := tuya.WriteCommand(h.mqttClient, data)
+		// 	if err != nil {
+		// 		h.logger.Warn(err.Error())
+		// 		continue
+		// 	}
+		// }
+	}
+}
+
+func (h *Homed) temperatureTarget(room string) float64 {
+	var defaultTarget float64 = 14
+	schedule, ok := h.temperatureController.schedules[room]
+	if !ok {
+		h.logger.Error("missing schedule for room", zap.String("room", room))
+		return defaultTarget
+	}
+
+	ts := schedule.Now()
+	if ts == nil {
+		return defaultTarget
+	}
+
+	return ts.Value
+}
+
+// TODO
+
+func (h *Homed) loadTemperatureSchedules() {
+	home := os.Getenv("HOME")
+	saveFile := filepath.Join(home, ".homed_stuff.yaml")
+
+	err := readFile(saveFile, h.temperatureController.schedules)
+	if err != nil {
+		h.logger.Error(
+			"failed to read temperature schedules",
+			zap.String("error", err.Error()),
+		)
+	}
+}
+
+func (h *Homed) saveTemperatureSchedules() {
+	home := os.Getenv("HOME")
+	saveFile := filepath.Join(home, ".homed_stuff.yaml")
+
+	err := writeFile(saveFile, true, h.temperatureController.schedules)
+	if err != nil {
+		h.logger.Error(
+			"failed to save temperature schedules",
+			zap.String("error", err.Error()),
+		)
+	}
 }

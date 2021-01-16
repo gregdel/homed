@@ -27,23 +27,26 @@ func (r *Room) Temperature() float64 {
 	// For now, we only return the first value of the component type "Temperature"
 	var temperature float64
 	var controlled bool
+	var tuyaTemp float64
 
 	for _, device := range r.Devices {
 		for _, component := range device.Components {
-			if component.Type() == components.TypeHomedTemperature {
+			switch component.Type() {
+			case components.TypeHomedTemperature:
 				controlled = true
-			}
-
-			if component.Type() == components.TypeTemperature {
+			case components.TypeTemperature:
 				c := component.(*components.Temperature)
 				temperature = c.Value
+			case components.TypeTuyaTRV:
+				c := component.(*components.TuyaTRV)
+				tuyaTemp = c.Temperature
 			}
 
 			if controlled && temperature != 0 {
-				break
+				return temperature
 			}
 		}
 	}
 
-	return temperature
+	return tuyaTemp
 }
