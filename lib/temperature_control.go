@@ -218,6 +218,13 @@ func (h *Homed) setRoomsTemperatures() {
 		// Update the target state
 		component.Target = h.temperatureTarget(roomName)
 
+		if component.Mode == components.HomedTemperatureModeNextTimeBlock {
+			nextTime := h.timeOfNextTimeBlock(roomName)
+			if nextTime != nil {
+				component.ManualUntil = nextTime
+			}
+		}
+
 		if component.ManualUntil != nil && time.Now().After(*component.ManualUntil) {
 			component.Mode = components.HomedTemperatureModeAuto
 			component.ManualUntil = nil
@@ -229,6 +236,17 @@ func (h *Homed) setRoomsTemperatures() {
 			continue
 		}
 	}
+}
+
+func (h *Homed) timeOfNextTimeBlock(room string) *time.Time {
+	schedule, ok := h.temperatureController.schedules[room]
+	if !ok {
+		h.logger.Error("missing schedule for room", zap.String("room", room))
+		return nil
+	}
+
+	_, t := schedule.NextTime()
+	return t
 }
 
 func (h *Homed) temperatureTarget(room string) float64 {
