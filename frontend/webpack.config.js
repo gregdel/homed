@@ -5,15 +5,21 @@ const TerserPlugin = require("terser-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 var mode = "development";
+if (process.env.NODE_ENV === "production") {
+  mode = "production";
+}
 
 var SRC_DIR = path.resolve(__dirname, "src");
+var BUILD_DIR = path.resolve(__dirname, "build");
 
 module.exports = {
   mode: mode,
   entry: path.join(SRC_DIR, "js/app.js"),
 
   output: {
-    path: path.resolve(__dirname, "build"),
+    publicPath: "",
+    path: BUILD_DIR,
+    filename: "[contenthash]-app.js",
   },
 
   plugins: [
@@ -33,6 +39,10 @@ module.exports = {
       {
         test: /\.css$/i,
         use: ["style-loader", "css-loader"],
+      },
+      {
+        test: /\.svg$/,
+        use: ["file-loader?name=[hash]-[name].[ext]"],
       },
     ],
   },
