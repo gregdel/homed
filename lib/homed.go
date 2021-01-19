@@ -31,6 +31,7 @@ type Homed struct {
 	stateTopics map[string]components.Component
 	cmdTopics   map[string]components.Component
 
+	scheduleFile          string
 	temperatureController *temperatureController
 }
 
@@ -107,6 +108,7 @@ func New(configPath string) (*Homed, error) {
 		return nil, err
 	}
 
+	homed.scheduleFile = config.ScheduleFile
 	if err := homed.initTemperatureController(); err != nil {
 		return nil, err
 	}

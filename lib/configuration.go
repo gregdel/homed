@@ -10,8 +10,9 @@ import (
 
 // Config reprensents the configuration
 type Config struct {
-	Debug bool `yaml:"debug"`
-	MQTT  struct {
+	Debug        bool   `yaml:"debug"`
+	ScheduleFile string `yaml:"schedule_file"`
+	MQTT         struct {
 		Broker string `yaml:"broker"`
 	} `yaml:"mqtt"`
 	HTTP struct {

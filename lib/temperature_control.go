@@ -1,8 +1,6 @@
 package homed
 
 import (
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
@@ -268,10 +266,7 @@ func (h *Homed) temperatureTarget(room string) float64 {
 // TODO
 
 func (h *Homed) loadTemperatureSchedules() {
-	home := os.Getenv("HOME")
-	saveFile := filepath.Join(home, ".homed_stuff.yaml")
-
-	err := readFile(saveFile, h.temperatureController.schedules)
+	err := readFile(h.scheduleFile, h.temperatureController.schedules)
 	if err != nil {
 		h.logger.Error(
 			"failed to read temperature schedules",
@@ -281,10 +276,7 @@ func (h *Homed) loadTemperatureSchedules() {
 }
 
 func (h *Homed) saveTemperatureSchedules() {
-	home := os.Getenv("HOME")
-	saveFile := filepath.Join(home, ".homed_stuff.yaml")
-
-	err := writeFile(saveFile, true, h.temperatureController.schedules)
+	err := writeFile(h.scheduleFile, true, h.temperatureController.schedules)
 	if err != nil {
 		h.logger.Error(
 			"failed to save temperature schedules",
