@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// Represents the max number of days to search for
+const maxDaysSearch = 7
+
 // Schedule holds the schedule
 type Schedule struct {
 	mu   sync.Mutex
@@ -39,6 +42,56 @@ func (s *Schedule) Now() *TimeSlot {
 		now.Weekday(),
 		NewTime(now.Hour(), now.Minute(), now.Second()),
 	)
+}
+
+// Next returns the next timeslot
+func (s *Schedule) Next() (*TimeSlot, time.Weekday) {
+	now := now()
+
+	weekday := now.Weekday()
+	currentDay := true
+
+	for i := 0; i < maxDaysSearch; i++ {
+		d := time.Weekday((int(weekday) + i) % 7)
+		ds := s.Days[d]
+
+		var ts *TimeSlot
+		if currentDay {
+			ts = ds.FirstAfter(NewTime(now.Hour(), now.Minute(), now.Second()))
+		} else {
+			ts = ds.First()
+		}
+
+		if ts != nil {
+			return ts, d
+		}
+
+		currentDay = false
+	}
+
+	return nil, 0
+}
+
+// NextTime returns the timeslot and time of the next timeslot
+func (s *Schedule) NextTime() (*TimeSlot, *time.Time) {
+	ts, wd := s.Next()
+	if ts == nil {
+		return nil, nil
+	}
+
+	now := now()
+	day := wd - now.Weekday()
+	if day < 0 {
+		day += 7
+	}
+
+	days := time.Duration(int(day)*24) * time.Hour
+	hours := time.Duration(ts.Start.Hour-now.Hour()) * time.Hour
+	minutes := time.Duration(ts.Start.Minute-now.Minute()) * time.Minute
+	seconds := time.Duration(ts.Start.Second-now.Second()) * time.Second
+	t := now.Add(days + hours + minutes + seconds)
+
+	return ts, &t
 }
 
 // Add adds a timeslot to a schedule

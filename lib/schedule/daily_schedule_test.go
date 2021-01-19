@@ -152,3 +152,55 @@ func TestDailyScheduleDelete(t *testing.T) {
 		t.Error("this invalid id should not work")
 	}
 }
+
+func TestDailyScheduleFirstAfter(t *testing.T) {
+	ds := NewDailySchedule()
+	slot1 := &TimeSlot{Start: NewTime(8, 0, 0), Stop: NewTimePointer(10, 0, 0)}
+	slot2 := &TimeSlot{Start: NewTime(10, 30, 0)}
+	slot3 := &TimeSlot{Start: NewTime(11, 0, 0)}
+
+	for _, slot := range []*TimeSlot{slot1, slot2, slot3} {
+		err := ds.Add(slot)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	tt := []struct {
+		name     string
+		at       Time
+		expected *TimeSlot
+	}{
+		{name: "expect no slot found", at: NewTime(12, 0, 0), expected: nil},
+		{name: "expect slot1 found", at: NewTime(6, 0, 0), expected: slot1},
+		{name: "expect slot2 found", at: NewTime(9, 0, 0), expected: slot2},
+		{name: "expect slot3 found", at: NewTime(10, 45, 0), expected: slot3},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			slot := ds.FirstAfter(tc.at)
+			if !reflect.DeepEqual(slot, tc.expected) {
+				t.Errorf("expected %+v, got %+v", tc.expected, slot)
+			}
+		})
+	}
+}
+
+func TestDailyScheduleFirst(t *testing.T) {
+	ds := NewDailySchedule()
+
+	if got := ds.First(); got != nil {
+		t.Errorf("expected nothing, got %+v", got)
+	}
+
+	slot := &TimeSlot{Start: NewTime(11, 0, 0)}
+	err := ds.Add(slot)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got := ds.First(); got != slot {
+		t.Errorf("expected the only slot, got %+v", got)
+	}
+}

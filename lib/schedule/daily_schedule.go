@@ -149,3 +149,12 @@ func (ds DailySchedule) FirstAfter(t Time) *TimeSlot {
 
 	return nil
 }
+
+// First returns the first timeslot
+func (ds DailySchedule) First() *TimeSlot {
+	if len(ds) == 0 {
+		return nil
+	}
+
+	return ds[0]
+}
