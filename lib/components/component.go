@@ -19,6 +19,7 @@ var (
 	TypeWifiSignal       Type = "wifi_signal"
 	TypeTuyaTRV          Type = "tuya_trv"
 	TypeBoiler           Type = "boiler"
+	TypeTasmotaSwitch    Type = "tasmota_switch"
 )
 
 // Component represents a component

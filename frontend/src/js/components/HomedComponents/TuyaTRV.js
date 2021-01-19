@@ -13,7 +13,7 @@ export const TuyaTRV = ({ uuid }) => {
   const dispatch = useDispatch();
   const {
     local_temperature: localTemperature,
-    battery_log: batteryLow,
+    battery_low: batteryLow,
     current_heating_setpoint: currentHeatingSetpoint,
     position,
   } = useSelector((state) => state.stuff.components.get(uuid).values);

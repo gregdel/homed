@@ -1,9 +1,11 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import PropTypes from "prop-types";
-import moment from "moment";
 
 import { fetchSchedule } from "../../actions/schedule";
+
+import { Typography, Divider } from "antd";
+const { Title } = Typography;
 
 export const Schedule = () => {
   const dispatch = useDispatch();
@@ -21,44 +23,56 @@ export const Schedule = () => {
   for (let i = 0; i < 7; i = i + 1) {
     items.push(<DailySchedule key={i} day={i} data={schedule.days[i]} />);
   }
+  items.push(items.shift());
 
   return (
     <>
-      <h1>Schedule</h1>
+      <Title>Schedule</Title>
+      <Divider />
       {items}
     </>
   );
 };
 
 export const DailySchedule = ({ day = 0, data = [] }) => {
+  const days = {
+    0: "Sunday",
+    1: "Monday",
+    2: "Tuesday",
+    3: "Wednesay",
+    4: "Thrusday",
+    5: "Friday",
+    6: "Saturday",
+  };
+
   return (
     <>
-      <h1>Day: {day}</h1>
+      <Title level={3}>{days[day]}</Title>
       <Timeline data={data} />
+      <Divider />
     </>
   );
 };
 DailySchedule.propTypes = {
-  day: PropTypes.number.required,
-  data: PropTypes.array.required,
+  day: PropTypes.number.isRequired,
+  data: PropTypes.array.isRequired,
 };
 
 export const Timeline = ({ data = [] }) => {
   if (data.length === 0) {
-    return null;
+    return <div>No schedule defined</div>;
   }
-
-  console.log(data);
 
   return (
     <div
       style={{
         width: "100%",
-        height: "10em",
+        height: "6em",
         display: "flex",
         flexDirection: "row",
         alignItems: "flex-end",
-        backgroundColor: "#002766",
+        backgroundColor: "#91d5ff",
+        borderRadius: "0.3em",
       }}
     >
       {data.map((v, i) => (
@@ -68,37 +82,46 @@ export const Timeline = ({ data = [] }) => {
   );
 };
 Timeline.propTypes = {
-  data: PropTypes.array.required,
+  data: PropTypes.array.isRequired,
 };
 
-export const TimeSlot = ({ uuid, start, stop, value }) => {
-  // <p>{uuid}</p>
-  // <p>
-  //   {start.hour}:{start.minute}
-  // </p>
-  // {stop && (
-  //   <p>
-  //     {stop.hour}:{stop.minute}
-  //   </p>
-  // )}
+const prettyNumber = (number) => ("0" + number).slice(-2);
+
+export const TimeSlot = ({ start, stop, value }) => {
   return (
     <div
       style={{
         height: "5em",
-        backgroundColor: "#ffc53d",
-        width: "5em",
+        backgroundColor: "#ffd666",
+        width: "8em",
         borderTopLeftRadius: "0.3em",
         borderTopRightRadius: "0.3em",
         marginLeft: "10em",
       }}
     >
-      <p>{value}</p>
+      <div
+        style={{ display: "flex", flexDirection: "column", margin: "0.3em" }}
+      >
+        <div>
+          <span style={{ fontSize: "1.5em" }}>{value}°C</span>
+        </div>
+        <div>
+          <span>
+            {start.hour}:{prettyNumber(start.minute)}
+          </span>
+          {stop && (
+            <span>
+              {" "}
+              - {stop.hour}:{prettyNumber(stop.minute)}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
 TimeSlot.propTypes = {
-  uuid: PropTypes.string.required,
-  start: PropTypes.object.required,
-  stop: PropTypes.object.required,
-  value: PropTypes.number.required,
+  start: PropTypes.object.isRequired,
+  stop: PropTypes.object,
+  value: PropTypes.number.isRequired,
 };

@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
-import { prettyName } from "../../utils";
 
 import { HomedTemperature } from "../HomedComponents/HomedTemperature";
 import { Boiler } from "../HomedComponents/Boiler";
@@ -31,11 +30,9 @@ export const Dashboard = () => {
   );
 };
 
-const Room = ({ name, uuid }) => (
+const Room = ({ uuid }) => (
   <Col xs={24} sm={12} lg={8}>
-    <Card title={prettyName(name)}>
-      <HomedTemperature uuid={uuid} />
-    </Card>
+    <HomedTemperature uuid={uuid} />
   </Col>
 );
 

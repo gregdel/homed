@@ -20,7 +20,7 @@ type temperatureController struct {
 	boiler *components.Boiler
 
 	// Wether we're in a rising or falling phase of the hysteresis algorithm
-	rising bool
+	rising map[string]bool
 
 	rooms     map[string]*components.HomedTemperature
 	schedules map[string]*schedule.Schedule
@@ -29,6 +29,7 @@ type temperatureController struct {
 
 func newTemperatureController() *temperatureController {
 	return &temperatureController{
+		rising:    map[string]bool{},
 		rooms:     map[string]*components.HomedTemperature{},
 		tuyas:     map[string][]*components.TuyaTRV{},
 		schedules: map[string]*schedule.Schedule{},
@@ -76,6 +77,7 @@ func (h *Homed) startTemperatureControl(done <-chan struct{}) {
 	// TODO: remove this first round
 	h.updateRoomsTemperatures()
 	h.setRoomsTemperatures()
+	h.setRoomsDevicesTemperatures()
 	h.setBoilerState()
 
 	exit := false
@@ -91,6 +93,7 @@ func (h *Homed) startTemperatureControl(done <-chan struct{}) {
 		case <-ticker.C:
 			h.updateRoomsTemperatures()
 			h.setRoomsTemperatures()
+			h.setRoomsDevicesTemperatures()
 			h.setBoilerState()
 		}
 	}
@@ -121,7 +124,7 @@ func (h *Homed) updateRoomsTemperatures() {
 }
 
 func (h *Homed) setBoilerState() {
-	if h.temperatureController.boiler != nil {
+	if h.temperatureController.boiler == nil {
 		return
 	}
 
@@ -130,25 +133,36 @@ func (h *Homed) setBoilerState() {
 	expectedBoilerState := false
 	hysteresis := 0.3
 
-	for _, component := range h.temperatureController.rooms {
+	for room, component := range h.temperatureController.rooms {
+		_, ok := h.temperatureController.rising[room]
+		if !ok {
+			h.temperatureController.rising[room] = false
+		}
+
 		current := component.Current
-		min := component.Target - hysteresis
-		max := component.Target + hysteresis
+		target := component.CurrentTarget()
+		min := target - hysteresis
+		max := target + hysteresis
 
 		if current > max {
-			h.temperatureController.rising = false
+			h.logger.Info("boiler in rising phase", zap.String("room", room))
+			h.temperatureController.rising[room] = false
 		}
 
 		if current < min {
-			h.temperatureController.rising = true
+			h.logger.Info("boiler in falling phase", zap.String("room", room))
+			h.temperatureController.rising[room] = true
 		}
 
-		if h.temperatureController.rising && (current < max) {
+		if h.temperatureController.rising[room] && (current < max) {
+			h.logger.Info("boiler should be on", zap.String("room", room))
 			expectedBoilerState = true
+			break
 		}
 	}
 
 	if boiler.On == expectedBoilerState {
+		h.logger.Info("boiler already in the good state", zap.Bool("state", expectedBoilerState))
 		return
 	}
 
@@ -164,25 +178,14 @@ func (h *Homed) setBoilerState() {
 	}
 }
 
-func (h *Homed) setRoomsTemperatures() {
+func (h *Homed) setRoomsDevicesTemperatures() {
 	for roomName, component := range h.temperatureController.rooms {
-		if component.Mode != components.HomedTemperatureModeAuto {
+		target := component.CurrentTarget()
+
+		tuyas, ok := h.temperatureController.tuyas[roomName]
+		if !ok {
 			continue
 		}
-
-		// Update the target state
-		component.Target = h.temperatureTarget(roomName)
-		if err := component.PublishState(h.mqttClient); err != nil {
-			h.logger.Warn(err.Error(), zap.String("room", roomName))
-			continue
-		}
-
-		h.logger.Info("should configure the tuya to the target", zap.Float64("target", component.Target))
-
-		// tuyas, ok := h.temperatureController.tuyas[roomName]
-		// if !ok {
-		// 	continue
-		// }
 
 		// data, err := json.Marshal(components.TuyaTRV{HeatingSetpoint: component.Target})
 		// if err != nil {
@@ -190,13 +193,41 @@ func (h *Homed) setRoomsTemperatures() {
 		// 	continue
 		// }
 
-		// for _, tuya := range tuyas {
-		// 	err := tuya.WriteCommand(h.mqttClient, data)
-		// 	if err != nil {
-		// 		h.logger.Warn(err.Error())
-		// 		continue
-		// 	}
-		// }
+		for _, tuya := range tuyas {
+			if tuya.HeatingSetpoint == target {
+				continue
+			}
+
+			h.logger.Info(
+				"should configure the tuya to the target",
+				zap.String("room", roomName),
+				zap.Float64("target", target),
+			)
+
+			// err := tuya.WriteCommand(h.mqttClient, data)
+			// if err != nil {
+			// 	h.logger.Warn(err.Error())
+			// 	continue
+			// }
+		}
+	}
+}
+
+func (h *Homed) setRoomsTemperatures() {
+	for roomName, component := range h.temperatureController.rooms {
+		// Update the target state
+		component.Target = h.temperatureTarget(roomName)
+
+		if component.ManualUntil != nil && time.Now().After(*component.ManualUntil) {
+			component.Mode = components.HomedTemperatureModeAuto
+			component.ManualUntil = nil
+			component.ManualTarget = component.Target
+		}
+
+		if err := component.PublishState(h.mqttClient); err != nil {
+			h.logger.Warn(err.Error(), zap.String("room", roomName))
+			continue
+		}
 	}
 }
 

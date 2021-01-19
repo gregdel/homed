@@ -1,10 +1,10 @@
 import { configureAxios, request } from "../request";
 
 export const fetchSchedule = () =>
-  request("FETCH_SCHEDULE", configureAxios().get("/schedule"));
+  request("FETCH_SCHEDULE", configureAxios().get("/schedules/bureau"));
 
 export const addSchedule = (data) =>
-  request("ADD_SCHEDULE", configureAxios().post("/schedule", data), [
+  request("ADD_SCHEDULE", configureAxios().post("/schedules/bureau", data), [
     () => fetchSchedule(),
   ]);
 

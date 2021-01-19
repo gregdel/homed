@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -47,7 +48,7 @@ func (s *DeviceStatus) Collectors(labels prometheus.Labels) []prometheus.Collect
 
 // Update implements the Component interface
 func (s *DeviceStatus) Update(value []byte) error {
-	v := string(value)
+	v := strings.ToLower(string(value))
 	switch v {
 	case "online":
 		s.Online = true

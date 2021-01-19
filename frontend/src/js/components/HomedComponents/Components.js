@@ -10,6 +10,7 @@ import { TuyaTRV } from "./TuyaTRV";
 import { WifiSignal } from "./WifiSignal";
 import { RTL433 } from "./RTL433";
 import { Boiler } from "./Boiler";
+import { TasmotaSwitch } from "./TasmotaSwitch";
 
 import { Row, Col, Card } from "antd";
 
@@ -51,6 +52,9 @@ export const HomedComponent = ({ uuid, room, device, type, values }) => {
       break;
     case "boiler":
       typedComponent = <Boiler {...values} />;
+      break;
+    case "tasmota_switch":
+      typedComponent = <TasmotaSwitch {...values} />;
       break;
     case "homed_temperature":
       // Don't display the homed temperature here
