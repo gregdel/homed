@@ -1,6 +1,7 @@
 package components
 
 import (
+	"math"
 	"strconv"
 )
 
@@ -15,6 +16,12 @@ func (fs *float64Component) Update(value []byte) error {
 	if err != nil {
 		return err
 	}
+
+	// TODO: find a better solution to handle NaN values
+	if math.IsNaN(v) {
+		v = -99999
+	}
+
 	fs.Value = v
 	return nil
 }
