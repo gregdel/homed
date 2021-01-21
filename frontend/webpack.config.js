@@ -11,6 +11,10 @@ if (process.env.NODE_ENV === "production") {
 
 var SRC_DIR = path.resolve(__dirname, "src");
 var BUILD_DIR = path.resolve(__dirname, "build");
+if (process.env.NODE_ENV === "production") {
+  mode = "production";
+  BUILD_DIR = path.resolve(__dirname, "../build");
+}
 
 module.exports = {
   mode: mode,
