@@ -65,7 +65,7 @@ func (h *Homed) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	err = component.WriteCommand(h.mqttClient, data)
+	err = component.WriteCommand(data)
 	if err != nil {
 		fmt.Fprintf(w, "failed to write mqtt command: %s", err.Error())
 		return

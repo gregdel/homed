@@ -3,6 +3,7 @@ package components
 import (
 	"encoding/json"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -42,7 +43,7 @@ func (s Components) MarshalJSON() ([]byte, error) {
 }
 
 // Add adds a component to the component slice
-func (s *Components) Add(cfg Config, labels prometheus.Labels) (Component, error) {
+func (s *Components) Add(cfg Config, client mqtt.Client, labels prometheus.Labels) (Component, error) {
 	component, err := newComponent(cfg.Type)
 	if err != nil {
 		return nil, err
@@ -60,6 +61,7 @@ func (s *Components) Add(cfg Config, labels prometheus.Labels) (Component, error
 	component.SetCommandTopic(cfg.CommandTopic)
 	component.SetStateTopic(cfg.StateTopic)
 	component.SetInternal(cfg.Internal)
+	component.SetMQTTClient(client)
 
 	uuid, err := uuid.NewRandom()
 	if err != nil {

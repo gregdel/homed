@@ -1,5 +1,7 @@
 package homed
 
+import "github.com/gregdel/homed/lib/components"
+
 // Room represent a room
 type Room struct {
 	Name    string    `json:"name"`
@@ -22,30 +24,35 @@ func (r *Room) AddDevice(device *Device) {
 
 // Temperature returns the temperature in the room
 func (r *Room) Temperature() float64 {
-	return 0
-	// // For now, we only return the first value of the component type "Temperature"
-	// var temperature float64
-	// var controlled bool
-	// var tuyaTemp float64
+	// For now, we only return the first value of the component type "Temperature"
+	var temperature float64
+	var controlled bool
+	var tuyaTemp float64
 
-	// for _, device := range r.Devices {
-	// 	for _, component := range device.Components {
-	// 		switch component.Type() {
-	// 		case components.TypeHomedTemperature:
-	// 			controlled = true
-	// 		case components.TypeTemperature:
-	// 			c := component.(*components.Temperature)
-	// 			temperature = c.Value
-	// 		case components.TypeTuyaTRV:
-	// 			c := component.(*components.TuyaTRV)
-	// 			tuyaTemp = c.Temperature
-	// 		}
+	for _, device := range r.Devices {
+		for _, component := range device.Components {
+			if component.Type() == components.TypeHomedTemperature {
+				controlled = true
+				continue
+			}
 
-	// 		if controlled && temperature != 0 {
-	// 			return temperature
-	// 		}
-	// 	}
-	// }
+			tc, ok := component.(components.TemperatureGetter)
+			if !ok {
+				continue
+			}
 
-	// return tuyaTemp
+			if component.Type() == components.TypeTuyaTRV {
+				// TODO: handle the error
+				tuyaTemp, _ = tc.GetTemperature()
+				continue
+			}
+
+			temperature, _ = tc.GetTemperature()
+			if controlled && temperature != 0 {
+				return temperature
+			}
+		}
+	}
+
+	return tuyaTemp
 }

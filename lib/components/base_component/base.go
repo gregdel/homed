@@ -14,6 +14,8 @@ type Component struct {
 	StateTopic   string
 	IsInternal   bool
 
+	mqttClient mqtt.Client
+
 	UUID      uuid.UUID  `json:"uuid"`
 	UpdatedAt *time.Time `json:"updated_at"`
 }
@@ -44,6 +46,11 @@ func (c *Component) SetStateTopic(topic string) {
 	c.StateTopic = topic
 }
 
+// SetMQTTClient implements the Component interface
+func (c *Component) SetMQTTClient(client mqtt.Client) {
+	c.mqttClient = client
+}
+
 // SetInternal implements the Component interface
 func (c *Component) SetInternal(internal bool) {
 	c.IsInternal = internal
@@ -65,8 +72,8 @@ func (c *Component) Internal() bool {
 }
 
 // WriteCommand implements the Component interface
-func (c *Component) WriteCommand(client mqtt.Client, data []byte) error {
-	if client == nil {
+func (c *Component) WriteCommand(data []byte) error {
+	if c.mqttClient == nil {
 		return fmt.Errorf("components: missing mqtt client")
 	}
 
@@ -74,7 +81,7 @@ func (c *Component) WriteCommand(client mqtt.Client, data []byte) error {
 		return fmt.Errorf("components: component is read only")
 	}
 
-	token := client.Publish(c.CommandTopic, 0, false, data)
+	token := c.mqttClient.Publish(c.CommandTopic, 0, false, data)
 	if token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
@@ -83,9 +90,18 @@ func (c *Component) WriteCommand(client mqtt.Client, data []byte) error {
 }
 
 // ExecCommand implements the Component interface
-func (c *Component) ExecCommand(client mqtt.Client, data []byte) error {
+func (c *Component) ExecCommand(data []byte) error {
+	if c.mqttClient == nil {
+		return fmt.Errorf("components: missing mqtt client")
+	}
+
 	if !c.IsInternal {
 		return fmt.Errorf("components: only internal components have exec commands")
+	}
+
+	token := c.mqttClient.Publish(c.StateTopic, 0, true, data)
+	if token.Wait() && token.Error() != nil {
+		return token.Error()
 	}
 
 	return nil

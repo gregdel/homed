@@ -76,3 +76,13 @@ func (t *TuyaTRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
 func (t *TuyaTRV) Update(value []byte) error {
 	return json.Unmarshal(value, t)
 }
+
+// GetTemperature implements the TemperatureGetter interface
+func (t *TuyaTRV) GetTemperature() (float64, error) {
+	return t.Temperature, nil
+}
+
+// SetTemperature implements the TemperatureGetter interface
+func (t *TuyaTRV) SetTemperature(float64) error {
+	return nil
+}

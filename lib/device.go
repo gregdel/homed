@@ -1,6 +1,7 @@
 package homed
 
 import (
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -21,11 +22,11 @@ func NewDevice(name string) *Device {
 }
 
 // AddComponent adds a component to the device
-func (d *Device) AddComponent(cfg components.Config) (components.Component, error) {
+func (d *Device) AddComponent(cfg components.Config, client mqtt.Client) (components.Component, error) {
 	labels := prometheus.Labels{"device": d.Name}
 	if d.Room != nil {
 		labels["room"] = string(d.Room.Name)
 	}
 
-	return d.Components.Add(cfg, labels)
+	return d.Components.Add(cfg, client, labels)
 }

@@ -30,3 +30,8 @@ func (t *Temperature) Type() components.Type {
 func (t *Temperature) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return components.SingleCollector(t, labels, func() float64 { return t.Value })
 }
+
+// GetTemperature implements the TemperatureGetter interface
+func (t *Temperature) GetTemperature() (float64, error) {
+	return t.Value, nil
+}

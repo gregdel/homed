@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/components"
 	base "github.com/gregdel/homed/lib/components/base_component"
 	"github.com/prometheus/client_golang/prometheus"
@@ -87,7 +86,7 @@ func (h *HomedTemperature) Collectors(labels prometheus.Labels) []prometheus.Col
 }
 
 // ExecCommand implements the Component interface
-func (h *HomedTemperature) ExecCommand(client mqtt.Client, cmd []byte) error {
+func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 	data := struct {
 		Mode           Mode       `json:"mode"`
 		ManualTarget   float64    `json:"manual_target"`
@@ -130,20 +129,18 @@ func (h *HomedTemperature) ExecCommand(client mqtt.Client, cmd []byte) error {
 	h.ManualTarget = data.ManualTarget
 	h.ManualUntil = data.ManualUntil
 
-	return h.PublishState(client)
+	return h.PublishState()
+
 }
 
 // PublishState publishes the mqtt state of the component
-func (h *HomedTemperature) PublishState(client mqtt.Client) error {
-	// Publish the current state
+func (h *HomedTemperature) PublishState() error {
 	data, err := json.Marshal(h.Data)
 	if err != nil {
 		return err
 	}
 
-	token := client.Publish(h.StateTopic, 0, true, data)
-	token.Wait()
-	return token.Error()
+	return h.Component.ExecCommand(data)
 }
 
 // Update implements the Component interface

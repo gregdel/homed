@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/components"
 	base "github.com/gregdel/homed/lib/components/base_component"
 	"github.com/prometheus/client_golang/prometheus"
@@ -61,7 +60,7 @@ func (b *Boiler) stateFromData(value []byte) bool {
 }
 
 // WriteCommand implements the Component interface
-func (b *Boiler) WriteCommand(client mqtt.Client, data []byte) error {
+func (b *Boiler) WriteCommand(data []byte) error {
 	newState := b.stateFromData(data)
 	if newState == b.On {
 		return nil
@@ -76,7 +75,7 @@ func (b *Boiler) WriteCommand(client mqtt.Client, data []byte) error {
 		}
 	}
 
-	return b.Component.WriteCommand(client, data)
+	return b.Component.WriteCommand(data)
 }
 
 // Update implements the Component interface

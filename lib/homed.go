@@ -58,6 +58,9 @@ func New(configPath string) (*Homed, error) {
 		return nil, err
 	}
 
+	opts := mqtt.NewClientOptions().AddBroker(config.MQTT.Broker)
+	homed.mqttClient = mqtt.NewClient(opts)
+
 	var err error
 	if config.Debug {
 		homed.logger, err = zap.NewDevelopment()
@@ -86,7 +89,7 @@ func New(configPath string) (*Homed, error) {
 		room.AddDevice(device)
 
 		for _, cfg := range d.Components {
-			component, err := device.AddComponent(cfg)
+			component, err := device.AddComponent(cfg, homed.mqttClient)
 			if err != nil {
 				homed.logger.Warn(err.Error(), zap.String("device_name", device.Name))
 				continue
@@ -100,9 +103,6 @@ func New(configPath string) (*Homed, error) {
 			homed.components[component.ID().String()] = component
 		}
 	}
-
-	opts := mqtt.NewClientOptions().AddBroker(config.MQTT.Broker)
-	homed.mqttClient = mqtt.NewClient(opts)
 
 	if err := homed.initHTTP(config.HTTP.Addr); err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ func (h *Homed) handleCommand(c mqtt.Client, m mqtt.Message) {
 		return
 	}
 
-	if err := component.ExecCommand(c, m.Payload()); err != nil {
+	if err := component.ExecCommand(m.Payload()); err != nil {
 		h.logger.Warn(
 			"failed to write component command",
 			zap.String("error", err.Error()))

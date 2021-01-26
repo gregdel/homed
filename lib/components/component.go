@@ -43,9 +43,9 @@ type Component interface {
 	Internal() bool
 
 	// WriteCommand writes a command to a mqtt topic (for external components)
-	WriteCommand(client mqtt.Client, data []byte) error
+	WriteCommand(data []byte) error
 	// ExecCommand executes a command (for internal components)
-	ExecCommand(client mqtt.Client, data []byte) error
+	ExecCommand(data []byte) error
 
 	// ID returns the component id
 	ID() uuid.UUID
@@ -53,6 +53,7 @@ type Component interface {
 	SetStateTopic(string)
 	SetCommandTopic(string)
 	SetInternal(bool)
+	SetMQTTClient(mqtt.Client)
 
 	// SetId sets the id of a component
 	SetID(uuid uuid.UUID)
