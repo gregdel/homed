@@ -1,4 +1,4 @@
-package components
+package base
 
 import (
 	"fmt"
@@ -8,25 +8,26 @@ import (
 	"github.com/google/uuid"
 )
 
-type baseComponent struct {
-	commandTopic string
-	stateTopic   string
-	internal     bool
+// Component represents a base component
+type Component struct {
+	CommandTopic string
+	StateTopic   string
+	IsInternal   bool
 
 	UUID      uuid.UUID  `json:"uuid"`
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 // PostUpdate implements the Component interface
-func (bs *baseComponent) PostUpdate() error {
+func (c *Component) PostUpdate() error {
 	now := time.Now()
-	bs.UpdatedAt = &now
+	c.UpdatedAt = &now
 	return nil
 }
 
 // ReadOnly implements the Component interface
-func (bs *baseComponent) ReadOnly() bool {
-	if bs.commandTopic == "" {
+func (c *Component) ReadOnly() bool {
+	if c.CommandTopic == "" {
 		return true
 	}
 
@@ -34,46 +35,46 @@ func (bs *baseComponent) ReadOnly() bool {
 }
 
 // SetCommandTopic implements the Component interface
-func (bs *baseComponent) SetCommandTopic(topic string) {
-	bs.commandTopic = topic
+func (c *Component) SetCommandTopic(topic string) {
+	c.CommandTopic = topic
 }
 
 // SetStateTopic implements the Component interface
-func (bs *baseComponent) SetStateTopic(topic string) {
-	bs.stateTopic = topic
+func (c *Component) SetStateTopic(topic string) {
+	c.StateTopic = topic
 }
 
 // SetInternal implements the Component interface
-func (bs *baseComponent) SetInternal(internal bool) {
-	bs.internal = internal
+func (c *Component) SetInternal(internal bool) {
+	c.IsInternal = internal
 }
 
-// setID implements the Component interface
-func (bs *baseComponent) setID(uuid uuid.UUID) {
-	bs.UUID = uuid
+// SetID implements the Component interface
+func (c *Component) SetID(uuid uuid.UUID) {
+	c.UUID = uuid
 }
 
 // ID implements the Component interface
-func (bs *baseComponent) ID() uuid.UUID {
-	return bs.UUID
+func (c *Component) ID() uuid.UUID {
+	return c.UUID
 }
 
 // Internal implements the Component interface
-func (bs *baseComponent) Internal() bool {
-	return bs.internal
+func (c *Component) Internal() bool {
+	return c.IsInternal
 }
 
 // WriteCommand implements the Component interface
-func (bs *baseComponent) WriteCommand(client mqtt.Client, data []byte) error {
+func (c *Component) WriteCommand(client mqtt.Client, data []byte) error {
 	if client == nil {
 		return fmt.Errorf("components: missing mqtt client")
 	}
 
-	if bs.ReadOnly() {
+	if c.ReadOnly() {
 		return fmt.Errorf("components: component is read only")
 	}
 
-	token := client.Publish(bs.commandTopic, 0, false, data)
+	token := client.Publish(c.CommandTopic, 0, false, data)
 	if token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
@@ -82,8 +83,8 @@ func (bs *baseComponent) WriteCommand(client mqtt.Client, data []byte) error {
 }
 
 // ExecCommand implements the Component interface
-func (bs *baseComponent) ExecCommand(client mqtt.Client, data []byte) error {
-	if !bs.internal {
+func (c *Component) ExecCommand(client mqtt.Client, data []byte) error {
+	if !c.IsInternal {
 		return fmt.Errorf("components: only internal components have exec commands")
 	}
 

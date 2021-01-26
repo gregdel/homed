@@ -1,39 +1,41 @@
-package components
+package boiler
 
 import (
 	"fmt"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gregdel/homed/lib/components"
+	base "github.com/gregdel/homed/lib/components/base_component"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 const boilerCooldownDuration = 5 * time.Minute
 
 func init() {
-	register(TypeBoiler, NewBoiler)
+	components.Register("boiler", NewBoiler)
 }
 
 // Boiler is a component that controls the boiler
 type Boiler struct {
-	baseComponent
+	base.Component
 
 	On              bool       `json:"on"`
 	LastStateChange *time.Time `json:"last_state_change"`
 }
 
 // NewBoiler returns a new status component
-func NewBoiler() Component {
+func NewBoiler() components.Component {
 	return &Boiler{}
 }
 
 // Type implements the Component interface
-func (s *Boiler) Type() Type {
-	return TypeBoiler
+func (b *Boiler) Type() components.Type {
+	return components.TypeBoiler
 }
 
 // Collectors implements the Component interface
-func (s *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
+func (b *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{
@@ -41,7 +43,7 @@ func (s *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
 				ConstLabels: labels,
 			},
 			func() float64 {
-				if s.On {
+				if b.On {
 					return 1
 				}
 				return 0
@@ -50,7 +52,7 @@ func (s *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	}
 }
 
-func (s *Boiler) stateFromData(value []byte) bool {
+func (b *Boiler) stateFromData(value []byte) bool {
 	data := string(value)
 	if data == "ON" {
 		return true
@@ -59,26 +61,26 @@ func (s *Boiler) stateFromData(value []byte) bool {
 }
 
 // WriteCommand implements the Component interface
-func (s *Boiler) WriteCommand(client mqtt.Client, data []byte) error {
-	newState := s.stateFromData(data)
-	if newState == s.On {
+func (b *Boiler) WriteCommand(client mqtt.Client, data []byte) error {
+	newState := b.stateFromData(data)
+	if newState == b.On {
 		return nil
 	}
 
 	now := time.Now()
-	if s.LastStateChange == nil {
-		s.LastStateChange = &now
+	if b.LastStateChange == nil {
+		b.LastStateChange = &now
 	} else {
-		if s.LastStateChange.Add(boilerCooldownDuration).Before(now) {
+		if b.LastStateChange.Add(boilerCooldownDuration).Before(now) {
 			return fmt.Errorf("components: boiler: last change is to recent")
 		}
 	}
 
-	return s.baseComponent.WriteCommand(client, data)
+	return b.Component.WriteCommand(client, data)
 }
 
 // Update implements the Component interface
-func (s *Boiler) Update(value []byte) error {
-	s.On = s.stateFromData(value)
+func (b *Boiler) Update(value []byte) error {
+	b.On = b.stateFromData(value)
 	return nil
 }

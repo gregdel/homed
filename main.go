@@ -6,6 +6,16 @@ import (
 	"os"
 
 	homed "github.com/gregdel/homed/lib"
+
+	_ "github.com/gregdel/homed/lib/components/boiler"
+	_ "github.com/gregdel/homed/lib/components/device_status"
+	_ "github.com/gregdel/homed/lib/components/homed_temperature"
+	_ "github.com/gregdel/homed/lib/components/humidity"
+	_ "github.com/gregdel/homed/lib/components/rtl433"
+	_ "github.com/gregdel/homed/lib/components/tasmota_switch"
+	_ "github.com/gregdel/homed/lib/components/temperature"
+	_ "github.com/gregdel/homed/lib/components/tuya_trv"
+	_ "github.com/gregdel/homed/lib/components/wifi_signal"
 )
 
 func main() {

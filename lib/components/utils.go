@@ -6,7 +6,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func updateFloat64(input []byte, output *float64) error {
+// UpdateFloat64 parses and updates a float64 from an input
+func UpdateFloat64(input []byte, output *float64) error {
 	v, err := strconv.ParseFloat(string(input), 64)
 	if err != nil {
 		return err
@@ -15,7 +16,8 @@ func updateFloat64(input []byte, output *float64) error {
 	return nil
 }
 
-func singleCollector(s Component, labels prometheus.Labels, fn func() float64) []prometheus.Collector {
+// SingleCollector returns a single prometheus collector
+func SingleCollector(s Component, labels prometheus.Labels, fn func() float64) []prometheus.Collector {
 	return []prometheus.Collector{
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{

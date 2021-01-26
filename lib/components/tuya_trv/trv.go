@@ -1,18 +1,20 @@
-package components
+package trv
 
 import (
 	"encoding/json"
 
+	"github.com/gregdel/homed/lib/components"
+	base "github.com/gregdel/homed/lib/components/base_component"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 func init() {
-	register(TypeTuyaTRV, NewTuyaTRV)
+	components.Register(components.TypeTuyaTRV, New)
 }
 
 // TuyaTRV is a component that handles temperatures
 type TuyaTRV struct {
-	baseComponent
+	base.Component
 
 	HeatingSetpoint float64 `json:"current_heating_setpoint"`
 	Temperature     float64 `json:"local_temperature"`
@@ -20,18 +22,18 @@ type TuyaTRV struct {
 	BatteryLow      bool    `json:"battery_low"`
 }
 
-// NewTuyaTRV returns a new component for Tuya TRVs
-func NewTuyaTRV() Component {
+// New returns a new component for Tuya TRVs
+func New() components.Component {
 	return &TuyaTRV{}
 }
 
 // Type implements the Component interface
-func (s *TuyaTRV) Type() Type {
-	return TypeTuyaTRV
+func (t *TuyaTRV) Type() components.Type {
+	return components.TypeTuyaTRV
 }
 
 // Collectors implements the Component interface
-func (s *TuyaTRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
+func (t *TuyaTRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	prefix := "homed_tuya_trv"
 	return []prometheus.Collector{
 		prometheus.NewGaugeFunc(
@@ -39,21 +41,21 @@ func (s *TuyaTRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
 				Name:        prefix + "temperature",
 				ConstLabels: labels,
 			},
-			func() float64 { return s.Temperature },
+			func() float64 { return t.Temperature },
 		),
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{
 				Name:        prefix + "heating_set_point",
 				ConstLabels: labels,
 			},
-			func() float64 { return s.HeatingSetpoint },
+			func() float64 { return t.HeatingSetpoint },
 		),
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{
 				Name:        prefix + "position",
 				ConstLabels: labels,
 			},
-			func() float64 { return s.Position },
+			func() float64 { return t.Position },
 		),
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{
@@ -61,7 +63,7 @@ func (s *TuyaTRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
 				ConstLabels: labels,
 			},
 			func() float64 {
-				if s.BatteryLow {
+				if t.BatteryLow {
 					return 1
 				}
 				return 0
@@ -71,6 +73,6 @@ func (s *TuyaTRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
 }
 
 // Update implements the Component interface
-func (s *TuyaTRV) Update(value []byte) error {
-	return json.Unmarshal(value, s)
+func (t *TuyaTRV) Update(value []byte) error {
+	return json.Unmarshal(value, t)
 }

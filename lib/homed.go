@@ -109,9 +109,9 @@ func New(configPath string) (*Homed, error) {
 	}
 
 	homed.scheduleFile = config.ScheduleFile
-	if err := homed.initTemperatureController(); err != nil {
-		return nil, err
-	}
+	// if err := homed.initTemperatureController(); err != nil {
+	// 	return nil, err
+	// }
 
 	return homed, nil
 }
@@ -204,7 +204,7 @@ func (h *Homed) Run() error {
 	}()
 
 	// Start the temperature control function
-	go h.startTemperatureControl(done)
+	// go h.startTemperatureControl(done)
 
 	h.logger.Info("Starting HTTP server")
 	h.httpServer.ListenAndServe()
@@ -212,7 +212,7 @@ func (h *Homed) Run() error {
 	h.logger.Info("Disconnecting from the MQTT broker")
 	h.mqttClient.Disconnect(250)
 
-	h.saveTemperatureSchedules()
+	// h.saveTemperatureSchedules()
 
 	return nil
 }

@@ -1,31 +1,33 @@
-package components
+package status
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/gregdel/homed/lib/components"
+	base "github.com/gregdel/homed/lib/components/base_component"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 func init() {
-	register(TypeDeviceStatus, NewDeviceStatus)
+	components.Register(components.TypeDeviceStatus, NewDeviceStatus)
 }
 
 // DeviceStatus is a component that reports the status of a device
 type DeviceStatus struct {
-	baseComponent
+	base.Component
 
 	Online bool `json:"online"`
 }
 
 // NewDeviceStatus returns a new status component
-func NewDeviceStatus() Component {
+func NewDeviceStatus() components.Component {
 	return &DeviceStatus{}
 }
 
 // Type implements the Component interface
-func (s *DeviceStatus) Type() Type {
-	return TypeDeviceStatus
+func (s *DeviceStatus) Type() components.Type {
+	return components.TypeDeviceStatus
 }
 
 // Collectors implements the Component interface

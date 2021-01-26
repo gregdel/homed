@@ -65,7 +65,7 @@ func (s *Components) Add(cfg Config, labels prometheus.Labels) (Component, error
 	if err != nil {
 		return nil, err
 	}
-	component.setID(uuid)
+	component.SetID(uuid)
 
 	*s = append(*s, component)
 	return component, nil

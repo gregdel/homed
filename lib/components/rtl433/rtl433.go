@@ -1,39 +1,41 @@
-package components
+package rtl433
 
 import (
 	"encoding/json"
 
+	"github.com/gregdel/homed/lib/components"
+	base "github.com/gregdel/homed/lib/components/base_component"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 func init() {
-	register(TypeRTL433, NewRTL433)
+	components.Register(components.TypeRTL433, New)
 }
 
 // RTL433 is a component that handles rtl_433 signals
 type RTL433 struct {
-	baseComponent
+	base.Component
 
 	BoilerState bool `json:"boiler_state"`
 }
 
-// NewRTL433 returns a new humidity component
-func NewRTL433() Component {
+// New returns a new humidity component
+func New() components.Component {
 	return &RTL433{}
 }
 
 // Type implements the Component interface
-func (s *RTL433) Type() Type {
-	return TypeRTL433
+func (r *RTL433) Type() components.Type {
+	return components.TypeRTL433
 }
 
 // Collectors implements the Component interface
-func (s *RTL433) Collectors(labels prometheus.Labels) []prometheus.Collector {
+func (r *RTL433) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{Name: "homed_boiler_state"},
 			func() float64 {
-				if s.BoilerState {
+				if r.BoilerState {
 					return 1
 				}
 				return 0
@@ -43,7 +45,7 @@ func (s *RTL433) Collectors(labels prometheus.Labels) []prometheus.Collector {
 }
 
 // Update implements the Component interface
-func (s *RTL433) Update(value []byte) error {
+func (r *RTL433) Update(value []byte) error {
 	data := struct {
 		Model string `json:"model"`
 		Rows  []struct {
@@ -67,13 +69,13 @@ func (s *RTL433) Update(value []byte) error {
 	code := data.Rows[2].Data
 	switch code {
 	case "ff67b7efb7fbb8":
-		s.BoilerState = true
+		r.BoilerState = true
 	case "ff67b7ffdbfddf":
-		s.BoilerState = true
+		r.BoilerState = true
 	case "ff67b7ffdbfedf":
-		s.BoilerState = false
+		r.BoilerState = false
 	case "ff67b7efb7fdb8":
-		s.BoilerState = false
+		r.BoilerState = false
 	}
 
 	return nil

@@ -4,7 +4,8 @@ import "fmt"
 
 var registeredComponents map[string]func() Component
 
-func register(t Type, fn func() Component) {
+// Register a component
+func Register(t Type, fn func() Component) {
 	if registeredComponents == nil {
 		registeredComponents = map[string]func() Component{}
 	}

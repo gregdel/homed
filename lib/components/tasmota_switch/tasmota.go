@@ -1,34 +1,36 @@
-package components
+package tasmota
 
 import (
 	"encoding/json"
 
+	"github.com/gregdel/homed/lib/components"
+	base "github.com/gregdel/homed/lib/components/base_component"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 func init() {
-	register(TypeTasmotaSwitch, NewTasmotaSwitch)
+	components.Register(components.TypeTasmotaSwitch, New)
 }
 
-// TasmotaSwitch is a component that controls the boiler
-type TasmotaSwitch struct {
-	baseComponent
+// Switch is a component that controls the boiler
+type Switch struct {
+	base.Component
 
 	On bool `json:"on"`
 }
 
-// NewTasmotaSwitch returns a new status component
-func NewTasmotaSwitch() Component {
-	return &TasmotaSwitch{}
+// New returns a new status component
+func New() components.Component {
+	return &Switch{}
 }
 
 // Type implements the Component interface
-func (s *TasmotaSwitch) Type() Type {
-	return TypeTasmotaSwitch
+func (s *Switch) Type() components.Type {
+	return components.TypeTasmotaSwitch
 }
 
 // Collectors implements the Component interface
-func (s *TasmotaSwitch) Collectors(labels prometheus.Labels) []prometheus.Collector {
+func (s *Switch) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{
@@ -46,7 +48,7 @@ func (s *TasmotaSwitch) Collectors(labels prometheus.Labels) []prometheus.Collec
 }
 
 // Update implements the Component interface
-func (s *TasmotaSwitch) Update(value []byte) error {
+func (s *Switch) Update(value []byte) error {
 	data := struct {
 		Power string `json:"POWER"`
 	}{}

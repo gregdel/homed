@@ -54,6 +54,6 @@ type Component interface {
 	SetCommandTopic(string)
 	SetInternal(bool)
 
-	// setId sets the id of a component
-	setID(uuid uuid.UUID)
+	// SetId sets the id of a component
+	SetID(uuid uuid.UUID)
 }

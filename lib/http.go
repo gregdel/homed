@@ -120,17 +120,17 @@ func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 }
 
 func (h *Homed) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
-	if !ok {
-		fmt.Fprintf(w, "failed to find schedule")
-		return
-	}
+	// s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
+	// if !ok {
+	// 	fmt.Fprintf(w, "failed to find schedule")
+	// 	return
+	// }
 
-	err := json.NewEncoder(w).Encode(s)
-	if err != nil {
-		fmt.Fprintf(w, "failed to encode data: %s", err.Error())
-		return
-	}
+	// err := json.NewEncoder(w).Encode(s)
+	// if err != nil {
+	// 	fmt.Fprintf(w, "failed to encode data: %s", err.Error())
+	// 	return
+	// }
 }
 
 func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -153,24 +153,24 @@ func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
-	if !ok {
-		fmt.Fprintf(w, "failed to find schedule")
-		return
-	}
+	// s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
+	// if !ok {
+	// 	fmt.Fprintf(w, "failed to find schedule")
+	// 	return
+	// }
 
-	err = s.Add(time.Weekday(weekday), &ts)
-	if err != nil {
-		fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
-		return
-	}
+	// err = s.Add(time.Weekday(weekday), &ts)
+	// if err != nil {
+	// 	fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
+	// 	return
+	// }
 
-	h.saveTemperatureSchedules()
+	// h.saveTemperatureSchedules()
 }
 
 func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	weekdayStr := ps.ByName("weekday")
-	uuid := ps.ByName("uuid")
+	// uuid := ps.ByName("uuid")
 
 	weekday, err := strconv.Atoi(weekdayStr)
 	if err != nil {
@@ -183,17 +183,17 @@ func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
-	if !ok {
-		fmt.Fprintf(w, "failed to find schedule")
-		return
-	}
+	// s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
+	// if !ok {
+	// 	fmt.Fprintf(w, "failed to find schedule")
+	// 	return
+	// }
 
-	err = s.Delete(time.Weekday(weekday), uuid)
-	if err != nil {
-		fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
-		return
-	}
+	// err = s.Delete(time.Weekday(weekday), uuid)
+	// if err != nil {
+	// 	fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
+	// 	return
+	// }
 
-	h.saveTemperatureSchedules()
+	// h.saveTemperatureSchedules()
 }
