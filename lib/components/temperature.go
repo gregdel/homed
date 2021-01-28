@@ -37,6 +37,7 @@ type TemperatureController interface {
 // or set
 type TemperatureControllerInternal interface {
 	Publisher
+	Scheduled
 	TemperatureController
 
 	SetTemperature(float64) error

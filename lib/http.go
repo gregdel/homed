@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/schedule"
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -21,9 +22,9 @@ func (h *Homed) initHTTP(addr string) error {
 	router.GET("/data", h.jsonData)
 	router.GET("/events", h.websocketEvents)
 
-	router.GET("/schedules/:roomName", h.httpGetSchedule)
-	router.POST("/schedules/:roomName/:weekday", h.httpPostSchedule)
-	router.DELETE("/schedules/:roomName/:weekday/:uuid", h.httpDeleteSchedule)
+	router.GET("/schedules/:componentId", h.httpGetSchedule)
+	router.POST("/schedules/:componentId/:weekday", h.httpPostSchedule)
+	router.DELETE("/schedules/:componentId/:weekday/:uuid", h.httpDeleteSchedule)
 
 	router.NotFound = http.FileServer(http.Dir("frontend/build"))
 	h.httpServer = &http.Server{
@@ -120,20 +121,40 @@ func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 }
 
 func (h *Homed) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
-	// if !ok {
-	// 	fmt.Fprintf(w, "failed to find schedule")
-	// 	return
-	// }
+	componentID := ps.ByName("componentId")
+	c, ok := h.components[componentID]
+	if !ok {
+		fmt.Fprintf(w, "failed to find component")
+		return
+	}
 
-	// err := json.NewEncoder(w).Encode(s)
-	// if err != nil {
-	// 	fmt.Fprintf(w, "failed to encode data: %s", err.Error())
-	// 	return
-	// }
+	sc, ok := c.(components.Scheduled)
+	if !ok {
+		fmt.Fprintf(w, "this component can not be scheduled")
+		return
+	}
+
+	err := json.NewEncoder(w).Encode(sc.Schedule())
+	if err != nil {
+		fmt.Fprintf(w, "failed to encode data: %s", err.Error())
+		return
+	}
 }
 
 func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	componentID := ps.ByName("componentId")
+	c, ok := h.components[componentID]
+	if !ok {
+		fmt.Fprintf(w, "failed to find component")
+		return
+	}
+
+	sc, ok := c.(components.Scheduled)
+	if !ok {
+		fmt.Fprintf(w, "this component can not be scheduled")
+		return
+	}
+
 	ts := schedule.TimeSlot{}
 	err := json.NewDecoder(r.Body).Decode(&ts)
 	if err != nil {
@@ -153,25 +174,37 @@ func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	// s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
-	// if !ok {
-	// 	fmt.Fprintf(w, "failed to find schedule")
-	// 	return
-	// }
-
-	// err = s.Add(time.Weekday(weekday), &ts)
-	// if err != nil {
-	// 	fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
-	// 	return
-	// }
+	err = sc.ScheduleAdd(time.Weekday(weekday), &ts)
+	if err != nil {
+		fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
+		return
+	}
 
 	// h.saveTemperatureSchedules()
 }
 
 func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	weekdayStr := ps.ByName("weekday")
-	// uuid := ps.ByName("uuid")
+	componentID := ps.ByName("componentId")
+	c, ok := h.components[componentID]
+	if !ok {
+		fmt.Fprintf(w, "failed to find component")
+		return
+	}
 
+	sc, ok := c.(components.Scheduled)
+	if !ok {
+		fmt.Fprintf(w, "this component can not be scheduled")
+		return
+	}
+
+	ts := schedule.TimeSlot{}
+	err := json.NewDecoder(r.Body).Decode(&ts)
+	if err != nil {
+		fmt.Fprintf(w, "failed to decode data: %s", err.Error())
+		return
+	}
+
+	weekdayStr := ps.ByName("weekday")
 	weekday, err := strconv.Atoi(weekdayStr)
 	if err != nil {
 		fmt.Fprintf(w, "failed to parse weekday: %s", err.Error())
@@ -183,17 +216,12 @@ func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	// s, ok := h.temperatureController.schedules[ps.ByName("roomName")]
-	// if !ok {
-	// 	fmt.Fprintf(w, "failed to find schedule")
-	// 	return
-	// }
-
-	// err = s.Delete(time.Weekday(weekday), uuid)
-	// if err != nil {
-	// 	fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
-	// 	return
-	// }
+	uuid := ps.ByName("uuid")
+	err = sc.ScheduleDelete(time.Weekday(weekday), uuid)
+	if err != nil {
+		fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
+		return
+	}
 
 	// h.saveTemperatureSchedules()
 }

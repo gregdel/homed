@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
-	"github.com/gregdel/homed/lib/schedule"
 	"go.uber.org/zap"
 )
 
@@ -16,17 +15,15 @@ type temperatureController struct {
 	// Wether we're in a rising or falling phase of the hysteresis algorithm
 	rising map[string]bool
 
-	rooms     map[string]components.TemperatureControllerInternal
-	schedules map[string]*schedule.Schedule
-	tuyas     map[string][]components.TemperatureController
+	rooms map[string]components.TemperatureControllerInternal
+	tuyas map[string][]components.TemperatureController
 }
 
 func newTemperatureController() *temperatureController {
 	return &temperatureController{
-		rising:    map[string]bool{},
-		rooms:     map[string]components.TemperatureControllerInternal{},
-		tuyas:     map[string][]components.TemperatureController{},
-		schedules: map[string]*schedule.Schedule{},
+		rising: map[string]bool{},
+		rooms:  map[string]components.TemperatureControllerInternal{},
+		tuyas:  map[string][]components.TemperatureController{},
 	}
 }
 
@@ -38,7 +35,6 @@ func (h *Homed) initTemperatureController() error {
 			case components.TypeBoiler:
 				tc.boiler = component.(components.Switch)
 			case components.TypeHomedTemperature:
-				tc.schedules[room.Name] = schedule.New()
 				tc.rooms[room.Name] = component.(components.TemperatureControllerInternal)
 			case components.TypeTuyaTRV:
 				if len(tc.tuyas[room.Name]) == 0 {
@@ -54,7 +50,7 @@ func (h *Homed) initTemperatureController() error {
 
 	h.temperatureController = tc
 
-	h.loadTemperatureSchedules()
+	// h.loadTemperatureSchedules()
 
 	return nil
 }
@@ -108,7 +104,7 @@ func (h *Homed) updateRoomsTemperatures() {
 		}
 
 		if err := component.SetTemperature(currentTemperature); err != nil {
-			h.logger.Warn(err.Error(), zap.String("room", roomName))
+			h.logger.Error(err.Error(), zap.String("room", roomName))
 			continue
 		}
 	}
@@ -186,7 +182,7 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 	for roomName, component := range h.temperatureController.rooms {
 		target, err := component.TemperatureTarget()
 		if err != nil {
-			h.logger.Warn(
+			h.logger.Error(
 				"failed to get temperature target",
 				zap.Error(err),
 			)
@@ -201,7 +197,7 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 		for _, tuya := range tuyas {
 			tuyaTarget, err := tuya.TemperatureTarget()
 			if err != nil {
-				h.logger.Warn(
+				h.logger.Error(
 					"failed to get tuya's temperature target",
 					zap.Error(err),
 				)
@@ -220,7 +216,7 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 
 			err = tuya.SetTemperatureTarget(target)
 			if err != nil {
-				h.logger.Warn(
+				h.logger.Error(
 					"failed to set tuya's temperature target",
 					zap.Error(err),
 				)
@@ -232,10 +228,12 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 
 func (h *Homed) setRoomsTemperatures() {
 	for roomName, component := range h.temperatureController.rooms {
+		scheduledTarget := component.CurrentSchedule()
+
 		// Update the target state
-		err := component.SetTemperatureTarget(h.temperatureTarget(roomName))
+		err := component.SetTemperatureTarget(scheduledTarget)
 		if err != nil {
-			h.logger.Warn(
+			h.logger.Error(
 				"failed to set the temperature target",
 				zap.Error(err),
 			)
@@ -244,7 +242,7 @@ func (h *Homed) setRoomsTemperatures() {
 
 		mode, err := component.TemperatureMode()
 		if err != nil {
-			h.logger.Warn(
+			h.logger.Error(
 				"failed to get the temperature mode",
 				zap.Error(err),
 			)
@@ -252,10 +250,10 @@ func (h *Homed) setRoomsTemperatures() {
 		}
 
 		if mode == components.TemperatureModeNextTimeBlock {
-			nextTime := h.timeOfNextTimeBlock(roomName)
+			nextTime := component.ScheduledNextTime()
 			if nextTime != nil {
 				if err := component.SetTemperatureModeManualUntil(nextTime); err != nil {
-					h.logger.Warn(
+					h.logger.Error(
 						"failed to set the temperature manual mode until",
 						zap.Error(err),
 					)
@@ -266,7 +264,7 @@ func (h *Homed) setRoomsTemperatures() {
 
 		manualUntil, err := component.TemperatureModeManualUntil()
 		if err != nil {
-			h.logger.Warn(
+			h.logger.Error(
 				"failed to get the end date of the manual mode",
 				zap.Error(err),
 			)
@@ -275,7 +273,7 @@ func (h *Homed) setRoomsTemperatures() {
 
 		if manualUntil != nil && time.Now().After(*manualUntil) {
 			if err := component.SetTemperatureMode(components.TemperatureModeAuto); err != nil {
-				h.logger.Warn(
+				h.logger.Error(
 					"failed to set temperature mode",
 					zap.Error(err),
 				)
@@ -283,7 +281,7 @@ func (h *Homed) setRoomsTemperatures() {
 			}
 
 			if err := component.SetTemperatureModeManualUntil(nil); err != nil {
-				h.logger.Warn(
+				h.logger.Error(
 					"failed to set temperature target",
 					zap.Error(err),
 				)
@@ -291,13 +289,13 @@ func (h *Homed) setRoomsTemperatures() {
 			}
 
 			previousTarget, err := component.TemperatureTarget()
-			h.logger.Warn(
+			h.logger.Error(
 				"failed to get the temperature target",
 				zap.Error(err),
 			)
 
 			if err := component.SetTemperatureTarget(previousTarget); err != nil {
-				h.logger.Warn(
+				h.logger.Error(
 					"failed to set temperature target",
 					zap.Error(err),
 				)
@@ -306,7 +304,7 @@ func (h *Homed) setRoomsTemperatures() {
 		}
 
 		if err := component.PublishState(); err != nil {
-			h.logger.Warn(
+			h.logger.Error(
 				"failed to publish state",
 				zap.Error(err),
 				zap.String("room", roomName),
@@ -316,51 +314,24 @@ func (h *Homed) setRoomsTemperatures() {
 	}
 }
 
-func (h *Homed) timeOfNextTimeBlock(room string) *time.Time {
-	schedule, ok := h.temperatureController.schedules[room]
-	if !ok {
-		h.logger.Error("missing schedule for room", zap.String("room", room))
-		return nil
-	}
+// // TODO
 
-	_, t := schedule.NextTime()
-	return t
-}
+// func (h *Homed) loadTemperatureSchedules() {
+// 	err := readFile(h.scheduleFile, h.temperatureController.schedules)
+// 	if err != nil {
+// 		h.logger.Error(
+// 			"failed to read temperature schedules",
+// 			zap.String("error", err.Error()),
+// 		)
+// 	}
+// }
 
-func (h *Homed) temperatureTarget(room string) float64 {
-	var defaultTarget float64 = 14
-	schedule, ok := h.temperatureController.schedules[room]
-	if !ok {
-		h.logger.Error("missing schedule for room", zap.String("room", room))
-		return defaultTarget
-	}
-
-	ts := schedule.Now()
-	if ts == nil {
-		return defaultTarget
-	}
-
-	return ts.Value
-}
-
-// TODO
-
-func (h *Homed) loadTemperatureSchedules() {
-	err := readFile(h.scheduleFile, h.temperatureController.schedules)
-	if err != nil {
-		h.logger.Error(
-			"failed to read temperature schedules",
-			zap.String("error", err.Error()),
-		)
-	}
-}
-
-func (h *Homed) saveTemperatureSchedules() {
-	err := writeFile(h.scheduleFile, true, h.temperatureController.schedules)
-	if err != nil {
-		h.logger.Error(
-			"failed to save temperature schedules",
-			zap.String("error", err.Error()),
-		)
-	}
-}
+// func (h *Homed) saveTemperatureSchedules() {
+// 	err := writeFile(h.scheduleFile, true, h.temperatureController.schedules)
+// 	if err != nil {
+// 		h.logger.Error(
+// 			"failed to save temperature schedules",
+// 			zap.String("error", err.Error()),
+// 		)
+// 	}
+// }

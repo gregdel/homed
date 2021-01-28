@@ -212,7 +212,7 @@ func (h *Homed) Run() error {
 	h.logger.Info("Disconnecting from the MQTT broker")
 	h.mqttClient.Disconnect(250)
 
-	h.saveTemperatureSchedules()
+	// h.saveTemperatureSchedules()
 
 	return nil
 }
