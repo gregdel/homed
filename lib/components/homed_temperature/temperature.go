@@ -10,29 +10,20 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// Make sure that the module is a temperature controller
+var _ components.TemperatureControllerInternal = (*HomedTemperature)(nil)
+
 func init() {
 	components.Register(components.TypeHomedTemperature, New)
 }
 
-// Mode represents a temperature control mode
-type Mode string
-
-// Available modes
-var (
-	ModeAuto          Mode = "auto"
-	ModeFixed         Mode = "fixed"
-	ModeDuration      Mode = "duration"
-	ModeUntilDate     Mode = "until_date"
-	ModeNextTimeBlock Mode = "next_time_block"
-)
-
 // Data represents the data of HomedTemperature
 type Data struct {
-	Current      float64    `json:"current"`
-	Target       float64    `json:"target"`
-	Mode         Mode       `json:"mode"`
-	ManualTarget float64    `json:"manual_target"`
-	ManualUntil  *time.Time `json:"manual_until,omitempty"`
+	Current      float64                    `json:"current"`
+	Target       float64                    `json:"target"`
+	Mode         components.TemperatureMode `json:"mode"`
+	ManualTarget float64                    `json:"manual_target"`
+	ManualUntil  *time.Time                 `json:"manual_until,omitempty"`
 }
 
 // HomedTemperature is a component that handles temperatures
@@ -45,14 +36,14 @@ type HomedTemperature struct {
 func New() components.Component {
 	return &HomedTemperature{
 		Data: Data{
-			Mode: ModeAuto,
+			Mode: components.TemperatureModeAuto,
 		},
 	}
 }
 
 // CurrentTarget returns the current target according to the mode
 func (h *HomedTemperature) CurrentTarget() float64 {
-	if h.Mode == ModeAuto {
+	if h.Mode == components.TemperatureModeAuto {
 		return h.Target
 	}
 
@@ -88,10 +79,10 @@ func (h *HomedTemperature) Collectors(labels prometheus.Labels) []prometheus.Col
 // ExecCommand implements the Component interface
 func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 	data := struct {
-		Mode           Mode       `json:"mode"`
-		ManualTarget   float64    `json:"manual_target"`
-		ManualUntil    *time.Time `json:"manual_until,omitempty"`
-		ManualDuration string     `json:"manual_duration"`
+		Mode           components.TemperatureMode `json:"mode"`
+		ManualTarget   float64                    `json:"manual_target"`
+		ManualUntil    *time.Time                 `json:"manual_until,omitempty"`
+		ManualDuration string                     `json:"manual_duration"`
 	}{}
 
 	if err := json.Unmarshal(cmd, &data); err != nil {
@@ -99,23 +90,23 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 	}
 
 	switch data.Mode {
-	case ModeAuto:
+	case components.TemperatureModeAuto:
 		data.ManualTarget = h.Target
 		data.ManualUntil = nil
-	case ModeFixed:
+	case components.TemperatureModeFixed:
 		data.ManualUntil = nil
-	case ModeDuration:
+	case components.TemperatureModeDuration:
 		d, err := time.ParseDuration(data.ManualDuration)
 		if err != nil {
 			return err
 		}
 		t := time.Now().Add(d)
 		data.ManualUntil = &t
-	case ModeUntilDate:
+	case components.TemperatureModeUntilDate:
 		if data.ManualUntil == nil {
 			return fmt.Errorf("components: homed_temperature: missing date")
 		}
-	case ModeNextTimeBlock:
+	case components.TemperatureModeNextTimeBlock:
 		data.ManualUntil = nil
 	default:
 		return nil
@@ -125,9 +116,9 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 		return fmt.Errorf("components: homed_temperature: date is in the past")
 	}
 
-	h.Mode = data.Mode
-	h.ManualTarget = data.ManualTarget
 	h.ManualUntil = data.ManualUntil
+	h.ManualTarget = data.ManualTarget
+	h.Mode = data.Mode
 
 	return h.PublishState()
 
@@ -146,4 +137,63 @@ func (h *HomedTemperature) PublishState() error {
 // Update implements the Component interface
 func (h *HomedTemperature) Update(value []byte) error {
 	return json.Unmarshal(value, h)
+}
+
+// Temperature implements the TemperatureController interface
+func (h *HomedTemperature) Temperature() (float64, error) {
+	return h.Current, nil
+}
+
+// SetTemperature implements the TemperatureSetter interface
+func (h *HomedTemperature) SetTemperature(temperature float64) error {
+	h.Current = temperature
+	return h.PublishState()
+}
+
+// TemperatureTarget implements the TemperatureController interface
+func (h *HomedTemperature) TemperatureTarget() (float64, error) {
+	if h.Mode == components.TemperatureModeAuto {
+		return h.Target, nil
+	}
+
+	return h.ManualTarget, nil
+}
+
+// SetTemperatureTarget implements the TemperatureController interface
+func (h *HomedTemperature) SetTemperatureTarget(target float64) error {
+	h.Target = target
+	return h.PublishState()
+}
+
+// TemperatureMode implements the TemperatureController interface
+func (h *HomedTemperature) TemperatureMode() (components.TemperatureMode, error) {
+	return h.Mode, nil
+}
+
+// SetTemperatureMode implements the TemperatureController interface
+func (h *HomedTemperature) SetTemperatureMode(mode components.TemperatureMode) error {
+	h.Mode = mode
+	return h.PublishState()
+}
+
+// TemperatureManualTarget implements the TemperatureController interface
+func (h *HomedTemperature) TemperatureManualTarget() (float64, error) {
+	return h.ManualTarget, nil
+}
+
+// SetTemperatureManualTarget implements the TemperatureController interface
+func (h *HomedTemperature) SetTemperatureManualTarget(target float64) error {
+	h.ManualTarget = target
+	return h.PublishState()
+}
+
+// SetTemperatureModeManualUntil implements the TemperatureControllerInternal interface
+func (h *HomedTemperature) SetTemperatureModeManualUntil(until *time.Time) error {
+	h.ManualUntil = until
+	return h.PublishState()
+}
+
+// TemperatureModeManualUntil implements the TemperatureControllerInternal interface
+func (h *HomedTemperature) TemperatureModeManualUntil() (*time.Time, error) {
+	return h.ManualUntil, nil
 }

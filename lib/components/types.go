@@ -1,15 +1,15 @@
 package components
 
-// TemperatureGetter is an interface to reprensents something that holds a
-// temperature
-type TemperatureGetter interface {
-	Component
-	GetTemperature() (float64, error)
+// Switch is an interface to reprensents a switch
+type Switch interface {
+	IsOn() bool
+	Toggle() error
+	SetOn() error
+	SetOff() error
+	Set(state bool) error
 }
 
-// TemperatureSetter is an interface to reprensents something that sets a
-// temperature
-type TemperatureSetter interface {
-	Component
-	SetTemperature(float64) error
+// Publisher is an interface to publish the component state
+type Publisher interface {
+	PublishState() error
 }

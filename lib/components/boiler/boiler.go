@@ -9,7 +9,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const boilerCooldownDuration = 5 * time.Minute
+const (
+	cooldownDuration = 5 * time.Minute
+
+	payloadOn  = "ON"
+	payloadOff = "OFF"
+)
 
 func init() {
 	components.Register("boiler", NewBoiler)
@@ -53,7 +58,7 @@ func (b *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
 
 func (b *Boiler) stateFromData(value []byte) bool {
 	data := string(value)
-	if data == "ON" {
+	if data == payloadOn {
 		return true
 	}
 	return false
@@ -70,7 +75,7 @@ func (b *Boiler) WriteCommand(data []byte) error {
 	if b.LastStateChange == nil {
 		b.LastStateChange = &now
 	} else {
-		if b.LastStateChange.Add(boilerCooldownDuration).Before(now) {
+		if b.LastStateChange.Add(cooldownDuration).Before(now) {
 			return fmt.Errorf("components: boiler: last change is to recent")
 		}
 	}
@@ -82,4 +87,37 @@ func (b *Boiler) WriteCommand(data []byte) error {
 func (b *Boiler) Update(value []byte) error {
 	b.On = b.stateFromData(value)
 	return nil
+}
+
+// SetOn implements the Switch interface
+func (b *Boiler) SetOn() error {
+	return b.WriteCommand([]byte(payloadOn))
+}
+
+// SetOff implements the Switch interface
+func (b *Boiler) SetOff() error {
+	return b.WriteCommand([]byte(payloadOff))
+}
+
+// Set implements the Switch interface
+func (b *Boiler) Set(state bool) error {
+	if state {
+		return b.SetOn()
+	}
+
+	return b.SetOff()
+}
+
+// Toggle implements the Switch interface
+func (b *Boiler) Toggle() error {
+	if b.On {
+		return b.SetOn()
+	}
+
+	return b.SetOff()
+}
+
+// IsOn implements the Switch interface
+func (b *Boiler) IsOn() bool {
+	return b.On
 }

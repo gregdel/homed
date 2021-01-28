@@ -6,6 +6,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// Make sure that the module is a TemperatureGetter
+var _ components.TemperatureGetter = (*Temperature)(nil)
+
 func init() {
 	components.Register(components.TypeTemperature, New)
 }
@@ -31,7 +34,7 @@ func (t *Temperature) Collectors(labels prometheus.Labels) []prometheus.Collecto
 	return components.SingleCollector(t, labels, func() float64 { return t.Value })
 }
 
-// GetTemperature implements the TemperatureGetter interface
-func (t *Temperature) GetTemperature() (float64, error) {
+// Temperature implements the TemperatureGetter interface
+func (t *Temperature) Temperature() (float64, error) {
 	return t.Value, nil
 }

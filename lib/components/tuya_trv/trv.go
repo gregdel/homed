@@ -2,11 +2,15 @@ package trv
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/gregdel/homed/lib/components"
 	base "github.com/gregdel/homed/lib/components/base_component"
 	"github.com/prometheus/client_golang/prometheus"
 )
+
+// Make sure that the module is a temperature controller
+var _ components.TemperatureController = (*TuyaTRV)(nil)
 
 func init() {
 	components.Register(components.TypeTuyaTRV, New)
@@ -16,10 +20,10 @@ func init() {
 type TuyaTRV struct {
 	base.Component
 
-	HeatingSetpoint float64 `json:"current_heating_setpoint"`
-	Temperature     float64 `json:"local_temperature"`
-	Position        float64 `json:"position"`
-	BatteryLow      bool    `json:"battery_low"`
+	HeatingSetpoint  float64 `json:"current_heating_setpoint"`
+	LocalTemperature float64 `json:"local_temperature"`
+	Position         float64 `json:"position"`
+	BatteryLow       bool    `json:"battery_low"`
 }
 
 // New returns a new component for Tuya TRVs
@@ -41,7 +45,7 @@ func (t *TuyaTRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
 				Name:        prefix + "temperature",
 				ConstLabels: labels,
 			},
-			func() float64 { return t.Temperature },
+			func() float64 { return t.LocalTemperature },
 		),
 		prometheus.NewGaugeFunc(
 			prometheus.GaugeOpts{
@@ -77,12 +81,39 @@ func (t *TuyaTRV) Update(value []byte) error {
 	return json.Unmarshal(value, t)
 }
 
-// GetTemperature implements the TemperatureGetter interface
-func (t *TuyaTRV) GetTemperature() (float64, error) {
-	return t.Temperature, nil
+// SetTemperature implements the TemperatureGetterSetter interface
+func (t *TuyaTRV) SetTemperature(float64) error {
+	return components.ErrNotImplemented
 }
 
-// SetTemperature implements the TemperatureGetter interface
-func (t *TuyaTRV) SetTemperature(float64) error {
-	return nil
+// Temperature implements the TemperatureGetter interface
+func (t *TuyaTRV) Temperature() (float64, error) {
+	return t.LocalTemperature, nil
+}
+
+// TemperatureTarget implements the TemperatureController interface
+func (t *TuyaTRV) TemperatureTarget() (float64, error) {
+	return t.HeatingSetpoint, nil
+}
+
+// SetTemperatureTarget implements the TemperatureController interface
+func (t *TuyaTRV) SetTemperatureTarget(temperature float64) error {
+	if temperature == t.HeatingSetpoint {
+		return nil
+	}
+
+	t.HeatingSetpoint = temperature
+
+	data := fmt.Sprintf("%.2f", temperature)
+	return t.WriteCommand([]byte(data))
+}
+
+// TemperatureMode implements the TemperatureController interface
+func (t *TuyaTRV) TemperatureMode() (components.TemperatureMode, error) {
+	return components.TemperatureModeAuto, components.ErrNotImplemented
+}
+
+// SetTemperatureMode implements the TemperatureController interface
+func (t *TuyaTRV) SetTemperatureMode(components.TemperatureMode) error {
+	return components.ErrNotImplemented
 }
