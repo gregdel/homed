@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/gregdel/homed/lib/components"
-	base "github.com/gregdel/homed/lib/components/base_component"
+	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -14,8 +14,8 @@ func init() {
 
 // Light is a component that controls a light
 type Light struct {
-	base.Component
-	base.Switch
+	common.Component
+	common.Switch
 }
 
 // NewLight returns a new light component
@@ -24,7 +24,7 @@ func NewLight() components.Component {
 	payloadOff, _ := json.Marshal(lightState{State: "OFF"})
 
 	return &Light{
-		Switch: base.NewSwitch(payloadOn, payloadOff),
+		Switch: common.NewSwitch(payloadOn, payloadOff),
 	}
 }
 

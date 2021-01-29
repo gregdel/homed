@@ -2,7 +2,7 @@ package temperature
 
 import (
 	"github.com/gregdel/homed/lib/components"
-	base "github.com/gregdel/homed/lib/components/base_component"
+	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -15,8 +15,8 @@ func init() {
 
 // Temperature is a component that handles temperatures
 type Temperature struct {
-	base.Component
-	base.GenericSensor
+	common.Component
+	common.GenericSensor
 }
 
 // New new temperature component

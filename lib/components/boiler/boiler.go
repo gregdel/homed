@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
-	base "github.com/gregdel/homed/lib/components/base_component"
+	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -22,8 +22,8 @@ func init() {
 
 // Boiler is a component that controls the boiler
 type Boiler struct {
-	base.Component
-	base.BinarySensor
+	common.Component
+	common.BinarySensor
 
 	LastStateChange *time.Time `json:"last_state_change"`
 }

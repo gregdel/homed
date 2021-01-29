@@ -1,4 +1,4 @@
-package scheduled
+package common
 
 import (
 	"time"
@@ -11,8 +11,8 @@ type ScheduledComponent struct {
 	schedule *schedule.Schedule
 }
 
-// New reuturns a new scheduled component
-func New() *ScheduledComponent {
+// NewScheduledComponent returns a new scheduled component
+func NewScheduledComponent() *ScheduledComponent {
 	return &ScheduledComponent{schedule: schedule.New()}
 }
 

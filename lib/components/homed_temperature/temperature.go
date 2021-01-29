@@ -6,8 +6,7 @@ import (
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
-	base "github.com/gregdel/homed/lib/components/base_component"
-	scheduled "github.com/gregdel/homed/lib/components/scheduled_component"
+	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -29,14 +28,14 @@ type Data struct {
 
 // HomedTemperature is a component that handles temperatures
 type HomedTemperature struct {
-	base.Component
-	scheduled.ScheduledComponent
+	common.Component
+	common.ScheduledComponent
 	Data
 }
 
 // New returns a new temperature component
 func New() components.Component {
-	sc := scheduled.New()
+	sc := common.NewScheduledComponent()
 	return &HomedTemperature{
 		ScheduledComponent: *sc,
 		Data: Data{

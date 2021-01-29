@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gregdel/homed/lib/components"
-	base "github.com/gregdel/homed/lib/components/base_component"
+	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -18,7 +18,7 @@ func init() {
 
 // TuyaTRV is a component that handles temperatures
 type TuyaTRV struct {
-	base.Component
+	common.Component
 
 	HeatingSetpoint  float64 `json:"current_heating_setpoint"`
 	LocalTemperature float64 `json:"local_temperature"`

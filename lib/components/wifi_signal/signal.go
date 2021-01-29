@@ -2,7 +2,7 @@ package wifisignal
 
 import (
 	"github.com/gregdel/homed/lib/components"
-	base "github.com/gregdel/homed/lib/components/base_component"
+	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -12,8 +12,8 @@ func init() {
 
 // WifiSignal is a component that handles temperatures
 type WifiSignal struct {
-	base.Component
-	base.GenericSensor
+	common.Component
+	common.GenericSensor
 }
 
 // New returns a new wifi signal component

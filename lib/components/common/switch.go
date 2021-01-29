@@ -1,4 +1,4 @@
-package base
+package common
 
 // Switch represents a generic switch
 type Switch struct {

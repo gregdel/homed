@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/gregdel/homed/lib/components"
-	base "github.com/gregdel/homed/lib/components/base_component"
+	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -14,14 +14,14 @@ func init() {
 
 // Switch is a component that controls the boiler
 type Switch struct {
-	base.Component
-	base.Switch
+	common.Component
+	common.Switch
 }
 
 // New returns a new status component
 func New() components.Component {
 	return &Switch{
-		Switch: base.NewSwitch([]byte("ON"), []byte("OFF")),
+		Switch: common.NewSwitch([]byte("ON"), []byte("OFF")),
 	}
 }
 

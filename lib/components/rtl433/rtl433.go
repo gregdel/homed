@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/gregdel/homed/lib/components"
-	base "github.com/gregdel/homed/lib/components/base_component"
+	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -14,7 +14,7 @@ func init() {
 
 // RTL433 is a component that handles rtl_433 signals
 type RTL433 struct {
-	base.Component
+	common.Component
 
 	BoilerState bool `json:"boiler_state"`
 }

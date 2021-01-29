@@ -2,7 +2,7 @@ package status
 
 import (
 	"github.com/gregdel/homed/lib/components"
-	base "github.com/gregdel/homed/lib/components/base_component"
+	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -12,8 +12,8 @@ func init() {
 
 // DeviceStatus is a component that reports the status of a device
 type DeviceStatus struct {
-	base.Component
-	base.DeviceStatus
+	common.Component
+	common.DeviceStatus
 }
 
 // NewDeviceStatus returns a new status component

@@ -1,4 +1,4 @@
-package base
+package common
 
 // BinarySensor represents a generic sensor
 type BinarySensor struct {
