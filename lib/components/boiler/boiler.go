@@ -9,12 +9,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const (
-	cooldownDuration = 5 * time.Minute
-
-	payloadOn  = "ON"
-	payloadOff = "OFF"
-)
+const cooldownDuration = 5 * time.Minute
 
 func init() {
 	components.Register("boiler", NewBoiler)
@@ -23,14 +18,16 @@ func init() {
 // Boiler is a component that controls the boiler
 type Boiler struct {
 	common.Component
-	common.BinarySensor
+	common.Switch
 
 	LastStateChange *time.Time `json:"last_state_change"`
 }
 
 // NewBoiler returns a new status component
 func NewBoiler() components.Component {
-	return &Boiler{}
+	return &Boiler{
+		Switch: common.NewSwitch([]byte("ON"), []byte("OFF")),
+	}
 }
 
 // Type implements the Component interface
@@ -58,7 +55,7 @@ func (b *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
 
 func (b *Boiler) stateFromData(value []byte) bool {
 	data := string(value)
-	if data == payloadOn {
+	if data == "ON" {
 		return true
 	}
 	return false
@@ -80,39 +77,11 @@ func (b *Boiler) WriteCommand(data []byte) error {
 		}
 	}
 
-	return b.Component.WriteCommand(data)
+	return b.Set(newState)
 }
 
 // Update implements the Component interface
 func (b *Boiler) Update(value []byte) error {
 	b.On = b.stateFromData(value)
 	return nil
-}
-
-// SetOn implements the Switch interface
-func (b *Boiler) SetOn() error {
-	return b.WriteCommand([]byte(payloadOn))
-}
-
-// SetOff implements the Switch interface
-func (b *Boiler) SetOff() error {
-	return b.WriteCommand([]byte(payloadOff))
-}
-
-// Set implements the Switch interface
-func (b *Boiler) Set(state bool) error {
-	if state {
-		return b.SetOn()
-	}
-
-	return b.SetOff()
-}
-
-// Toggle implements the Switch interface
-func (b *Boiler) Toggle() error {
-	if b.On {
-		return b.SetOn()
-	}
-
-	return b.SetOff()
 }

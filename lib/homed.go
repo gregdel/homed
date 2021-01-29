@@ -139,11 +139,6 @@ func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
 
 	h.publishToWebsocket(component)
 
-	// h.logger.Debug(
-	// 	"Updating component",
-	// 	zap.String("topic", m.Topic()),
-	// 	zap.String("value", string(m.Payload())),
-	// )
 	h.logger.Sync()
 }
 
