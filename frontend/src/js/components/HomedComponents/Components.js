@@ -11,6 +11,7 @@ import { WifiSignal } from "./WifiSignal";
 import { RTL433 } from "./RTL433";
 import { Boiler } from "./Boiler";
 import { TasmotaSwitch } from "./TasmotaSwitch";
+import { ESPLight } from "./EspLight";
 
 import { Row, Col, Card } from "antd";
 
@@ -55,6 +56,9 @@ export const HomedComponent = ({ uuid, room, device, type, values }) => {
       break;
     case "tasmota_switch":
       typedComponent = <TasmotaSwitch {...values} />;
+      break;
+    case "esphome_light":
+      typedComponent = <ESPLight uuid={uuid} />;
       break;
     case "homed_temperature":
       // Don't display the homed temperature here

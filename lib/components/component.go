@@ -19,6 +19,7 @@ var (
 	TypeWifiSignal       Type = "wifi_signal"
 	TypeTuyaTRV          Type = "tuya_trv"
 	TypeBoiler           Type = "boiler"
+	TypeESPHomeLight     Type = "esphome_light"
 	TypeTasmotaSwitch    Type = "tasmota_switch"
 )
 
