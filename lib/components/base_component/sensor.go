@@ -5,13 +5,15 @@ import (
 	"strconv"
 )
 
-// Float64Component represents a basic component
-type Float64Component struct {
+// GenericSensor represents a generic sensor
+type GenericSensor struct {
+	Component
+
 	Value float64 `json:"value"`
 }
 
 // Update implements the Component interface
-func (fs *Float64Component) Update(value []byte) error {
+func (gs *GenericSensor) Update(value []byte) error {
 	v, err := strconv.ParseFloat(string(value), 64)
 	if err != nil {
 		return err
@@ -22,6 +24,11 @@ func (fs *Float64Component) Update(value []byte) error {
 		v = -99999
 	}
 
-	fs.Value = v
+	gs.Value = v
 	return nil
+}
+
+// SensorValue implements the Sensor interface
+func (gs *GenericSensor) SensorValue() float64 {
+	return gs.Value
 }

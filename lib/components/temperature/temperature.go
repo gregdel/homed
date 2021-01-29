@@ -16,7 +16,7 @@ func init() {
 // Temperature is a component that handles temperatures
 type Temperature struct {
 	base.Component
-	base.Float64Component
+	base.GenericSensor
 }
 
 // New new temperature component

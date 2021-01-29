@@ -15,13 +15,14 @@ func init() {
 // Switch is a component that controls the boiler
 type Switch struct {
 	base.Component
-
-	On bool `json:"on"`
+	base.Switch
 }
 
 // New returns a new status component
 func New() components.Component {
-	return &Switch{}
+	return &Switch{
+		Switch: base.NewSwitch([]byte("ON"), []byte("OFF")),
+	}
 }
 
 // Type implements the Component interface

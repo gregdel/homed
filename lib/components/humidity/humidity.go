@@ -13,7 +13,7 @@ func init() {
 // Humidity is a component that handles temperatures
 type Humidity struct {
 	base.Component
-	base.Float64Component
+	base.GenericSensor
 }
 
 // New returns a new humidity component

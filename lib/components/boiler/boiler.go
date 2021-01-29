@@ -23,8 +23,8 @@ func init() {
 // Boiler is a component that controls the boiler
 type Boiler struct {
 	base.Component
+	base.BinarySensor
 
-	On              bool       `json:"on"`
 	LastStateChange *time.Time `json:"last_state_change"`
 }
 
@@ -115,9 +115,4 @@ func (b *Boiler) Toggle() error {
 	}
 
 	return b.SetOff()
-}
-
-// IsOn implements the Switch interface
-func (b *Boiler) IsOn() bool {
-	return b.On
 }

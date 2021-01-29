@@ -15,12 +15,17 @@ func init() {
 // Light is a component that controls a light
 type Light struct {
 	base.Component
-	On bool `json:"on"`
+	base.Switch
 }
 
 // NewLight returns a new light component
 func NewLight() components.Component {
-	return &Light{}
+	payloadOn, _ := json.Marshal(lightState{State: "ON"})
+	payloadOff, _ := json.Marshal(lightState{State: "OFF"})
+
+	return &Light{
+		Switch: base.NewSwitch(payloadOn, payloadOff),
+	}
 }
 
 // Type implements the Component interface
@@ -58,14 +63,6 @@ func (ls *lightState) isOn() bool {
 	return false
 }
 
-func (l *Light) payload(on bool) ([]byte, error) {
-	state := "OFF"
-	if on {
-		state = "ON"
-	}
-	return json.Marshal(lightState{State: state})
-}
-
 // Update implements the Component interface
 func (l *Light) Update(value []byte) error {
 	ls := lightState{}
@@ -75,45 +72,4 @@ func (l *Light) Update(value []byte) error {
 
 	l.On = ls.isOn()
 	return nil
-}
-
-// SetOn implements the Switch interface
-func (l *Light) SetOn() error {
-	payload, err := l.payload(true)
-	if err != nil {
-		return err
-	}
-	return l.WriteCommand(payload)
-}
-
-// SetOff implements the Switch interface
-func (l *Light) SetOff() error {
-	payload, err := l.payload(false)
-	if err != nil {
-		return err
-	}
-	return l.WriteCommand(payload)
-}
-
-// Set implements the Switch interface
-func (l *Light) Set(state bool) error {
-	if state {
-		return l.SetOn()
-	}
-
-	return l.SetOff()
-}
-
-// Toggle implements the Switch interface
-func (l *Light) Toggle() error {
-	if l.On {
-		return l.SetOn()
-	}
-
-	return l.SetOff()
-}
-
-// IsOn implements the Switch interface
-func (l *Light) IsOn() bool {
-	return l.On
 }

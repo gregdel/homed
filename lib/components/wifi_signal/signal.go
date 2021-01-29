@@ -13,7 +13,7 @@ func init() {
 // WifiSignal is a component that handles temperatures
 type WifiSignal struct {
 	base.Component
-	base.Float64Component
+	base.GenericSensor
 }
 
 // New returns a new wifi signal component

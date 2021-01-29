@@ -30,3 +30,13 @@ type Scheduled interface {
 	ScheduleAdd(time.Weekday, *schedule.TimeSlot) error
 	ScheduleDelete(time.Weekday, string) error
 }
+
+// Sensor reprensents a sensor that holds a value
+type Sensor interface {
+	SensorValue() float64
+}
+
+// BinarySensor reprensents a binary sensor that holds a true/false value
+type BinarySensor interface {
+	IsOn() bool
+}
