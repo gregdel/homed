@@ -28,6 +28,14 @@ type Component interface {
 	// Type represents the component type
 	Type() Type
 
+	// Room
+	Room() string
+	SetRoom(string)
+
+	// Device
+	Device() string
+	SetDevice(string)
+
 	// Update is called every time a new mqtt payload is received on the state
 	// topic
 	Update([]byte) error

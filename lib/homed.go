@@ -10,6 +10,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gorilla/websocket"
 	"github.com/gregdel/homed/lib/components"
+	"github.com/unrolled/render"
 	"go.uber.org/zap"
 )
 
@@ -20,13 +21,14 @@ type Homed struct {
 	logger *zap.Logger
 
 	httpServer *http.Server
+	render     *render.Render
 	websockets map[string]*websocket.Conn
 
 	mqttClient mqtt.Client
 
+	components *components.Components
 	rooms      map[string]*Room
 	devices    map[string]*Device
-	components map[string]components.Component
 
 	stateTopics map[string]components.Component
 	cmdTopics   map[string]components.Component
@@ -35,19 +37,17 @@ type Homed struct {
 	temperatureController *temperatureController
 }
 
-// Rooms TODO delete
-func (h *Homed) Rooms() map[string]*Room {
-	return h.rooms
-}
-
 // New returns a new Homed
 func New(configPath string) (*Homed, error) {
 	homed := &Homed{
 		websockets: map[string]*websocket.Conn{},
 
-		rooms:      map[string]*Room{},
-		devices:    map[string]*Device{},
-		components: map[string]components.Component{},
+		components: components.New(),
+
+		render: render.New(),
+
+		rooms:   map[string]*Room{},
+		devices: map[string]*Device{},
 
 		stateTopics: map[string]components.Component{},
 		cmdTopics:   map[string]components.Component{},
@@ -89,10 +89,14 @@ func New(configPath string) (*Homed, error) {
 		room.AddDevice(device)
 
 		for _, cfg := range d.Components {
-			component, err := device.AddComponent(cfg, homed.mqttClient)
+			component, err := homed.components.Add(cfg, homed.mqttClient, room.Name, device.Name)
 			if err != nil {
-				homed.logger.Warn(err.Error(), zap.String("device_name", device.Name))
-				continue
+				homed.logger.Error(
+					"failed to add component",
+					zap.Error(err),
+					zap.String("device_name", device.Name),
+					zap.String("room_name", room.Name),
+				)
 			}
 
 			if component.Internal() {
@@ -100,7 +104,6 @@ func New(configPath string) (*Homed, error) {
 			}
 
 			homed.stateTopics[cfg.StateTopic] = component
-			homed.components[component.ID().String()] = component
 		}
 	}
 

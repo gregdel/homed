@@ -30,7 +30,7 @@ func newTemperatureController() *temperatureController {
 func (h *Homed) initTemperatureController() error {
 	tc := newTemperatureController()
 	for _, room := range h.rooms {
-		for _, component := range room.Components() {
+		for _, component := range h.components.ListByRoom(room.Name) {
 			switch component.Type() {
 			case components.TypeBoiler:
 				tc.boiler = component.(components.Switch)
@@ -314,7 +314,7 @@ func (h *Homed) setRoomsTemperatures() {
 	}
 }
 
-// // TODO
+// // // TODO
 
 // func (h *Homed) loadTemperatureSchedules() {
 // 	err := readFile(h.scheduleFile, h.temperatureController.schedules)

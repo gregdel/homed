@@ -10,14 +10,16 @@ import (
 
 // Component represents a base component
 type Component struct {
-	CommandTopic string
-	StateTopic   string
-	IsInternal   bool
+	CommandTopic string `json:"-"`
+	StateTopic   string `json:"-"`
+	IsInternal   bool   `json:"-"`
 
 	mqttClient mqtt.Client
 
-	UUID      uuid.UUID  `json:"uuid"`
-	UpdatedAt *time.Time `json:"updated_at"`
+	UUID       uuid.UUID  `json:"uuid"`
+	UpdatedAt  *time.Time `json:"updated_at"`
+	RoomName   string     `json:"room_name"`
+	DeviceName string     `json:"device_name"`
 }
 
 // PostUpdate implements the Component interface
@@ -69,6 +71,26 @@ func (c *Component) ID() uuid.UUID {
 // Internal implements the Component interface
 func (c *Component) Internal() bool {
 	return c.IsInternal
+}
+
+// Room implements the Component interface
+func (c *Component) Room() string {
+	return c.RoomName
+}
+
+// SetRoom implements the Component interface
+func (c *Component) SetRoom(name string) {
+	c.RoomName = name
+}
+
+// Device implements the Component interface
+func (c *Component) Device() string {
+	return c.DeviceName
+}
+
+// SetDevice implements the Component interface
+func (c *Component) SetDevice(name string) {
+	c.DeviceName = name
 }
 
 // WriteCommand implements the Component interface

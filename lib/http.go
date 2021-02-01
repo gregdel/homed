@@ -18,13 +18,13 @@ import (
 func (h *Homed) initHTTP(addr string) error {
 	router := httprouter.New()
 	router.Handler("GET", "/metrics", promhttp.Handler())
-	router.PUT("/components/:id", h.updateComponent)
-	router.GET("/data", h.jsonData)
 	router.GET("/events", h.websocketEvents)
 
-	router.GET("/schedules/:componentId", h.httpGetSchedule)
-	router.POST("/schedules/:componentId/:weekday", h.httpPostSchedule)
-	router.DELETE("/schedules/:componentId/:weekday/:uuid", h.httpDeleteSchedule)
+	router.GET("/components", h.httpComponentList)
+	router.PUT("/components/:id", h.updateComponent)
+	router.GET("/components/:id/schedule", h.httpGetSchedule)
+	router.GET("/components/:id/schedule/:weekday", h.httpPostSchedule)
+	router.DELETE("/compoments/:id/schedule/:weekday/:uuid", h.httpDeleteSchedule)
 
 	router.NotFound = http.FileServer(http.Dir("frontend/build"))
 	h.httpServer = &http.Server{
@@ -35,17 +35,20 @@ func (h *Homed) initHTTP(addr string) error {
 	return nil
 }
 
-func (h *Homed) jsonData(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	out := struct {
-		Rooms []*Room `json:"rooms"`
-	}{}
-
-	for _, r := range h.rooms {
-		out.Rooms = append(out.Rooms, r)
+func (h *Homed) httpError(w http.ResponseWriter, msg string, err error) {
+	e := struct {
+		Message string `json:"message"`
+		Error   string `json:"error"`
+	}{
+		Message: msg,
+		Error:   err.Error(),
 	}
 
-	// TODO check stuff
-	err := json.NewEncoder(w).Encode(out)
+	h.render.JSON(w, http.StatusInternalServerError, e)
+}
+
+func (h *Homed) httpComponentList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	err := json.NewEncoder(w).Encode(h.components)
 	if err != nil {
 		fmt.Fprintf(w, "failed to encode data: %s", err.Error())
 	}
@@ -54,21 +57,21 @@ func (h *Homed) jsonData(w http.ResponseWriter, r *http.Request, ps httprouter.P
 func (h *Homed) updateComponent(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id := ps.ByName("id")
 
-	component, ok := h.components[id]
-	if !ok {
-		fmt.Fprintf(w, "component %s not found", id)
+	component, err := h.components.Get(id)
+	if err != nil {
+		h.httpError(w, "failed to get the component", err)
 		return
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintf(w, "failed to read body: %s", err.Error())
+		h.httpError(w, "failed to read body", err)
 		return
 	}
 
 	err = component.WriteCommand(data)
 	if err != nil {
-		fmt.Fprintf(w, "failed to write mqtt command: %s", err.Error())
+		h.httpError(w, "failed to write mqtt command", err)
 		return
 	}
 }
@@ -91,10 +94,7 @@ func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 	// Upgrade the request for websockets
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Fprintf(w, "got error upgrading request: %s", err.Error())
-		if _, ok := err.(websocket.HandshakeError); !ok {
-			fmt.Fprintf(w, "handshake error")
-		}
+		h.httpError(w, "got error upgrading request", err)
 		return
 	}
 	defer ws.Close()
@@ -107,7 +107,7 @@ func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 
 	uuid, err := h.registerWebsocket(ws)
 	if err != nil {
-		fmt.Fprintf(w, err.Error())
+		h.httpError(w, "failed to register websocket", err)
 		return
 	}
 	defer h.unregisterWebsocket(uuid)
@@ -121,10 +121,10 @@ func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 }
 
 func (h *Homed) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("componentId")
-	c, ok := h.components[componentID]
-	if !ok {
-		fmt.Fprintf(w, "failed to find component")
+	componentID := ps.ByName("id")
+	c, err := h.components.Get(componentID)
+	if err != nil {
+		fmt.Fprintf(w, "failed to get the component: %s", err.Error())
 		return
 	}
 
@@ -134,18 +134,23 @@ func (h *Homed) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	err := json.NewEncoder(w).Encode(sc.Schedule())
+	err = json.NewEncoder(w).Encode(sc.Schedule())
 	if err != nil {
 		fmt.Fprintf(w, "failed to encode data: %s", err.Error())
 		return
 	}
 }
 
+func (h *Homed) httpGetCompoment(ps httprouter.Params) (components.Component, error) {
+	componentID := ps.ByName("id")
+	return h.components.Get(componentID)
+}
+
 func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("componentId")
-	c, ok := h.components[componentID]
-	if !ok {
-		fmt.Fprintf(w, "failed to find component")
+	componentID := ps.ByName("id")
+	c, err := h.components.Get(componentID)
+	if err != nil {
+		fmt.Fprintf(w, "failed to get the component: %s", err.Error())
 		return
 	}
 
@@ -156,7 +161,7 @@ func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	ts := schedule.TimeSlot{}
-	err := json.NewDecoder(r.Body).Decode(&ts)
+	err = json.NewDecoder(r.Body).Decode(&ts)
 	if err != nil {
 		fmt.Fprintf(w, "failed to decode data: %s", err.Error())
 		return
@@ -184,10 +189,10 @@ func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 }
 
 func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("componentId")
-	c, ok := h.components[componentID]
-	if !ok {
-		fmt.Fprintf(w, "failed to find component")
+	componentID := ps.ByName("id")
+	c, err := h.components.Get(componentID)
+	if err != nil {
+		fmt.Fprintf(w, "failed to get the component: %s", err.Error())
 		return
 	}
 
@@ -198,7 +203,7 @@ func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	ts := schedule.TimeSlot{}
-	err := json.NewDecoder(r.Body).Decode(&ts)
+	err = json.NewDecoder(r.Body).Decode(&ts)
 	if err != nil {
 		fmt.Fprintf(w, "failed to decode data: %s", err.Error())
 		return
