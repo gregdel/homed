@@ -8,11 +8,11 @@ import { Col, Row, Switch } from "antd";
 import Icon from "@mdi/react";
 import { mdiPower } from "@mdi/js";
 
-import { componentUpdate } from "../../actions/homedComponents";
+import { componentUpdate } from "../../actions/components";
 
 export const TasmotaSwitch = ({ uuid }) => {
   const dispatch = useDispatch();
-  const data = useSelector((state) => state.stuff.components.get(uuid));
+  const data = useSelector((state) => state.components.components.get(uuid));
   if (!data) {
     return null;
   }

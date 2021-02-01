@@ -20,7 +20,7 @@ import { HomedComponents } from "./components/HomedComponents/Components";
 import { Schedule } from "./components/Schedule/Schedule";
 
 import store, { history } from "./store";
-import { fetchStuff } from "./actions/stuff";
+import { componentsFetch } from "./actions/components";
 
 import "antd/dist/antd.css";
 import "../css/index.css";
@@ -52,7 +52,7 @@ const DataFetcher = ({ children }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(fetchStuff());
+    dispatch(componentsFetch());
   }, [dispatch]);
 
   return (

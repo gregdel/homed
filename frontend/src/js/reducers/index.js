@@ -4,10 +4,10 @@ import { combineReducers } from "redux";
 import { enableMapSet } from "immer";
 enableMapSet();
 
-import stuff from "./stuff";
+import components from "./components";
 import temperatureSchedule from "./temperatureSchedule";
 
 export default combineReducers({
-  stuff,
+  components,
   temperatureSchedule,
 });

@@ -16,7 +16,7 @@ import { ESPLight } from "./EspLight";
 import { Row, Col, Card } from "antd";
 
 export const HomedComponents = () => {
-  const HomedComponents = useSelector((state) => state.stuff.components);
+  const HomedComponents = useSelector((state) => state.components.components);
 
   var items = [];
   HomedComponents.forEach((value, key) => {
@@ -30,7 +30,7 @@ export const HomedComponents = () => {
   return <Row gutter={[10, 10]}>{items}</Row>;
 };
 
-export const HomedComponent = ({ uuid, room, device, type, values }) => {
+export const HomedComponent = ({ uuid, type, values }) => {
   var typedComponent;
   switch (type) {
     case "temperature":
@@ -43,7 +43,7 @@ export const HomedComponent = ({ uuid, room, device, type, values }) => {
       typedComponent = <DeviceStatus {...values} />;
       break;
     case "tuya_trv":
-      typedComponent = <TuyaTRV room={room} {...values} />;
+      typedComponent = <TuyaTRV uuid={uuid} />;
       break;
     case "wifi_signal":
       typedComponent = <WifiSignal {...values} />;
@@ -74,7 +74,7 @@ export const HomedComponent = ({ uuid, room, device, type, values }) => {
     prettyDate = updatedAt.fromNow();
   }
 
-  const title = `${room} - ${type} - ${device}`;
+  const title = `${values.room_name} - ${type} - ${values.device_name}`;
   return (
     <Card title={title} extra={prettyDate}>
       {typedComponent}

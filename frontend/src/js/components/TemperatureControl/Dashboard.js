@@ -8,8 +8,12 @@ import { Boiler } from "../HomedComponents/Boiler";
 import { Row, Col, Card } from "antd";
 
 export const Dashboard = () => {
-  const rooms = useSelector((state) => state.stuff.temperatureControl.rooms);
-  const boiler = useSelector((state) => state.stuff.temperatureControl.boiler);
+  const rooms = useSelector(
+    (state) => state.components.temperatureControl.rooms
+  );
+  const boiler = useSelector(
+    (state) => state.components.temperatureControl.boiler
+  );
 
   var items = [];
   rooms.forEach((uuid, name) => {

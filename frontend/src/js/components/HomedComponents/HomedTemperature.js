@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { prettyName } from "../../utils";
 import moment from "moment";
 
-import { componentUpdate } from "../../actions/homedComponents";
+import { componentUpdate } from "../../actions/components";
 
 import Icon from "@mdi/react";
 import {
@@ -19,15 +19,15 @@ import { Card, Slider, Popover, DatePicker, TimePicker } from "antd";
 export const HomedTemperature = ({ uuid }) => {
   const dispatch = useDispatch();
   const {
-    room,
     values: {
       current,
       target,
+      room_name: room,
       mode,
       manual_target: manualTarget,
       manual_until: manualUntil,
     },
-  } = useSelector((state) => state.stuff.components.get(uuid));
+  } = useSelector((state) => state.components.components.get(uuid));
 
   const [newTarget, setNewTarget] = useState(
     mode === "auto" ? target : manualTarget

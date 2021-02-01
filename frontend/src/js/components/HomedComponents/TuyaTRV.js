@@ -7,7 +7,7 @@ import { Row, Col, Slider, Progress } from "antd";
 import Icon from "@mdi/react";
 import { mdiBattery, mdiBattery10 } from "@mdi/js";
 
-import { componentUpdate } from "../../actions/homedComponents";
+import { componentUpdate } from "../../actions/components";
 
 export const TuyaTRV = ({ uuid }) => {
   const dispatch = useDispatch();
@@ -16,7 +16,7 @@ export const TuyaTRV = ({ uuid }) => {
     battery_low: batteryLow,
     current_heating_setpoint: currentHeatingSetpoint,
     position,
-  } = useSelector((state) => state.stuff.components.get(uuid).values);
+  } = useSelector((state) => state.components.components.get(uuid).values);
 
   const [target, setTarget] = useState(currentHeatingSetpoint);
 

@@ -9,10 +9,10 @@ import { Row, Col, Card } from "antd";
 
 export const Tuya = () => {
   const components = useSelector((state) =>
-    [...state.stuff.components]
+    [...state.components.components]
       .filter(([, component]) => component && component.type === "tuya_trv")
       .map(([, value]) => ({
-        room: value.room,
+        room: value.values.room_name,
         uuid: value.values.uuid,
         updatedAt: moment(
           value.values.updated_at,
