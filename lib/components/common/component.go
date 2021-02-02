@@ -5,7 +5,6 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/google/uuid"
 )
 
 // Component represents a base component
@@ -16,7 +15,7 @@ type Component struct {
 
 	mqttClient mqtt.Client
 
-	UUID       uuid.UUID  `json:"uuid"`
+	Cid        string     `json:"id"`
 	UpdatedAt  *time.Time `json:"updated_at"`
 	RoomName   string     `json:"room_name"`
 	DeviceName string     `json:"device_name"`
@@ -59,13 +58,13 @@ func (c *Component) SetInternal(internal bool) {
 }
 
 // SetID implements the Component interface
-func (c *Component) SetID(uuid uuid.UUID) {
-	c.UUID = uuid
+func (c *Component) SetID(id string) {
+	c.Cid = id
 }
 
 // ID implements the Component interface
-func (c *Component) ID() uuid.UUID {
-	return c.UUID
+func (c *Component) ID() string {
+	return c.Cid
 }
 
 // Internal implements the Component interface

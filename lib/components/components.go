@@ -2,10 +2,10 @@ package components
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -109,16 +109,30 @@ func (c *Components) Add(cfg Config, client mqtt.Client, roomName, deviceName st
 		return nil, err
 	}
 
-	uuid, err := uuid.NewRandom()
-	if err != nil {
+	id := fmt.Sprintf("%s_%s", deviceName, component.Type())
+	i := 1
+	for {
+		newID := fmt.Sprintf("%s_%d", id, i)
+		_, err := c.Get(newID)
+		if err == nil {
+			i++
+			continue
+		}
+
+		if err == ErrComponentNotFound {
+			id = newID
+			break
+		}
+
 		return nil, err
 	}
-	component.SetID(uuid)
+
+	component.SetID(id)
 
 	labels := prometheus.Labels{
 		"device": deviceName,
 		"room":   roomName,
-		"id":     uuid.String(),
+		"id":     id,
 	}
 
 	collectors := component.Collectors(labels)
@@ -138,7 +152,7 @@ func (c *Components) Add(cfg Config, client mqtt.Client, roomName, deviceName st
 	component.SetDevice(deviceName)
 
 	c.mu.Lock()
-	c.byID[uuid.String()] = component
+	c.byID[id] = component
 	c.mu.Unlock()
 
 	return component, nil

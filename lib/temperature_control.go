@@ -140,7 +140,7 @@ func (h *Homed) setBoilerState() {
 			h.logger.Info(
 				"failed to get temperature target",
 				zap.String("component_type", string(component.Type())),
-				zap.String("component_id", component.ID().String()),
+				zap.String("component_id", component.ID()),
 			)
 			continue
 		}
