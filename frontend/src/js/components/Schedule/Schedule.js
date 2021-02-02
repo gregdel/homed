@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
 
 import { fetchSchedule } from "../../actions/schedule";
@@ -9,12 +10,14 @@ const { Title } = Typography;
 
 export const Schedule = () => {
   const dispatch = useDispatch();
+  const { componentId: id } = useParams();
 
   useEffect(() => {
-    dispatch(fetchSchedule());
+    dispatch(fetchSchedule(id));
   }, [dispatch]);
 
-  const schedule = useSelector((state) => state.temperatureSchedule.schedule);
+  const schedule = useSelector((state) => state.schedules.schedules.get(id));
+  console.log(schedule);
   if (!schedule || !schedule.days) {
     return null;
   }

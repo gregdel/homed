@@ -37,7 +37,11 @@ const App = () => (
                 <Route path="/all" exact component={HomedComponents} />
                 <Route path="/temperature" exact component={Dashboard} />
                 <Route path="/tuya" exact component={Tuya} />
-                <Route path="/schedule" exact component={Schedule} />
+                <Route
+                  path="/components/:componentId/schedule"
+                  exact
+                  component={Schedule}
+                />
                 <Route render={() => <Redirect to="/temperature" />} />
               </Switch>
             </Content>

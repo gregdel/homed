@@ -12,9 +12,11 @@ import {
   mdiCalendar,
   mdiTimerOutline,
   mdiAutorenew,
+  mdiAvTimer,
 } from "@mdi/js";
 
 import { Card, Slider, Popover, DatePicker, TimePicker } from "antd";
+import { Link } from "react-router-dom";
 
 export const HomedTemperature = ({ id }) => {
   const dispatch = useDispatch();
@@ -130,7 +132,15 @@ export const HomedTemperature = ({ id }) => {
     : [];
 
   return (
-    <Card title={prettyName(room)} actions={actions}>
+    <Card
+      title={prettyName(room)}
+      extra={
+        <Link to={`/components/${id}/schedule`}>
+          <Icon path={mdiAvTimer} size={1} />
+        </Link>
+      }
+      actions={actions}
+    >
       <div style={{ fontSize: "4em" }}>
         <span>{current}°C</span>
       </div>

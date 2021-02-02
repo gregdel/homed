@@ -11,9 +11,15 @@ import { componentUpdate } from "../../actions/components";
 
 export const Boiler = ({ id }) => {
   const dispatch = useDispatch();
+
   const on = useSelector((state) =>
-    state.components.components.get(id).values.on ? true : false
+    state.components.components.get(id)
+      ? state.components.components.get(id).values.on
+      : undefined
   );
+  if (on === undefined) {
+    return null;
+  }
 
   const toggle = () => {
     dispatch(componentUpdate(id, on ? "OFF" : "ON"));

@@ -1,16 +1,26 @@
 import { configureAxios, request } from "../request";
 
-export const fetchSchedule = () =>
-  request("FETCH_SCHEDULE", configureAxios().get("/schedules/bureau"));
-
-export const addSchedule = (data) =>
-  request("ADD_SCHEDULE", configureAxios().post("/schedules/bureau", data), [
-    () => fetchSchedule(),
-  ]);
-
-export const deleteSchedule = (weekday, id) =>
+export const fetchSchedule = (id) =>
   request(
-    "DELETE_SCHEDULE",
-    configureAxios().delete(`/schedule/${weekday}/${id}`),
-    [() => deleteSchedule()]
+    "SCHEDULE_FETCH",
+    configureAxios().get(`/components/${id}/schedule`),
+    null,
+    { id }
+  );
+
+export const addSchedule = (id, weekday, data) =>
+  request(
+    "SCHEDULE_ADD",
+    configureAxios().post(`/components/${id}/schedule/${weekday}`, data),
+    [() => fetchSchedule(id)],
+    { id }
+  );
+
+export const deleteSchedule = (componentId, weekday, scheduleId) =>
+  request(
+    "SCHEDULE_DELETE",
+    configureAxios().delete(
+      `/components/${componentId}/schedule/${weekday}/${scheduleId}`
+    ),
+    [() => fetchSchedule(componentId)]
   );
