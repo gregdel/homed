@@ -10,9 +10,9 @@ import { mdiLightbulb } from "@mdi/js";
 
 import { componentUpdate } from "../../actions/components";
 
-export const ESPLight = ({ uuid }) => {
+export const ESPLight = ({ id }) => {
   const dispatch = useDispatch();
-  const data = useSelector((state) => state.components.components.get(uuid));
+  const data = useSelector((state) => state.components.components.get(id));
   if (!data) {
     return null;
   }
@@ -21,7 +21,7 @@ export const ESPLight = ({ uuid }) => {
 
   const toggle = () => {
     const data = { state: on ? "OFF" : "ON" };
-    dispatch(componentUpdate(uuid, data));
+    dispatch(componentUpdate(id, data));
   };
 
   return (
@@ -37,5 +37,5 @@ export const ESPLight = ({ uuid }) => {
 };
 
 ESPLight.propTypes = {
-  uuid: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
 };

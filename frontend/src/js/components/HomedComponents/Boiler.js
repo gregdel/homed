@@ -1,7 +1,6 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-
 import PropTypes from "prop-types";
+import { useDispatch, useSelector } from "react-redux";
 
 import { Col, Row, Switch } from "antd";
 
@@ -10,17 +9,14 @@ import { mdiWaterBoiler } from "@mdi/js";
 
 import { componentUpdate } from "../../actions/components";
 
-export const Boiler = ({ uuid }) => {
+export const Boiler = ({ id }) => {
   const dispatch = useDispatch();
-  const data = useSelector((state) => state.components.components.get(uuid));
-  if (!data) {
-    return null;
-  }
-
-  const on = data.values.on;
+  const on = useSelector((state) =>
+    state.components.components.get(id).values.on ? true : false
+  );
 
   const toggle = () => {
-    dispatch(componentUpdate(uuid, on ? "OFF" : "ON"));
+    dispatch(componentUpdate(id, on ? "OFF" : "ON"));
   };
 
   return (
@@ -36,5 +32,5 @@ export const Boiler = ({ uuid }) => {
 };
 
 Boiler.propTypes = {
-  uuid: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
 };

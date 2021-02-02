@@ -13,7 +13,7 @@ export const Tuya = () => {
       .filter(([, component]) => component && component.type === "tuya_trv")
       .map(([, value]) => ({
         room: value.values.room_name,
-        uuid: value.values.uuid,
+        id: value.values.id,
         updatedAt: moment(
           value.values.updated_at,
           "YYYY-MM-DD HH:mm:ss Z"
@@ -23,10 +23,10 @@ export const Tuya = () => {
 
   return (
     <Row gutter={[10, 10]}>
-      {components.map(({ room, uuid, updatedAt }) => (
-        <Col key={uuid} xs={24} sm={12} lg={8}>
+      {components.map(({ room, id, updatedAt }) => (
+        <Col key={id} xs={24} sm={12} lg={8}>
           <Card title={prettyName(room)} extra={updatedAt}>
-            <TuyaTRV uuid={uuid} />
+            <TuyaTRV id={id} />
           </Card>
         </Col>
       ))}

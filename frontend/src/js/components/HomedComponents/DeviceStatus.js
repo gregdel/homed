@@ -1,10 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { useSelector } from "react-redux";
 
-export const DeviceStatus = ({ online }) => {
+export const DeviceStatus = ({ id }) => {
+  const online = useSelector(
+    (state) => state.components.components.get(id).values.on
+  );
   return <>{online ? "Online" : "Offline"}</>;
 };
 
 DeviceStatus.propTypes = {
-  online: PropTypes.bool.isRequired,
+  id: PropTypes.string.isRequired,
 };

@@ -16,15 +16,15 @@ export const Dashboard = () => {
   );
 
   var items = [];
-  rooms.forEach((uuid, name) => {
-    items.push(<Room key={uuid} name={name} uuid={uuid} />);
+  rooms.forEach((id, name) => {
+    items.push(<Room key={id} name={name} id={id} />);
   });
 
   return (
     <>
       <Row style={{ marginBottom: "0.5em" }}>
         <Card title="Boiler" style={{ width: "100%" }}>
-          <Boiler uuid={boiler} />
+          <Boiler id={boiler} />
         </Card>
       </Row>
       <Row gutter={[10, 10]} justify="space-around">
@@ -34,13 +34,13 @@ export const Dashboard = () => {
   );
 };
 
-const Room = ({ uuid }) => (
+const Room = ({ id }) => (
   <Col xs={24} sm={12} lg={8}>
-    <HomedTemperature uuid={uuid} />
+    <HomedTemperature id={id} />
   </Col>
 );
 
 Room.propTypes = {
-  uuid: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
 };

@@ -16,18 +16,18 @@ export default (state = defaultState, action) =>
         data = action.payload.response;
 
         data.map((component) => {
-          const uuid = component.values.uuid;
+          const id = component.values.id;
           const room = component.values.room_name;
-          draft.components.set(uuid, component);
+          draft.components.set(id, component);
 
           // Keep the temperature controled rooms in a different map
           if (component.type === "homed_temperature") {
-            draft.temperatureControl.rooms.set(room, uuid);
+            draft.temperatureControl.rooms.set(room, id);
           }
 
           // Keep the temperature controled rooms in a different map
           if (component.type === "boiler") {
-            draft.temperatureControl.boiler = uuid;
+            draft.temperatureControl.boiler = id;
           }
         });
 
@@ -35,17 +35,17 @@ export default (state = defaultState, action) =>
 
       case "EVENT_COMPONENT_UPDATE":
         data = action.payload;
-        if (!data.values || !data.values.uuid) {
+        if (!data.values || !data.values.id) {
           return draft;
         }
 
         // TODO: we only update the values of the sensor to avoid losing the
         // romm / device information, we should find a better way to handle
         // this
-        var current = draft.components.get(data.values.uuid);
+        var current = draft.components.get(data.values.id);
         current.values = data.values;
 
-        draft.components.set(data.values.uuid, current);
+        draft.components.set(data.values.id, current);
         break;
       default:
         return draft;

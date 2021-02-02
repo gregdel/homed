@@ -16,7 +16,7 @@ import {
 
 import { Card, Slider, Popover, DatePicker, TimePicker } from "antd";
 
-export const HomedTemperature = ({ uuid }) => {
+export const HomedTemperature = ({ id }) => {
   const dispatch = useDispatch();
   const {
     values: {
@@ -27,7 +27,7 @@ export const HomedTemperature = ({ uuid }) => {
       manual_target: manualTarget,
       manual_until: manualUntil,
     },
-  } = useSelector((state) => state.components.components.get(uuid));
+  } = useSelector((state) => state.components.components.get(id));
 
   const [newTarget, setNewTarget] = useState(
     mode === "auto" ? target : manualTarget
@@ -48,7 +48,7 @@ export const HomedTemperature = ({ uuid }) => {
     };
     setShowTimePicker(false);
 
-    dispatch(componentUpdate(uuid, data));
+    dispatch(componentUpdate(id, data));
   };
 
   const onAfterChange = (value) => {
@@ -158,7 +158,7 @@ export const HomedTemperature = ({ uuid }) => {
   );
 };
 HomedTemperature.propTypes = {
-  uuid: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
 };
 
 const HeatingMode = ({ mode, date }) => {

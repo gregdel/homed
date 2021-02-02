@@ -9,14 +9,14 @@ import { mdiBattery, mdiBattery10 } from "@mdi/js";
 
 import { componentUpdate } from "../../actions/components";
 
-export const TuyaTRV = ({ uuid }) => {
+export const TuyaTRV = ({ id }) => {
   const dispatch = useDispatch();
   const {
     local_temperature: localTemperature,
     battery_low: batteryLow,
     current_heating_setpoint: currentHeatingSetpoint,
     position,
-  } = useSelector((state) => state.components.components.get(uuid).values);
+  } = useSelector((state) => state.components.components.get(id).values);
 
   const [target, setTarget] = useState(currentHeatingSetpoint);
 
@@ -28,7 +28,7 @@ export const TuyaTRV = ({ uuid }) => {
   };
 
   const onAfterChange = (value) => {
-    dispatch(componentUpdate(uuid, value));
+    dispatch(componentUpdate(id, value));
   };
 
   return (
@@ -66,5 +66,5 @@ export const TuyaTRV = ({ uuid }) => {
 };
 
 TuyaTRV.propTypes = {
-  uuid: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
 };

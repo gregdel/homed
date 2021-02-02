@@ -1,10 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { useSelector } from "react-redux";
 
-export const Humidity = ({ value }) => {
+export const Humidity = ({ id }) => {
+  const value = useSelector(
+    (state) => state.components.components.get(id).values.value
+  );
   return <>{value}%H</>;
 };
 
 Humidity.propTypes = {
-  value: PropTypes.number.isRequired,
+  id: PropTypes.string.isRequired,
 };

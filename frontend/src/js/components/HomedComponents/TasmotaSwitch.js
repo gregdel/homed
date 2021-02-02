@@ -10,9 +10,9 @@ import { mdiPower } from "@mdi/js";
 
 import { componentUpdate } from "../../actions/components";
 
-export const TasmotaSwitch = ({ uuid }) => {
+export const TasmotaSwitch = ({ id }) => {
   const dispatch = useDispatch();
-  const data = useSelector((state) => state.components.components.get(uuid));
+  const data = useSelector((state) => state.components.components.get(id));
   if (!data) {
     return null;
   }
@@ -20,7 +20,7 @@ export const TasmotaSwitch = ({ uuid }) => {
   const on = data.values.on;
 
   const toggle = () => {
-    dispatch(componentUpdate(uuid, on ? "OFF" : "ON"));
+    dispatch(componentUpdate(id, on ? "OFF" : "ON"));
   };
 
   return (
@@ -36,5 +36,5 @@ export const TasmotaSwitch = ({ uuid }) => {
 };
 
 TasmotaSwitch.propTypes = {
-  uuid: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
 };

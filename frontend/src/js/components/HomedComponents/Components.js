@@ -16,49 +16,68 @@ import { ESPLight } from "./EspLight";
 import { Row, Col, Card } from "antd";
 
 export const HomedComponents = () => {
-  const HomedComponents = useSelector((state) => state.components.components);
+  const components = useSelector((state) =>
+    [...state.components.components].map(([, value]) => ({
+      id: value.values.id,
+      roomName: value.values.room_name,
+      deviceName: value.values.device_name,
+      updatedAt: value.values.updated_at,
+      type: value.type,
+    }))
+  );
 
-  var items = [];
-  HomedComponents.forEach((value, key) => {
-    items.push(
-      <Col key={key} xs={24} sm={12} lg={8}>
-        <HomedComponent key={key} uuid={key} {...value} />
-      </Col>
-    );
-  });
-
-  return <Row gutter={[10, 10]}>{items}</Row>;
+  return (
+    <Row gutter={[10, 10]}>
+      {components.map(({ id, roomName, deviceName, updatedAt, type }) => (
+        <Col key={id} xs={24} sm={12} lg={8}>
+          <HomedComponent
+            id={id}
+            type={type}
+            deviceName={deviceName}
+            roomName={roomName}
+            updatedAt={updatedAt}
+          />
+        </Col>
+      ))}
+    </Row>
+  );
 };
 
-export const HomedComponent = ({ uuid, type, values }) => {
+export const HomedComponent = ({
+  id,
+  type,
+  deviceName,
+  roomName,
+  updatedAt,
+}) => {
   var typedComponent;
   switch (type) {
     case "temperature":
-      typedComponent = <Temperature {...values} />;
+      typedComponent = <Temperature id={id} />;
       break;
     case "humidity":
-      typedComponent = <Humidity {...values} />;
+      typedComponent = <Humidity id={id} />;
       break;
     case "device_status":
-      typedComponent = <DeviceStatus {...values} />;
+      typedComponent = <DeviceStatus id={id} />;
       break;
     case "tuya_trv":
-      typedComponent = <TuyaTRV uuid={uuid} />;
+      typedComponent = <TuyaTRV id={id} />;
       break;
     case "wifi_signal":
-      typedComponent = <WifiSignal {...values} />;
+      typedComponent = <WifiSignal id={id} />;
       break;
     case "rtl_433":
-      typedComponent = <RTL433 uuid={uuid} {...values} />;
+      typedComponent = <RTL433 id={id} />;
       break;
     case "boiler":
-      typedComponent = <Boiler {...values} />;
+      typedComponent = <Boiler id={id} />;
       break;
     case "tasmota_switch":
-      typedComponent = <TasmotaSwitch {...values} />;
+      typedComponent = <TasmotaSwitch id={id} />;
       break;
     case "esphome_light":
-      typedComponent = <ESPLight uuid={uuid} />;
+      typedComponent = <ESPLight id={id} />;
       break;
     case "homed_temperature":
       // Don't display the homed temperature here
@@ -69,12 +88,12 @@ export const HomedComponent = ({ uuid, type, values }) => {
   }
 
   var prettyDate = "";
-  const updatedAt = moment(values.updated_at, "YYYY-MM-DD HH:mm:ss Z");
-  if (updatedAt.isValid()) {
-    prettyDate = updatedAt.fromNow();
+  const m = moment(updatedAt, "YYYY-MM-DD HH:mm:ss Z");
+  if (m.isValid()) {
+    prettyDate = m.fromNow();
   }
 
-  const title = `${values.room_name} - ${type} - ${values.device_name}`;
+  const title = `${roomName} - ${type} - ${deviceName}`;
   return (
     <Card title={title} extra={prettyDate}>
       {typedComponent}
@@ -82,9 +101,9 @@ export const HomedComponent = ({ uuid, type, values }) => {
   );
 };
 HomedComponent.propTypes = {
-  uuid: PropTypes.string.isRequired,
-  room: PropTypes.string.isRequired,
-  device: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,
-  values: PropTypes.object.isRequired,
+  deviceName: PropTypes.string.isRequired,
+  roomName: PropTypes.string.isRequired,
+  updatedAt: PropTypes.string,
 };
