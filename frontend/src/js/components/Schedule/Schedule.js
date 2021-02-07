@@ -8,6 +8,8 @@ import { fetchSchedule } from "../../actions/schedule";
 import { Typography, Divider } from "antd";
 const { Title } = Typography;
 
+import { Add } from "./Add";
+
 export const Schedule = () => {
   const dispatch = useDispatch();
   const { componentId: id } = useParams();
@@ -52,6 +54,7 @@ export const DailySchedule = ({ day = 0, data = [] }) => {
     <>
       <Title level={3}>{days[day]}</Title>
       <Timeline data={data} />
+      <Add day={day} />
       <Divider />
     </>
   );
@@ -88,7 +91,8 @@ Timeline.propTypes = {
   data: PropTypes.array.isRequired,
 };
 
-const prettyNumber = (number) => ("0" + number).slice(-2);
+// Remove the seconds from the displayed time
+const formatTime = (time) => time.slice(0, -3);
 
 export const TimeSlot = ({ start, stop, value }) => {
   return (
@@ -109,15 +113,8 @@ export const TimeSlot = ({ start, stop, value }) => {
           <span style={{ fontSize: "1.5em" }}>{value}°C</span>
         </div>
         <div>
-          <span>
-            {start.hour}:{prettyNumber(start.minute)}
-          </span>
-          {stop && (
-            <span>
-              {" "}
-              - {stop.hour}:{prettyNumber(stop.minute)}
-            </span>
-          )}
+          <span>{formatTime(start)}</span>
+          {stop && <span> - {formatTime(stop)}</span>}
         </div>
       </div>
     </div>

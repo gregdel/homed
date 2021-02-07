@@ -23,7 +23,7 @@ func (h *Homed) initHTTP(addr string) error {
 	router.GET("/components", h.httpComponentList)
 	router.PUT("/components/:id", h.updateComponent)
 	router.GET("/components/:id/schedule", h.httpGetSchedule)
-	router.GET("/components/:id/schedule/:weekday", h.httpPostSchedule)
+	router.POST("/components/:id/schedule/:weekday", h.httpPostSchedule)
 	router.DELETE("/compoments/:id/schedule/:weekday/:uuid", h.httpDeleteSchedule)
 
 	router.NotFound = http.FileServer(http.Dir("frontend/build"))
