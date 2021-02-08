@@ -2,7 +2,6 @@ package common
 
 // Switch represents a generic switch
 type Switch struct {
-	Component
 	BinarySensor
 
 	payloadOn  []byte

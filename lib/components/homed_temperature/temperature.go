@@ -28,8 +28,8 @@ type Data struct {
 
 // HomedTemperature is a component that handles temperatures
 type HomedTemperature struct {
-	common.Component
 	common.ScheduledComponent
+
 	Data
 }
 

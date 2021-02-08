@@ -42,8 +42,6 @@ func New(configPath string) (*Homed, error) {
 	homed := &Homed{
 		websockets: map[string]*websocket.Conn{},
 
-		components: components.New(),
-
 		render: render.New(),
 
 		rooms:   map[string]*Room{},
@@ -57,6 +55,8 @@ func New(configPath string) (*Homed, error) {
 	if err := readFile(configPath, config); err != nil {
 		return nil, err
 	}
+
+	homed.components = components.New(config.DataPath)
 
 	opts := mqtt.NewClientOptions().AddBroker(config.MQTT.Broker)
 	homed.mqttClient = mqtt.NewClient(opts)
@@ -111,7 +111,6 @@ func New(configPath string) (*Homed, error) {
 		return nil, err
 	}
 
-	homed.scheduleFile = config.ScheduleFile
 	if err := homed.initTemperatureController(); err != nil {
 		return nil, err
 	}

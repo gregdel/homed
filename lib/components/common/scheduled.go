@@ -1,13 +1,17 @@
 package common
 
 import (
+	"os"
 	"time"
 
 	"github.com/gregdel/homed/lib/schedule"
+	"gopkg.in/yaml.v2"
 )
 
 // ScheduledComponent represents a scheduled component
 type ScheduledComponent struct {
+	Component
+
 	schedule *schedule.Schedule
 }
 
@@ -67,4 +71,26 @@ func (c *ScheduledComponent) ScheduleAdd(wd time.Weekday, ts *schedule.TimeSlot)
 // ScheduleDelete implements the Scheduled interface
 func (c *ScheduledComponent) ScheduleDelete(wd time.Weekday, id string) error {
 	return c.schedule.Delete(wd, id)
+}
+
+// LoadSchedule implements the Scheduled interface
+func (c *ScheduledComponent) LoadSchedule(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return yaml.NewDecoder(file).Decode(c.schedule)
+}
+
+// SaveSchedule implements the Scheduled interface
+func (c *ScheduledComponent) SaveSchedule(path string) error {
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return yaml.NewEncoder(file).Encode(c.schedule)
 }

@@ -3,6 +3,7 @@ package components
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"sync"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -13,14 +14,17 @@ import (
 type Components struct {
 	mu sync.Mutex
 
+	dataPath string
+
 	byID     map[string]Component
 	byRoom   map[string][]string
 	byDevice map[string][]string
 }
 
 // New returns a new Components type
-func New() *Components {
+func New(dataPath string) *Components {
 	return &Components{
+		dataPath: dataPath,
 		byID:     map[string]Component{},
 		byRoom:   map[string][]string{},
 		byDevice: map[string][]string{},
@@ -151,9 +155,19 @@ func (c *Components) Add(cfg Config, client mqtt.Client, roomName, deviceName st
 	component.SetRoom(roomName)
 	component.SetDevice(deviceName)
 
+	if sc, ok := component.(Scheduled); ok {
+		// TODO: check and log the error
+		sc.LoadSchedule(c.SchedulePath(component))
+	}
+
 	c.mu.Lock()
 	c.byID[id] = component
 	c.mu.Unlock()
 
 	return component, nil
+}
+
+// SchedulePath returns the schedule file path of a component
+func (c *Components) SchedulePath(component Component) string {
+	return filepath.Join(c.dataPath, component.ID()+".yaml")
 }

@@ -29,6 +29,8 @@ type Scheduled interface {
 	SetSchedule(*schedule.Schedule)
 	ScheduleAdd(time.Weekday, *schedule.TimeSlot) error
 	ScheduleDelete(time.Weekday, string) error
+	LoadSchedule(string) error
+	SaveSchedule(string) error
 }
 
 // Sensor reprensents a sensor that holds a value

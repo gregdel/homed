@@ -185,7 +185,11 @@ func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	// h.saveTemperatureSchedules()
+	err = sc.SaveSchedule(h.components.SchedulePath(c))
+	if err != nil {
+		fmt.Fprintf(w, "failed to save schedule: %s", err.Error())
+		return
+	}
 }
 
 func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -228,5 +232,9 @@ func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	// h.saveTemperatureSchedules()
+	err = sc.SaveSchedule(h.components.SchedulePath(c))
+	if err != nil {
+		fmt.Fprintf(w, "failed to save schedule: %s", err.Error())
+		return
+	}
 }
