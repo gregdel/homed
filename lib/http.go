@@ -24,7 +24,7 @@ func (h *Homed) initHTTP(addr string) error {
 	router.PUT("/components/:id", h.updateComponent)
 	router.GET("/components/:id/schedule", h.httpGetSchedule)
 	router.POST("/components/:id/schedule/:weekday", h.httpPostSchedule)
-	router.DELETE("/compoments/:id/schedule/:weekday/:uuid", h.httpDeleteSchedule)
+	router.DELETE("/components/:id/schedule/:weekday/:uuid", h.httpDeleteSchedule)
 
 	router.NotFound = http.FileServer(http.Dir("frontend/build"))
 	h.httpServer = &http.Server{
@@ -203,13 +203,6 @@ func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 	sc, ok := c.(components.Scheduled)
 	if !ok {
 		fmt.Fprintf(w, "this component can not be scheduled")
-		return
-	}
-
-	ts := schedule.TimeSlot{}
-	err = json.NewDecoder(r.Body).Decode(&ts)
-	if err != nil {
-		fmt.Fprintf(w, "failed to decode data: %s", err.Error())
 		return
 	}
 

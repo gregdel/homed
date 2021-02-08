@@ -3,7 +3,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
 
-import { fetchSchedule } from "../../actions/schedule";
+import { fetchSchedule, deleteSchedule } from "../../actions/schedule";
+
+import Icon from "@mdi/react";
+import { mdiTrashCanOutline } from "@mdi/js";
 
 import { Typography, Divider } from "antd";
 const { Title } = Typography;
@@ -53,7 +56,7 @@ export const DailySchedule = ({ day = 0, data = [] }) => {
   return (
     <>
       <Title level={3}>{days[day]}</Title>
-      <Timeline data={data} />
+      <Timeline day={day} data={data} />
       <Add day={day} />
       <Divider />
     </>
@@ -64,7 +67,7 @@ DailySchedule.propTypes = {
   data: PropTypes.array.isRequired,
 };
 
-export const Timeline = ({ data = [] }) => {
+export const Timeline = ({ day, data = [] }) => {
   if (data.length === 0) {
     return <div>No schedule defined</div>;
   }
@@ -82,19 +85,27 @@ export const Timeline = ({ data = [] }) => {
       }}
     >
       {data.map((v, i) => (
-        <TimeSlot key={i} {...v} />
+        <TimeSlot key={i} day={day} {...v} />
       ))}
     </div>
   );
 };
 Timeline.propTypes = {
+  day: PropTypes.number.isRequired,
   data: PropTypes.array.isRequired,
 };
 
 // Remove the seconds from the displayed time
 const formatTime = (time) => time.slice(0, -3);
 
-export const TimeSlot = ({ start, stop, value }) => {
+export const TimeSlot = ({ start, stop, value, uuid, day }) => {
+  const dispatch = useDispatch();
+  const { componentId: id } = useParams();
+
+  const handleDelete = () => {
+    dispatch(deleteSchedule(id, day, uuid));
+  };
+
   return (
     <div
       style={{
@@ -109,8 +120,11 @@ export const TimeSlot = ({ start, stop, value }) => {
       <div
         style={{ display: "flex", flexDirection: "column", margin: "0.3em" }}
       >
-        <div>
-          <span style={{ fontSize: "1.5em" }}>{value}°C</span>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div style={{ fontSize: "1.5em" }}>{value}°C</div>
+          <div style={{ cursor: "pointer" }} onClick={handleDelete}>
+            <Icon path={mdiTrashCanOutline} size={1} />
+          </div>
         </div>
         <div>
           <span>{formatTime(start)}</span>
@@ -121,7 +135,9 @@ export const TimeSlot = ({ start, stop, value }) => {
   );
 };
 TimeSlot.propTypes = {
-  start: PropTypes.object.isRequired,
-  stop: PropTypes.object,
+  uuid: PropTypes.string.isRequired,
+  start: PropTypes.string.isRequired,
+  stop: PropTypes.string,
   value: PropTypes.number.isRequired,
+  day: PropTypes.number.isRequired,
 };
