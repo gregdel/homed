@@ -15,8 +15,7 @@ const { Content } = Layout;
 import { WsHandler } from "./websocket";
 import { AppMenu } from "./components/Menu";
 import { Dashboard } from "./components/TemperatureControl/Dashboard";
-import { Tuya } from "./components/TemperatureControl/Tuya";
-import { HomedComponents } from "./components/HomedComponents/Components";
+import { Components } from "./components/Components/Components";
 import { Schedule } from "./components/Schedule/Schedule";
 
 import store, { history } from "./store";
@@ -34,9 +33,17 @@ const App = () => (
           <Layout>
             <Content style={{ padding: "1em" }}>
               <Switch>
-                <Route path="/all" exact component={HomedComponents} />
+                <Route path="/all" exact component={Components} />
                 <Route path="/temperature" exact component={Dashboard} />
-                <Route path="/tuya" exact component={Tuya} />
+                <Route path="/tuya" exact>
+                  <Components typesFilter={["tuya_trv"]} />
+                </Route>
+                <Route path="/lights" exact>
+                  <Components typesFilter={["esphome_light"]} />
+                </Route>
+                <Route path="/switches" exact>
+                  <Components typesFilter={["tasmota_switch"]} />
+                </Route>
                 <Route
                   path="/components/:componentId/schedule"
                   exact

@@ -1,8 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useSelector } from "react-redux";
 import moment from "moment";
 
+import { HomedTemperature } from "./HomedTemperature";
 import { Temperature } from "./Temperature";
 import { Humidity } from "./Humidity";
 import { DeviceStatus } from "./DeviceStatus";
@@ -13,42 +13,17 @@ import { Boiler } from "./Boiler";
 import { TasmotaSwitch } from "./TasmotaSwitch";
 import { ESPLight } from "./EspLight";
 
-import { Row, Col, Card } from "antd";
+import { Card } from "antd";
 
-export const HomedComponents = () => {
-  const components = useSelector((state) =>
-    [...state.components.components].map(([, value]) => ({
-      id: value.values.id,
-      roomName: value.values.room_name,
-      deviceName: value.values.device_name,
-      updatedAt: value.values.updated_at,
-      type: value.type,
-    }))
-  );
-
-  return (
-    <Row gutter={[10, 10]}>
-      {components.map(({ id, roomName, deviceName, updatedAt, type }) => (
-        <Col key={id} xs={24} sm={12} lg={8}>
-          <HomedComponent
-            id={id}
-            type={type}
-            deviceName={deviceName}
-            roomName={roomName}
-            updatedAt={updatedAt}
-          />
-        </Col>
-      ))}
-    </Row>
-  );
-};
-
-export const HomedComponent = ({
+export const Component = ({
   id,
   type,
-  deviceName,
+  title,
+  extra,
   roomName,
+  deviceName,
   updatedAt,
+  noCard,
 }) => {
   var typedComponent;
   switch (type) {
@@ -80,11 +55,15 @@ export const HomedComponent = ({
       typedComponent = <ESPLight id={id} />;
       break;
     case "homed_temperature":
-      // Don't display the homed temperature here
-      return null;
+      typedComponent = <HomedTemperature id={id} />;
+      break;
     default:
       typedComponent = <>Unhandled {type}</>;
       break;
+  }
+
+  if (noCard) {
+    return typedComponent;
   }
 
   var prettyDate = "";
@@ -93,17 +72,23 @@ export const HomedComponent = ({
     prettyDate = m.fromNow();
   }
 
-  const title = `${roomName} - ${type} - ${deviceName}`;
+  const newTitle = `${roomName} - ${type} - ${deviceName}`;
   return (
-    <Card title={title} extra={prettyDate}>
+    <Card title={title ? title : newTitle} extra={extra ? extra : prettyDate}>
       {typedComponent}
     </Card>
   );
 };
-HomedComponent.propTypes = {
+Component.defaultProps = {
+  noCard: false,
+};
+Component.propTypes = {
   id: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,
-  deviceName: PropTypes.string.isRequired,
-  roomName: PropTypes.string.isRequired,
+  roomName: PropTypes.string,
+  deviceName: PropTypes.string,
   updatedAt: PropTypes.string,
+  title: PropTypes.string,
+  extra: PropTypes.any,
+  noCard: PropTypes.bool.isRequired,
 };
