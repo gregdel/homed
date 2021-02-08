@@ -50,8 +50,6 @@ func (h *Homed) initTemperatureController() error {
 
 	h.temperatureController = tc
 
-	// h.loadTemperatureSchedules()
-
 	return nil
 }
 
@@ -313,25 +311,3 @@ func (h *Homed) setRoomsTemperatures() {
 		}
 	}
 }
-
-// // // TODO
-
-// func (h *Homed) loadTemperatureSchedules() {
-// 	err := readFile(h.scheduleFile, h.temperatureController.schedules)
-// 	if err != nil {
-// 		h.logger.Error(
-// 			"failed to read temperature schedules",
-// 			zap.String("error", err.Error()),
-// 		)
-// 	}
-// }
-
-// func (h *Homed) saveTemperatureSchedules() {
-// 	err := writeFile(h.scheduleFile, true, h.temperatureController.schedules)
-// 	if err != nil {
-// 		h.logger.Error(
-// 			"failed to save temperature schedules",
-// 			zap.String("error", err.Error()),
-// 		)
-// 	}
-// }

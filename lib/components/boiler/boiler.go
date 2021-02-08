@@ -17,7 +17,6 @@ func init() {
 
 // Boiler is a component that controls the boiler
 type Boiler struct {
-	common.Component
 	common.Switch
 
 	LastStateChange *time.Time `json:"last_state_change"`

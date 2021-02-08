@@ -161,7 +161,19 @@ func (c *Components) Add(cfg Config, client mqtt.Client, roomName, deviceName st
 	}
 
 	c.mu.Lock()
+
 	c.byID[id] = component
+
+	if len(c.byRoom[roomName]) == 0 {
+		c.byRoom[roomName] = []string{}
+	}
+	c.byRoom[roomName] = append(c.byRoom[roomName], id)
+
+	if len(c.byDevice[deviceName]) == 0 {
+		c.byDevice[deviceName] = []string{}
+	}
+	c.byDevice[deviceName] = append(c.byDevice[deviceName], id)
+
 	c.mu.Unlock()
 
 	return component, nil
