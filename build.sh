@@ -8,7 +8,6 @@ _err() {
 	exit 1
 }
 
-rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 [ -d "./$BUILD_DIR" ] || _err "Missing build dir"
@@ -32,7 +31,18 @@ _frontend_build() {
 	cd .. || return
 }
 
-_frontend_build
-_backend_build
-
-rm -rf "$BUILD_DIR"
+case "$1" in
+	frontend)
+		_frontend_build
+		;;
+	backend)
+		_backend_build
+		;;
+	*)
+		rm -rf "$BUILD_DIR"
+		mkdir -p "$BUILD_DIR"
+		_frontend_build
+		_backend_build
+		rm -rf "$BUILD_DIR"
+		;;
+esac
