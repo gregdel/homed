@@ -16,7 +16,9 @@ import (
 
 // Homed needs to be used to load data efficiently
 type Homed struct {
-	basePath string
+	basePath           string
+	dev                bool
+	temperatureControl bool
 
 	logger *zap.Logger
 
@@ -60,6 +62,9 @@ func New(configPath string) (*Homed, error) {
 
 	opts := mqtt.NewClientOptions().AddBroker(config.MQTT.Broker)
 	homed.mqttClient = mqtt.NewClient(opts)
+
+	homed.dev = config.Dev
+	homed.temperatureControl = config.TemperatureControl
 
 	var err error
 	if config.Debug {
@@ -200,16 +205,16 @@ func (h *Homed) Run() error {
 		h.httpServer.Shutdown(context.Background())
 	}()
 
-	// Start the temperature control function
-	go h.startTemperatureControl(done)
+	if h.temperatureControl {
+		// Start the temperature control function
+		go h.startTemperatureControl(done)
+	}
 
 	h.logger.Info("Starting HTTP server")
 	h.httpServer.ListenAndServe()
 
 	h.logger.Info("Disconnecting from the MQTT broker")
 	h.mqttClient.Disconnect(250)
-
-	// h.saveTemperatureSchedules()
 
 	return nil
 }

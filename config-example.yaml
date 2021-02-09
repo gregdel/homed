@@ -1,4 +1,7 @@
 debug: true
+dev: false
+temperature_control: false
+data_path: ./data
 mqtt:
   broker: tcp://192.168.100.50:1883
 http:

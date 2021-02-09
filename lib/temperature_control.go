@@ -28,6 +28,10 @@ func newTemperatureController() *temperatureController {
 }
 
 func (h *Homed) initTemperatureController() error {
+	if !h.temperatureControl {
+		return nil
+	}
+
 	tc := newTemperatureController()
 	for _, room := range h.rooms {
 		for _, component := range h.components.ListByRoom(room.Name) {

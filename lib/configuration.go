@@ -10,9 +10,11 @@ import (
 
 // Config reprensents the configuration
 type Config struct {
-	Debug    bool   `yaml:"debug"`
-	DataPath string `yaml:"data_path"`
-	MQTT     struct {
+	Debug              bool   `yaml:"debug"`
+	DataPath           string `yaml:"data_path"`
+	TemperatureControl bool   `yaml:"temperature_control"`
+	Dev                bool   `yaml:"dev"`
+	MQTT               struct {
 		Broker string `yaml:"broker"`
 	} `yaml:"mqtt"`
 	HTTP struct {
