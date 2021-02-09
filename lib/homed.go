@@ -2,6 +2,7 @@ package homed
 
 import (
 	"context"
+	"embed"
 	"net/http"
 	"os"
 	"os/signal"
@@ -35,13 +36,17 @@ type Homed struct {
 	stateTopics map[string]components.Component
 	cmdTopics   map[string]components.Component
 
+	embedFS *embed.FS
+
 	scheduleFile          string
 	temperatureController *temperatureController
 }
 
 // New returns a new Homed
-func New(configPath string) (*Homed, error) {
+func New(configPath string, embedFS *embed.FS) (*Homed, error) {
 	homed := &Homed{
+		embedFS: embedFS,
+
 		websockets: map[string]*websocket.Conn{},
 
 		render: render.New(),
@@ -211,7 +216,9 @@ func (h *Homed) Run() error {
 	}
 
 	h.logger.Info("Starting HTTP server")
-	h.httpServer.ListenAndServe()
+	if err := h.httpServer.ListenAndServe(); err != nil {
+		h.logger.Error("Failed to start http server", zap.Error(err))
+	}
 
 	h.logger.Info("Disconnecting from the MQTT broker")
 	h.mqttClient.Disconnect(250)

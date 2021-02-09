@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"os"
@@ -19,6 +20,9 @@ import (
 	_ "github.com/gregdel/homed/lib/components/wifi_signal"
 )
 
+//go:embed build
+var embedFS embed.FS
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Println(err)
@@ -30,7 +34,7 @@ func run() error {
 	var config string
 	flag.StringVar(&config, "config", "./config.yaml", "homed configuration file")
 
-	homed, err := homed.New(config)
+	homed, err := homed.New(config, &embedFS)
 	if err != nil {
 		return err
 	}

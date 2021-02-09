@@ -3,6 +3,7 @@ package homed
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -26,7 +27,19 @@ func (h *Homed) initHTTP(addr string) error {
 	router.POST("/components/:id/schedule/:weekday", h.httpPostSchedule)
 	router.DELETE("/components/:id/schedule/:weekday/:uuid", h.httpDeleteSchedule)
 
-	router.NotFound = http.FileServer(http.Dir("frontend/build"))
+	var httpFS http.FileSystem
+	if h.dev {
+		httpFS = http.Dir("frontend/build")
+	} else {
+		f, err := fs.Sub(h.embedFS, "build")
+		if err != nil {
+			return err
+		}
+
+		httpFS = http.FS(f)
+	}
+	router.NotFound = http.FileServer(httpFS)
+
 	h.httpServer = &http.Server{
 		Addr:    addr,
 		Handler: router,
