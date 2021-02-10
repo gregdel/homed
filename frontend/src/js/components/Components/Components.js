@@ -29,8 +29,6 @@ export const Components = ({ typesFilter, noCard }) => {
       }))
   );
 
-  console.warn(components);
-
   return (
     <Row gutter={[10, 10]}>
       {components.map(({ id, roomName, deviceName, updatedAt, type }) => (

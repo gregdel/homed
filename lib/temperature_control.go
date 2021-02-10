@@ -100,11 +100,16 @@ func (h *Homed) updateRoomsTemperatures() {
 		}
 
 		// Update the current room temperature
-		currentTemperature := room.Temperature()
+		currentTemperature := room.Temperature(h.components.ListByRoom(roomName))
 		if currentTemperature == 0 {
 			continue
 		}
 
+		h.logger.Info(
+			"Setting homed's room temperature",
+			zap.String("room", roomName),
+			zap.Float64("temperature", currentTemperature),
+		)
 		if err := component.SetTemperature(currentTemperature); err != nil {
 			h.logger.Error(err.Error(), zap.String("room", roomName))
 			continue
