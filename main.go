@@ -18,6 +18,7 @@ import (
 	_ "github.com/gregdel/homed/lib/components/temperature"
 	_ "github.com/gregdel/homed/lib/components/tuya_trv"
 	_ "github.com/gregdel/homed/lib/components/wifi_signal"
+	_ "github.com/gregdel/homed/lib/components/xiaomi_aqara"
 )
 
 //go:embed build

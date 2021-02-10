@@ -12,6 +12,7 @@ import { RTL433 } from "./RTL433";
 import { Boiler } from "./Boiler";
 import { TasmotaSwitch } from "./TasmotaSwitch";
 import { ESPLight } from "./EspLight";
+import { XiaomiAqara } from "./XiaomiAqara";
 
 import { Card } from "antd";
 
@@ -56,6 +57,9 @@ export const Component = ({
       break;
     case "homed_temperature":
       typedComponent = <HomedTemperature id={id} />;
+      break;
+    case "xiaomi_aqara":
+      typedComponent = <XiaomiAqara id={id} />;
       break;
     default:
       typedComponent = <>Unhandled {type}</>;

@@ -20,6 +20,7 @@ var (
 	TypeBoiler           Type = "boiler"
 	TypeESPHomeLight     Type = "esphome_light"
 	TypeTasmotaSwitch    Type = "tasmota_switch"
+	TypeXiaomiAqara      Type = "xiaomi_aqara"
 )
 
 // Component represents a component
