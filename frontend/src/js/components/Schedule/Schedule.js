@@ -76,17 +76,24 @@ export const Timeline = ({ day, data = [] }) => {
     <div
       style={{
         width: "100%",
-        height: "6em",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "flex-end",
+        height: "7em",
+        overflow: "auto",
         backgroundColor: "#91d5ff",
         borderRadius: "0.3em",
       }}
     >
-      {data.map((v, i) => (
-        <TimeSlot key={i} day={day} {...v} />
-      ))}
+      <div
+        style={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "flex-end",
+        }}
+      >
+        {data.map((v, i) => (
+          <TimeSlot key={i} day={day} {...v} />
+        ))}
+      </div>
     </div>
   );
 };
@@ -109,27 +116,25 @@ export const TimeSlot = ({ start, stop, value, uuid, day }) => {
   return (
     <div
       style={{
-        height: "5em",
         backgroundColor: "#ffd666",
-        width: "8em",
         borderTopLeftRadius: "0.3em",
         borderTopRightRadius: "0.3em",
-        marginLeft: "10em",
+        marginLeft: "1em",
+        marginRight: "1em",
+        padding: "0.3em",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      <div
-        style={{ display: "flex", flexDirection: "column", margin: "0.3em" }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <div style={{ fontSize: "1.5em" }}>{value}°C</div>
-          <div style={{ cursor: "pointer" }} onClick={handleDelete}>
-            <Icon path={mdiTrashCanOutline} size={1} />
-          </div>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div style={{ fontSize: "1.5em" }}>{value}°C</div>
+        <div style={{ cursor: "pointer" }} onClick={handleDelete}>
+          <Icon path={mdiTrashCanOutline} size={1} />
         </div>
-        <div>
-          <span>{formatTime(start)}</span>
-          {stop && <span> - {formatTime(stop)}</span>}
-        </div>
+      </div>
+      <div>
+        <span>{formatTime(start)}</span>
+        {stop && <span> - {formatTime(stop)}</span>}
       </div>
     </div>
   );
