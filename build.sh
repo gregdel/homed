@@ -8,8 +8,14 @@ _err() {
 	exit 1
 }
 
-mkdir -p "$BUILD_DIR"
+_cleanup_buildir() {
+	rm -rf "$BUILD_DIR"
+	mkdir -p "$BUILD_DIR"
+	[ "$1" ] || return 0
+	touch "$BUILD_DIR/$1"
+}
 
+_cleanup_buildir
 [ -d "./$BUILD_DIR" ] || _err "Missing build dir"
 [ -d "frontend" ]     || _err "Frontend directory is missing"
 
@@ -39,10 +45,9 @@ case "$1" in
 		_backend_build
 		;;
 	*)
-		rm -rf "$BUILD_DIR"
-		mkdir -p "$BUILD_DIR"
+		_cleanup_buildir
 		_frontend_build
 		_backend_build
-		rm -rf "$BUILD_DIR"
+		_cleanup_buildir keep
 		;;
 esac
