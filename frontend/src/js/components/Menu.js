@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Layout, Menu, Typography } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import Icon from "@mdi/react";
 import {
@@ -12,29 +12,82 @@ import {
 
 const { Sider } = Layout;
 
-export const AppMenu = () => (
-  <Sider breakpoint="lg" collapsedWidth="0">
-    <Menu theme="dark" mode="inline" style={{ paddingTop: "1em" }}>
-      <Menu.Item key="2" icon={<Icon path={mdiHomeThermometer} size={1} />}>
-        <Link to="/temperature" component={Typography.Link}>
-          Temperature
-        </Link>
-      </Menu.Item>
-      <Menu.Item key="3" icon={<Icon path={mdiThermometerLines} size={1} />}>
-        <Link to="/tuya" component={Typography.Link}>
-          Termostatic valves
-        </Link>
-      </Menu.Item>
-      <Menu.Item key="4" icon={<Icon path={mdiLightbulb} size={1} />}>
-        <Link to="/lights" component={Typography.Link}>
-          Lights
-        </Link>
-      </Menu.Item>
-      <Menu.Item key="5" icon={<Icon path={mdiPower} size={1} />}>
-        <Link to="/switches" component={Typography.Link}>
-          Switches
-        </Link>
-      </Menu.Item>
-    </Menu>
-  </Sider>
-);
+export const AppMenu = () => {
+  const [collapsed, setCollapsed] = useState(false);
+  const [collapsedType, setCollapsedType] = useState(null);
+  const [selectedKeys, setSelectedKeys] = useState([]);
+  const location = useLocation();
+
+  const onCollapse = (collapsed, type) => {
+    setCollapsed(collapsed);
+    setCollapsedType(type);
+  };
+
+  const onClick = () => {
+    if (collapsedType !== "clickTrigger") {
+      return;
+    }
+
+    setCollapsed(true);
+  };
+
+  const menu = [
+    {
+      path: "/temperature",
+      title: "Temperature",
+      icon: mdiHomeThermometer,
+    },
+    {
+      icon: mdiThermometerLines,
+      path: "/tuya",
+      title: "Thermostatic valves",
+    },
+    {
+      icon: mdiLightbulb,
+      path: "/lights",
+      title: "Lights",
+    },
+    {
+      icon: mdiPower,
+      path: "/switches",
+      title: "Switches",
+    },
+  ];
+
+  useEffect(() => {
+    let keys = [];
+    menu.map((entry, key) => {
+      if (location.pathname === entry.path) {
+        keys.push(key.toString());
+      }
+    });
+    setSelectedKeys(keys);
+  }, [location]);
+
+  return (
+    <Sider
+      breakpoint="lg"
+      collapsedWidth="0"
+      collapsed={collapsed}
+      onCollapse={onCollapse}
+    >
+      <Menu
+        theme="dark"
+        mode="inline"
+        style={{ paddingTop: "1em" }}
+        onClick={onClick}
+        selectedKeys={selectedKeys}
+      >
+        {menu.map((entry, key) => {
+          return (
+            <Menu.Item key={key} icon={<Icon path={entry.icon} size={1} />}>
+              <Link to={entry.path} component={Typography.Link}>
+                {entry.title}
+              </Link>
+            </Menu.Item>
+          );
+        })}
+      </Menu>
+    </Sider>
+  );
+};
