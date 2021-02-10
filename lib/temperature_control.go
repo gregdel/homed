@@ -105,7 +105,7 @@ func (h *Homed) updateRoomsTemperatures() {
 			continue
 		}
 
-		h.logger.Info(
+		h.logger.Debug(
 			"Setting homed's room temperature",
 			zap.String("room", roomName),
 			zap.Float64("temperature", currentTemperature),
@@ -156,24 +156,28 @@ func (h *Homed) setBoilerState() {
 		max := target + hysteresis
 
 		if current > max {
-			h.logger.Info("boiler in rising phase", zap.String("room", room))
+			if h.temperatureController.rising[room] {
+				h.logger.Info("boiler in entering the falling phase", zap.String("room", room))
+			}
 			h.temperatureController.rising[room] = false
 		}
 
 		if current < min {
-			h.logger.Info("boiler in falling phase", zap.String("room", room))
+			if !h.temperatureController.rising[room] {
+				h.logger.Info("boiler in entering the rising phase", zap.String("room", room))
+			}
 			h.temperatureController.rising[room] = true
 		}
 
 		if h.temperatureController.rising[room] && (current < max) {
-			h.logger.Info("boiler should be on", zap.String("room", room))
+			h.logger.Debug("boiler should be on", zap.String("room", room))
 			expectedBoilerState = true
 			break
 		}
 	}
 
 	if boiler.IsOn() == expectedBoilerState {
-		h.logger.Info("boiler already in the good state", zap.Bool("state", expectedBoilerState))
+		h.logger.Debug("boiler already in the good state", zap.Bool("state", expectedBoilerState))
 		return
 	}
 
