@@ -15,7 +15,7 @@ import {
   mdiAvTimer,
 } from "@mdi/js";
 
-import { Card, Slider, Popover, DatePicker, TimePicker } from "antd";
+import { Card, Slider, Popover, DatePicker, Input } from "antd";
 import { Link } from "react-router-dom";
 
 export const HomedTemperature = ({ id }) => {
@@ -96,20 +96,22 @@ export const HomedTemperature = ({ id }) => {
     </Popover>
   );
 
+  const onActionTimerEvent = (e) => {
+    sendChange({
+      mode: "duration",
+      target: newTarget,
+      duration: e.target.value + "h",
+    });
+  };
+
   const ActionTimer = (
     <Popover
-      title="Select a duration"
+      title="Select a duration (in hours)"
       content={
-        <TimePicker
-          format="HH:mm"
-          onSelect={(time) => {
-            const duration = time.hours() * 3600 + time.minutes() * 60;
-            sendChange({
-              mode: "duration",
-              target: newTarget,
-              duration: duration + "s",
-            });
-          }}
+        <Input
+          type="number"
+          onBlur={onActionTimerEvent}
+          onPressEnter={onActionTimerEvent}
         />
       }
     >
@@ -142,7 +144,7 @@ export const HomedTemperature = ({ id }) => {
       actions={actions}
     >
       <div style={{ fontSize: "4em" }}>
-        <span>{current}°C</span>
+        <span>{current.toFixed(1)}°C</span>
       </div>
 
       <div style={{ fontSize: "1em" }}>
