@@ -155,22 +155,28 @@ func (h *Homed) setBoilerState() {
 		min := target - hysteresis
 		max := target + hysteresis
 
+		zapFields := []zap.Field{
+			zap.String("room", room),
+			zap.Float64("temperature", current),
+			zap.Float64("target", target),
+		}
+
 		if current > max {
 			if h.temperatureController.rising[room] {
-				h.logger.Info("boiler in entering the falling phase", zap.String("room", room))
+				h.logger.Info("boiler entering the falling phase", zapFields...)
 			}
 			h.temperatureController.rising[room] = false
 		}
 
 		if current < min {
 			if !h.temperatureController.rising[room] {
-				h.logger.Info("boiler in entering the rising phase", zap.String("room", room))
+				h.logger.Info("boiler entering the rising phase", zapFields...)
 			}
 			h.temperatureController.rising[room] = true
 		}
 
 		if h.temperatureController.rising[room] && (current < max) {
-			h.logger.Debug("boiler should be on", zap.String("room", room))
+			h.logger.Debug("boiler should be on", zapFields...)
 			expectedBoilerState = true
 			break
 		}
