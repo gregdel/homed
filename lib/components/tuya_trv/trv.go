@@ -2,7 +2,7 @@ package trv
 
 import (
 	"encoding/json"
-	"fmt"
+	"math"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
@@ -20,11 +20,11 @@ func init() {
 type TuyaTRV struct {
 	common.Component
 
-	HeatingSetpoint        float64 `json:"current_heating_setpoint"`
-	LocalTemperature       float64 `json:"local_temperature"`
-	TemperatureCalibration float64 `json:"local_temperature_calibration"`
-	Position               float64 `json:"position"`
-	BatteryLow             bool    `json:"battery_low"`
+	HeatingSetpoint             float64 `json:"current_heating_setpoint"`
+	LocalTemperatureCalibration float64 `json:"local_temperature_calibration"`
+	LocalTemperature            float64 `json:"local_temperature"`
+	Position                    float64 `json:"position"`
+	BatteryLow                  bool    `json:"battery_low"`
 }
 
 // New returns a new component for Tuya TRVs
@@ -77,6 +77,20 @@ func (t *TuyaTRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	}
 }
 
+func (t *TuyaTRV) write(input interface{}) error {
+	data, err := json.Marshal(input)
+	if err != nil {
+		return err
+	}
+
+	return t.WriteCommand(data)
+}
+
+// Format the float to 1 digit of precision
+func formatFloat(input float64) float64 {
+	return math.Round(input*10) / 10
+}
+
 // Update implements the Component interface
 func (t *TuyaTRV) Update(value []byte) error {
 	return json.Unmarshal(value, t)
@@ -103,10 +117,11 @@ func (t *TuyaTRV) SetTemperatureTarget(temperature float64) error {
 		return nil
 	}
 
-	t.HeatingSetpoint = temperature
+	s := struct {
+		SetPoint float64 `json:"current_heating_setpoint"`
+	}{SetPoint: formatFloat(temperature)}
 
-	data := fmt.Sprintf("%.2f", temperature)
-	return t.WriteCommand([]byte(data))
+	return t.write(s)
 }
 
 // TemperatureMode implements the TemperatureController interface
@@ -117,4 +132,18 @@ func (t *TuyaTRV) TemperatureMode() (components.TemperatureMode, error) {
 // SetTemperatureMode implements the TemperatureController interface
 func (t *TuyaTRV) SetTemperatureMode(components.TemperatureMode) error {
 	return components.ErrNotImplemented
+}
+
+// TemperatureCalibration implements the TemperatureController interface
+func (t *TuyaTRV) TemperatureCalibration() (float64, error) {
+	return t.LocalTemperatureCalibration, nil
+}
+
+// SetTemperatureCalibration implements the TemperatureController interface
+func (t *TuyaTRV) SetTemperatureCalibration(c float64) error {
+	s := struct {
+		Calibration float64 `json:"local_temperature_calibration"`
+	}{Calibration: formatFloat(c)}
+
+	return t.write(s)
 }

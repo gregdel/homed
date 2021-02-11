@@ -205,7 +205,32 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 			continue
 		}
 
+		current, _ := component.Temperature()
 		for _, tuya := range tuyas {
+			// Compute the new calibration
+			computedTemp, _ := tuya.Temperature()
+			calibration, _ := tuya.TemperatureCalibration()
+			temp := computedTemp - calibration
+			// Only keep on decimal of precision
+			newCalibration := current - temp
+			allowedError := 0.3
+
+			if newCalibration < (calibration-allowedError) || newCalibration > (calibration+allowedError) {
+				h.logger.Info(
+					"recalibrating the tuya",
+					zap.String("room", roomName),
+					zap.Float64("calibration", newCalibration),
+				)
+				err = tuya.SetTemperatureCalibration(newCalibration)
+				if err != nil {
+					h.logger.Error(
+						"failed to calibrate tuya",
+						zap.Error(err),
+					)
+				}
+
+			}
+
 			tuyaTarget, err := tuya.TemperatureTarget()
 			if err != nil {
 				h.logger.Error(

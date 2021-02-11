@@ -200,3 +200,13 @@ func (h *HomedTemperature) SetTemperatureModeManualUntil(until *time.Time) error
 func (h *HomedTemperature) TemperatureModeManualUntil() (*time.Time, error) {
 	return h.ManualUntil, nil
 }
+
+// TemperatureCalibration implements the TemperatureController interface
+func (h *HomedTemperature) TemperatureCalibration() (float64, error) {
+	return 0, components.ErrNotImplemented
+}
+
+// SetTemperatureCalibration implements the TemperatureController interface
+func (h *HomedTemperature) SetTemperatureCalibration(c float64) error {
+	return components.ErrNotImplemented
+}

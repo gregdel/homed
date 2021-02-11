@@ -31,6 +31,9 @@ type TemperatureController interface {
 
 	TemperatureMode() (TemperatureMode, error)
 	SetTemperatureMode(TemperatureMode) error
+
+	TemperatureCalibration() (float64, error)
+	SetTemperatureCalibration(float64) error
 }
 
 // TemperatureControllerInternal is an interface to reprensents something that be get
