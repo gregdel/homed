@@ -13,6 +13,7 @@ export const TuyaTRV = ({ id }) => {
   const dispatch = useDispatch();
   const {
     local_temperature: localTemperature,
+    local_temperature_calibration: calibration,
     battery_low: batteryLow,
     current_heating_setpoint: currentHeatingSetpoint,
     position,
@@ -44,8 +45,9 @@ export const TuyaTRV = ({ id }) => {
         <Progress percent={position} steps={5} />
       </Row>
 
-      <div style={{ fontSize: "4em" }}>
-        <span>{localTemperature}°C</span>
+      <div>
+        <span style={{ fontSize: "4em" }}>{localTemperature}°C</span>
+        <small style={{ marginLeft: "1em" }}>({calibration}°C)</small>
       </div>
 
       <div style={{ fontSize: "1em" }}>

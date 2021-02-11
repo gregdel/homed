@@ -20,10 +20,11 @@ func init() {
 type TuyaTRV struct {
 	common.Component
 
-	HeatingSetpoint  float64 `json:"current_heating_setpoint"`
-	LocalTemperature float64 `json:"local_temperature"`
-	Position         float64 `json:"position"`
-	BatteryLow       bool    `json:"battery_low"`
+	HeatingSetpoint        float64 `json:"current_heating_setpoint"`
+	LocalTemperature       float64 `json:"local_temperature"`
+	TemperatureCalibration float64 `json:"local_temperature_calibration"`
+	Position               float64 `json:"position"`
+	BatteryLow             bool    `json:"battery_low"`
 }
 
 // New returns a new component for Tuya TRVs
