@@ -74,7 +74,10 @@ func (h *HomedTemperature) Collectors(labels prometheus.Labels) []prometheus.Col
 				Name:        prefix + "target",
 				ConstLabels: labels,
 			},
-			func() float64 { return h.Target },
+			func() float64 {
+				t, _ := h.TemperatureTarget()
+				return t
+			},
 		),
 	}
 }
