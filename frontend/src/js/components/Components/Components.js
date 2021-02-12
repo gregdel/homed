@@ -27,6 +27,9 @@ export const Components = ({ typesFilter, noCard }) => {
         updatedAt: value.values.updated_at,
         type: value.type,
       }))
+      .sort((a, b) =>
+        a.roomName < b.roomName ? -1 : a.roomName > b.roomName ? 1 : 0
+      )
   );
 
   return (
