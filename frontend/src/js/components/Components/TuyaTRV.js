@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 
-import { Row, Col, Slider, Progress } from "antd";
+import { Row, Col, Slider, Progress, Divider } from "antd";
 
 import Icon from "@mdi/react";
 import { mdiBattery, mdiBattery10 } from "@mdi/js";
@@ -16,6 +16,8 @@ export const TuyaTRV = ({ id }) => {
     local_temperature_calibration: calibration,
     battery_low: batteryLow,
     current_heating_setpoint: currentHeatingSetpoint,
+    system_mode: mode,
+    force: force,
     position,
   } = useSelector((state) => state.components.components.get(id).values);
 
@@ -42,6 +44,7 @@ export const TuyaTRV = ({ id }) => {
             rotate={90}
           />
         </Col>
+        <Divider type="vertical" />
         <Progress percent={position} steps={5} />
       </Row>
 
@@ -52,6 +55,14 @@ export const TuyaTRV = ({ id }) => {
 
       <div style={{ fontSize: "1em" }}>
         <span>Heating to {target}°C</span>
+        <br />
+        <span>
+          Mode: <strong>{mode}</strong>
+        </span>
+        <br />
+        <span>
+          Force: <strong>{force}</strong>
+        </span>
       </div>
 
       <Slider

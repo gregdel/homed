@@ -16,15 +16,38 @@ func init() {
 	components.Register(components.TypeTuyaTRV, New)
 }
 
+// Force the trv to be fully open if we need to heat and we are far from the
+// wanted temperature
+const forceModeDiff = 1
+
+// ForceMode represents the force modes
+type ForceMode string
+
+// SystemMode represents the system modes
+type SystemMode string
+
+// Force modes
+var (
+	ForceModeNormal ForceMode = "normal"
+	ForceModeOpen   ForceMode = "open"
+	ForceModeClose  ForceMode = "close"
+
+	SystemModeAuto SystemMode = "auto"
+	SystemModeHeat SystemMode = "heat"
+	SystemModeOff  SystemMode = "off"
+)
+
 // TuyaTRV is a component that handles temperatures
 type TuyaTRV struct {
 	common.Component
 
-	HeatingSetpoint             float64 `json:"current_heating_setpoint"`
-	LocalTemperatureCalibration float64 `json:"local_temperature_calibration"`
-	LocalTemperature            float64 `json:"local_temperature"`
-	Position                    float64 `json:"position"`
-	BatteryLow                  bool    `json:"battery_low"`
+	HeatingSetpoint             float64    `json:"current_heating_setpoint"`
+	LocalTemperatureCalibration float64    `json:"local_temperature_calibration"`
+	LocalTemperature            float64    `json:"local_temperature"`
+	Position                    float64    `json:"position"`
+	BatteryLow                  bool       `json:"battery_low"`
+	Force                       ForceMode  `json:"force"`
+	Mode                        SystemMode `json:"system_mode"`
 }
 
 // New returns a new component for Tuya TRVs
@@ -35,6 +58,15 @@ func New() components.Component {
 // Type implements the Component interface
 func (t *TuyaTRV) Type() components.Type {
 	return components.TypeTuyaTRV
+}
+
+// PostUpdate implements the Component interface
+func (t *TuyaTRV) PostUpdate() error {
+	if err := t.Component.PostUpdate(); err != nil {
+		return err
+	}
+
+	return t.updateForceMode()
 }
 
 // Collectors implements the Component interface
@@ -89,6 +121,27 @@ func (t *TuyaTRV) write(input interface{}) error {
 // Format the float to 1 digit of precision
 func formatFloat(input float64) float64 {
 	return math.Round(input*10) / 10
+}
+
+func (t *TuyaTRV) forceMode() ForceMode {
+	if (t.HeatingSetpoint - t.LocalTemperature) >= forceModeDiff {
+		return ForceModeOpen
+	}
+
+	return ForceModeNormal
+}
+
+func (t *TuyaTRV) updateForceMode() error {
+	f := t.forceMode()
+	if t.Force == f {
+		return nil
+	}
+
+	s := struct {
+		Force ForceMode `json:"force"`
+	}{Force: f}
+
+	return t.write(s)
 }
 
 // Update implements the Component interface
