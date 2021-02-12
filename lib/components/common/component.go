@@ -19,6 +19,7 @@ type Component struct {
 	UpdatedAt  *time.Time `json:"updated_at"`
 	RoomName   string     `json:"room_name"`
 	DeviceName string     `json:"device_name"`
+	Name       string     `json:"friendly_name"`
 }
 
 // PostUpdate implements the Component interface
@@ -90,6 +91,16 @@ func (c *Component) Device() string {
 // SetDevice implements the Component interface
 func (c *Component) SetDevice(name string) {
 	c.DeviceName = name
+}
+
+// FriendlyName implements the Component interface
+func (c *Component) FriendlyName() string {
+	return c.Name
+}
+
+// SetFriendlyName implements the Component interface
+func (c *Component) SetFriendlyName(n string) {
+	c.Name = n
 }
 
 // WriteCommand implements the Component interface

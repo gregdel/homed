@@ -24,3 +24,4 @@ devices:
   - type: tuya_trv
     state_topic: zigbee2mqtt/device_2
     command_topic: zigbee2mqtt/device_2/set/current_heating_setpoint
+    friendly_name: Tuya in room 2

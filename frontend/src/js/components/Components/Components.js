@@ -25,6 +25,7 @@ export const Components = ({ typesFilter, noCard }) => {
         roomName: value.values.room_name,
         deviceName: value.values.device_name,
         updatedAt: value.values.updated_at,
+        friendlyName: value.values.friendly_name,
         type: value.type,
       }))
       .sort((a, b) =>
@@ -34,18 +35,21 @@ export const Components = ({ typesFilter, noCard }) => {
 
   return (
     <Row gutter={[10, 10]}>
-      {components.map(({ id, roomName, deviceName, updatedAt, type }) => (
-        <Col key={id} xs={24} sm={12} lg={8}>
-          <Component
-            id={id}
-            type={type}
-            noCard={noCard}
-            deviceName={deviceName}
-            roomName={roomName}
-            updatedAt={updatedAt}
-          />
-        </Col>
-      ))}
+      {components.map(
+        ({ id, roomName, deviceName, friendlyName, updatedAt, type }) => (
+          <Col key={id} xs={24} sm={12} lg={8}>
+            <Component
+              id={id}
+              type={type}
+              noCard={noCard}
+              deviceName={deviceName}
+              roomName={roomName}
+              friendlyName={friendlyName}
+              updatedAt={updatedAt}
+            />
+          </Col>
+        )
+      )}
     </Row>
   );
 };

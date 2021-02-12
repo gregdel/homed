@@ -23,6 +23,7 @@ export const Component = ({
   extra,
   roomName,
   deviceName,
+  friendlyName,
   updatedAt,
   noCard,
 }) => {
@@ -76,7 +77,10 @@ export const Component = ({
     prettyDate = m.fromNow();
   }
 
-  const newTitle = `${roomName} - ${type} - ${deviceName}`;
+  const newTitle =
+    friendlyName !== ""
+      ? friendlyName
+      : `${roomName} - ${type} - ${deviceName}`;
   return (
     <Card title={title ? title : newTitle} extra={extra ? extra : prettyDate}>
       {typedComponent}
@@ -89,6 +93,7 @@ Component.defaultProps = {
 Component.propTypes = {
   id: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,
+  friendlyName: PropTypes.string.isRequired,
   roomName: PropTypes.string,
   deviceName: PropTypes.string,
   updatedAt: PropTypes.string,

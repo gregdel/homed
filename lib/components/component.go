@@ -28,6 +28,10 @@ type Component interface {
 	// Type represents the component type
 	Type() Type
 
+	// FriendlyName
+	FriendlyName() string
+	SetFriendlyName(string)
+
 	// Room
 	Room() string
 	SetRoom(string)

@@ -154,6 +154,7 @@ func (c *Components) Add(cfg Config, client mqtt.Client, roomName, deviceName st
 	component.SetMQTTClient(client)
 	component.SetRoom(roomName)
 	component.SetDevice(deviceName)
+	component.SetFriendlyName(cfg.FriendlyName)
 
 	if sc, ok := component.(Scheduled); ok {
 		// TODO: check and log the error
