@@ -137,7 +137,7 @@ export const HomedTemperature = ({ id }) => {
     <Card
       title={prettyName(room)}
       extra={
-        <Link to={`/components/${id}/schedule`}>
+        <Link to={`/components/${id}/schedule`} style={{ color: "#000000d9" }}>
           <Icon path={mdiAvTimer} size={1} />
         </Link>
       }
