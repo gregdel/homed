@@ -22,7 +22,6 @@ export const Schedule = () => {
   }, [dispatch]);
 
   const schedule = useSelector((state) => state.schedules.schedules.get(id));
-  console.log(schedule);
   if (!schedule || !schedule.days) {
     return null;
   }
@@ -76,7 +75,7 @@ export const Timeline = ({ day, data = [] }) => {
     <div
       style={{
         width: "100%",
-        height: "7em",
+        height: "8em",
         overflow: "auto",
         backgroundColor: "#91d5ff",
         borderRadius: "0.3em",
@@ -87,7 +86,7 @@ export const Timeline = ({ day, data = [] }) => {
           height: "100%",
           display: "flex",
           flexDirection: "row",
-          alignItems: "flex-end",
+          justifyContent: "space-around",
         }}
       >
         {data.map((v, i) => (
@@ -116,22 +115,24 @@ export const TimeSlot = ({ start, stop, value, uuid, day }) => {
   return (
     <div
       style={{
+        minWidth: "8em",
         backgroundColor: "#ffd666",
-        borderTopLeftRadius: "0.3em",
-        borderTopRightRadius: "0.3em",
-        marginLeft: "1em",
-        marginRight: "1em",
         padding: "0.3em",
         display: "flex",
         flexDirection: "column",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginLeft: "0.2em",
+        marginRight: "0.2em",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <div style={{ fontSize: "1.5em" }}>{value}°C</div>
-        <div style={{ cursor: "pointer" }} onClick={handleDelete}>
-          <Icon path={mdiTrashCanOutline} size={1} />
-        </div>
+      <div
+        style={{ cursor: "pointer", alignSelf: "flex-end" }}
+        onClick={handleDelete}
+      >
+        <Icon path={mdiTrashCanOutline} size={1} />
       </div>
+      <div style={{ fontSize: "2.4em" }}>{value}°C</div>
       <div>
         <span>{formatTime(start)}</span>
         {stop && <span> - {formatTime(stop)}</span>}
