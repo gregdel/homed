@@ -1,16 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
-import { Row, Col, Slider, Progress, Divider } from "antd";
+import { Row, Col, Progress, Divider } from "antd";
 
 import Icon from "@mdi/react";
 import { mdiBattery, mdiBattery10 } from "@mdi/js";
 
-import { componentUpdate } from "../../actions/components";
-
 export const TuyaTRV = ({ id }) => {
-  const dispatch = useDispatch();
   const {
     local_temperature: localTemperature,
     local_temperature_calibration: calibration,
@@ -21,18 +18,8 @@ export const TuyaTRV = ({ id }) => {
     position,
   } = useSelector((state) => state.components.components.get(id).values);
 
-  const [target, setTarget] = useState(currentHeatingSetpoint);
-
   var marks = {};
   marks[localTemperature] = localTemperature + "°C";
-
-  const onChange = (value) => {
-    setTarget(value);
-  };
-
-  const onAfterChange = (value) => {
-    dispatch(componentUpdate(id, value));
-  };
 
   return (
     <>
@@ -54,7 +41,7 @@ export const TuyaTRV = ({ id }) => {
       </div>
 
       <div style={{ fontSize: "1em" }}>
-        <span>Heating to {target}°C</span>
+        <span>Heating to {currentHeatingSetpoint}°C</span>
         <br />
         <span>
           Mode: <strong>{mode}</strong>
@@ -64,16 +51,6 @@ export const TuyaTRV = ({ id }) => {
           Force: <strong>{force}</strong>
         </span>
       </div>
-
-      <Slider
-        min={5}
-        max={35}
-        step={0.5}
-        marks={marks}
-        value={typeof target === "number" ? target : 0}
-        onChange={onChange}
-        onAfterChange={onAfterChange}
-      />
     </>
   );
 };

@@ -18,7 +18,7 @@ func init() {
 
 // Force the trv to be fully open if we need to heat and we are far from the
 // wanted temperature
-const forceModeDiff = 1
+const forceModeDiff = 0.5
 
 // ForceMode represents the force modes
 type ForceMode string
