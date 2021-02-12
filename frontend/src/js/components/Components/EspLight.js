@@ -3,10 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 
 import PropTypes from "prop-types";
 
-import { Col, Row, Switch } from "antd";
+import { mdiLightbulbOnOutline, mdiLightbulbOn } from "@mdi/js";
 
-import Icon from "@mdi/react";
-import { mdiLightbulb } from "@mdi/js";
+import { IconToggle } from "./common/IconToggle";
 
 import { componentUpdate } from "../../actions/components";
 
@@ -25,14 +24,12 @@ export const ESPLight = ({ id }) => {
   };
 
   return (
-    <Row gutter={2}>
-      <Col flex={1}>
-        <Icon path={mdiLightbulb} size={1} />
-      </Col>
-      <Col flex={1}>
-        <Switch checked={on} onChange={toggle} />
-      </Col>
-    </Row>
+    <IconToggle
+      iconOn={mdiLightbulbOn}
+      iconOff={mdiLightbulbOnOutline}
+      toggle={toggle}
+      on={on}
+    />
   );
 };
 

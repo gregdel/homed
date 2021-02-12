@@ -93,7 +93,7 @@ Component.defaultProps = {
 Component.propTypes = {
   id: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,
-  friendlyName: PropTypes.string.isRequired,
+  friendlyName: PropTypes.string,
   roomName: PropTypes.string,
   deviceName: PropTypes.string,
   updatedAt: PropTypes.string,

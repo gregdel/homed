@@ -1,12 +1,10 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-
 import PropTypes from "prop-types";
 
-import { Col, Row, Switch } from "antd";
-
-import Icon from "@mdi/react";
 import { mdiPower } from "@mdi/js";
+
+import { IconToggle } from "./common/IconToggle";
 
 import { componentUpdate } from "../../actions/components";
 
@@ -24,14 +22,7 @@ export const TasmotaSwitch = ({ id }) => {
   };
 
   return (
-    <Row gutter={2}>
-      <Col flex={1}>
-        <Icon path={mdiPower} size={1} />
-      </Col>
-      <Col flex={1}>
-        <Switch checked={on} onChange={toggle} />
-      </Col>
-    </Row>
+    <IconToggle iconOn={mdiPower} iconOff={mdiPower} toggle={toggle} on={on} />
   );
 };
 
