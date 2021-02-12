@@ -1,39 +1,44 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useDispatch, useSelector } from "react-redux";
-
-import { Col, Row, Switch } from "antd";
+import { useSelector } from "react-redux";
 
 import Icon from "@mdi/react";
-import { mdiWaterBoiler } from "@mdi/js";
+import { mdiFire } from "@mdi/js";
 
-import { componentUpdate } from "../../actions/components";
+import { Typography } from "antd";
 
 export const Boiler = ({ id }) => {
-  const dispatch = useDispatch();
-
-  const on = useSelector((state) =>
-    state.components.components.get(id)
-      ? state.components.components.get(id).values.on
-      : undefined
-  );
-  if (on === undefined) {
+  const state = useSelector((state) => state.components.components.get(id));
+  if (!state) {
     return null;
   }
 
-  const toggle = () => {
-    dispatch(componentUpdate(id, on ? "OFF" : "ON"));
-  };
+  const on = state.values.on;
 
   return (
-    <Row gutter={2}>
-      <Col flex={1}>
-        <Icon path={mdiWaterBoiler} size={1} />
-      </Col>
-      <Col flex={1}>
-        <Switch checked={on} onChange={toggle} />
-      </Col>
-    </Row>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "space-between",
+      }}
+    >
+      <div>
+        <Typography.Title level={3}>
+          Boiler is {on ? "on" : "off"}
+        </Typography.Title>
+      </div>
+      <div>
+        <Icon
+          path={mdiFire}
+          size={2}
+          style={{
+            color: on ? "#ff4d4f" : "#00000040",
+            transition: "color 0.3s ease-out 0s",
+          }}
+        />
+      </div>
+    </div>
   );
 };
 

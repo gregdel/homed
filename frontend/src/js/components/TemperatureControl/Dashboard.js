@@ -14,7 +14,7 @@ export const Dashboard = () => {
   return (
     <>
       <Row style={{ marginBottom: "0.5em" }}>
-        <Card title="Boiler" style={{ width: "100%" }}>
+        <Card style={{ width: "100%" }}>
           <Component type="boiler" id={boiler} noCard />
         </Card>
       </Row>
