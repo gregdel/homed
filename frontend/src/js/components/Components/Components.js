@@ -28,9 +28,16 @@ export const Components = ({ typesFilter, noCard }) => {
         friendlyName: value.values.friendly_name,
         type: value.type,
       }))
-      .sort((a, b) =>
-        a.roomName < b.roomName ? -1 : a.roomName > b.roomName ? 1 : 0
-      )
+      .sort((a, b) => {
+        if (a.friendlyName !== "" && b.friendlyName !== "") {
+          return a.friendlyName < b.friendlyName
+            ? -1
+            : a.friendlyName > b.friendlyName
+            ? 1
+            : 0;
+        }
+        return a.roomName < b.roomName ? -1 : a.roomName > b.roomName ? 1 : 0;
+      })
   );
 
   return (
