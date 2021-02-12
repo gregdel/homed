@@ -30,7 +30,8 @@
         "style-loader": "^2.0.0",
         "terser-webpack-plugin": "^5.1.1",
         "webpack": "^5.12.2",
-        "webpack-cli": "^4.3.1"
+        "webpack-cli": "^4.3.1",
+        "webpack-pwa-manifest": "^4.3.0"
     },
     "dependencies": {
         "antd": "^4.12.3",

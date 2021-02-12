@@ -3,6 +3,7 @@ const webpack = require("webpack");
 
 const TerserPlugin = require("terser-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const WebpackPwaManifest = require("webpack-pwa-manifest");
 
 var mode = "development";
 if (process.env.NODE_ENV === "production") {
@@ -30,6 +31,33 @@ module.exports = {
     new webpack.ProgressPlugin(),
     new HtmlWebpackPlugin({
       template: path.join(SRC_DIR, "html/index.html"),
+    }),
+    new WebpackPwaManifest({
+      fingerprints: true,
+      inject: true,
+      ios: {
+        "apple-mobile-web-app-status-bar-style": "default",
+        "apple-mobile-web-app-title": "homed",
+      },
+      name: "homed",
+      short_name: "homed",
+      background_color: "#001529",
+      theme_color: "#001529",
+      display: "standalone",
+      orientation: "omit",
+      scope: "/",
+      start_url: "/",
+      icons: [
+        {
+          src: path.resolve(__dirname, "src/img/icon.svg"),
+          sizes: [96, 128, 192, 256, 384, 512],
+        },
+        {
+          src: path.resolve(__dirname, "src/img/icon.svg"),
+          sizes: [80, 120, 152, 167, 180],
+          ios: true,
+        },
+      ],
     }),
   ],
 
