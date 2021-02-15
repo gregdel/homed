@@ -1,7 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
-import PropTypes from "prop-types";
-import { Provider, useDispatch } from "react-redux";
+import { Provider } from "react-redux";
 import {
   HashRouter as Router,
   Route,
@@ -12,14 +11,13 @@ import {
 import { Layout } from "antd";
 const { Content } = Layout;
 
-import { WsHandler } from "./websocket";
 import { AppMenu } from "./components/Menu";
+import { DataFetcher } from "./components/DataFetcher";
 import { Dashboard } from "./components/TemperatureControl/Dashboard";
 import { Components } from "./components/Components/Components";
 import { Schedule } from "./components/Schedule/Schedule";
 
 import store, { history } from "./store";
-import { componentsFetch } from "./actions/components";
 
 import "antd/dist/antd.css";
 import "../css/index.css";
@@ -58,32 +56,5 @@ const App = () => (
     </Router>
   </Provider>
 );
-
-const DataFetcher = ({ children }) => {
-  const dispatch = useDispatch();
-
-  const fetchData = () => {
-    dispatch(componentsFetch());
-  };
-
-  useEffect(() => {
-    fetchData();
-    // fetch data every time we regain focus
-    window.addEventListener("focus", fetchData);
-    return () => {
-      window.removeEventListener("focus", fetchData);
-    };
-  }, [dispatch]);
-
-  return (
-    <>
-      <WsHandler />
-      {children}
-    </>
-  );
-};
-DataFetcher.propTypes = {
-  children: PropTypes.any,
-};
 
 ReactDOM.render(<App />, document.getElementById("app"));
