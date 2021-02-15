@@ -13,6 +13,7 @@ const { Content } = Layout;
 
 import { AppMenu } from "./components/Menu";
 import { DataFetcher } from "./components/DataFetcher";
+import { Notifications } from "./components/Notifications";
 import { Dashboard } from "./components/TemperatureControl/Dashboard";
 import { Components } from "./components/Components/Components";
 import { Schedule } from "./components/Schedule/Schedule";
@@ -30,6 +31,7 @@ const App = () => (
           <AppMenu />
           <Layout>
             <Content style={{ padding: "1em" }}>
+              <Notifications />
               <Switch>
                 <Route path="/all" exact component={Components} />
                 <Route path="/temperature" exact component={Dashboard} />

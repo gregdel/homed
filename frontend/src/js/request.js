@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { notificationAdd } from "./actions/notifications";
+
 // This functions returns an axios instance, the token is added to the
 // configuration if found in the localStorage
 export function configureAxios(headers = {}) {
@@ -38,13 +40,7 @@ export function request(
     return promise
       .then((response) => {
         if (response.data.status === "error") {
-          dispatch({
-            type: "ADD_ALERT_ERROR",
-            payload: {
-              message: response.data.message,
-              main: mainPayload,
-            },
-          });
+          dispatch(notificationAdd(response.data.data, "error", 10));
           dispatch({
             type: errored,
             payload: {
@@ -57,7 +53,7 @@ export function request(
         dispatch({
           type: fulfilled,
           payload: {
-            response: response.data,
+            response: response.data.data,
             main: mainPayload,
           },
         });
@@ -77,13 +73,7 @@ export function request(
             type: "USER_LOGOUT",
           });
         }
-        dispatch({
-          type: "ADD_ALERT_ERROR",
-          payload: {
-            message: error.response.data,
-            main: mainPayload,
-          },
-        });
+        dispatch(notificationAdd(error.response.data, "error", 10));
       });
   };
 }

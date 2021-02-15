@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useDispatch } from "react-redux";
-import { eventComponentUpdate } from "./actions/components";
+import { eventComponentUpdate } from "../actions/components";
 
 export const WsHandler = () => {
   const dispatch = useDispatch();

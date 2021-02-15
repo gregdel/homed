@@ -48,23 +48,30 @@ func (h *Homed) initHTTP(addr string) error {
 	return nil
 }
 
-func (h *Homed) httpError(w http.ResponseWriter, msg string, err error) {
-	e := struct {
-		Message string `json:"message"`
-		Error   string `json:"error"`
+func (h *Homed) httpRender(w http.ResponseWriter, status string, data interface{}) {
+	o := struct {
+		Status string      `json:"status"`
+		Data   interface{} `json:"data"`
 	}{
-		Message: msg,
-		Error:   err.Error(),
+		Status: status,
+		Data:   data,
 	}
 
-	h.render.JSON(w, http.StatusInternalServerError, e)
+	if err := h.render.JSON(w, http.StatusOK, o); err != nil {
+		h.httpError(w, fmt.Sprintf("failed to render json data: %s", err))
+	}
+}
+
+func (h *Homed) httpRenderJSON(w http.ResponseWriter, data interface{}) {
+	h.httpRender(w, "success", data)
+}
+
+func (h *Homed) httpError(w http.ResponseWriter, msg string) {
+	h.httpRender(w, "error", msg)
 }
 
 func (h *Homed) httpComponentList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	err := json.NewEncoder(w).Encode(h.components)
-	if err != nil {
-		fmt.Fprintf(w, "failed to encode data: %s", err.Error())
-	}
+	h.httpRenderJSON(w, h.components)
 }
 
 func (h *Homed) updateComponent(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -72,19 +79,19 @@ func (h *Homed) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 
 	component, err := h.components.Get(id)
 	if err != nil {
-		h.httpError(w, "failed to get the component", err)
+		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
 		return
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		h.httpError(w, "failed to read body", err)
+		h.httpError(w, fmt.Sprintf("failed to read body: %s", err))
 		return
 	}
 
 	err = component.WriteCommand(data)
 	if err != nil {
-		h.httpError(w, "failed to write mqtt command", err)
+		h.httpError(w, fmt.Sprintf("failed to write mqtt command: %s", err))
 		return
 	}
 }
@@ -107,7 +114,7 @@ func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 	// Upgrade the request for websockets
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		h.httpError(w, "got error upgrading request", err)
+		h.httpError(w, fmt.Sprintf("got error upgrading request: %s", err))
 		return
 	}
 	defer ws.Close()
@@ -120,7 +127,7 @@ func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 
 	uuid, err := h.registerWebsocket(ws)
 	if err != nil {
-		h.httpError(w, "failed to register websocket", err)
+		h.httpError(w, fmt.Sprintf("failed to register websocket: %s", err))
 		return
 	}
 	defer h.unregisterWebsocket(uuid)
@@ -137,21 +144,17 @@ func (h *Homed) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httpr
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {
-		fmt.Fprintf(w, "failed to get the component: %s", err.Error())
+		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
 		return
 	}
 
 	sc, ok := c.(components.Scheduled)
 	if !ok {
-		fmt.Fprintf(w, "this component can not be scheduled")
+		h.httpError(w, "this component can not be scheduled")
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(sc.Schedule())
-	if err != nil {
-		fmt.Fprintf(w, "failed to encode data: %s", err.Error())
-		return
-	}
+	h.httpRenderJSON(w, sc.Schedule())
 }
 
 func (h *Homed) httpGetCompoment(ps httprouter.Params) (components.Component, error) {
@@ -163,44 +166,44 @@ func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {
-		fmt.Fprintf(w, "failed to get the component: %s", err.Error())
+		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
 		return
 	}
 
 	sc, ok := c.(components.Scheduled)
 	if !ok {
-		fmt.Fprintf(w, "this component can not be scheduled")
+		h.httpError(w, "this component can not be scheduled")
 		return
 	}
 
 	ts := schedule.TimeSlot{}
 	err = json.NewDecoder(r.Body).Decode(&ts)
 	if err != nil {
-		fmt.Fprintf(w, "failed to decode data: %s", err.Error())
+		h.httpError(w, fmt.Sprintf("failed to decode data: %s", err.Error()))
 		return
 	}
 
 	weekdayStr := ps.ByName("weekday")
 	weekday, err := strconv.Atoi(weekdayStr)
 	if err != nil {
-		fmt.Fprintf(w, "failed to parse weekday: %s", err.Error())
+		h.httpError(w, fmt.Sprintf("failed to parse weekday: %s", err.Error()))
 		return
 	}
 
 	if weekday < 0 || weekday > 6 {
-		fmt.Fprintf(w, "invalid weekday")
+		h.httpError(w, "invalid weekday")
 		return
 	}
 
 	err = sc.ScheduleAdd(time.Weekday(weekday), &ts)
 	if err != nil {
-		fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
+		h.httpError(w, fmt.Sprintf("failed to add to the schedule: %s", err.Error()))
 		return
 	}
 
 	err = sc.SaveSchedule(h.components.SchedulePath(c))
 	if err != nil {
-		fmt.Fprintf(w, "failed to save schedule: %s", err.Error())
+		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
 		return
 	}
 }
@@ -209,38 +212,38 @@ func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {
-		fmt.Fprintf(w, "failed to get the component: %s", err.Error())
+		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err.Error()))
 		return
 	}
 
 	sc, ok := c.(components.Scheduled)
 	if !ok {
-		fmt.Fprintf(w, "this component can not be scheduled")
+		h.httpError(w, "this component can not be scheduled")
 		return
 	}
 
 	weekdayStr := ps.ByName("weekday")
 	weekday, err := strconv.Atoi(weekdayStr)
 	if err != nil {
-		fmt.Fprintf(w, "failed to parse weekday: %s", err.Error())
+		h.httpError(w, fmt.Sprintf("failed to parse weekday: %s", err.Error()))
 		return
 	}
 
 	if weekday < 0 || weekday > 6 {
-		fmt.Fprintf(w, "invalid weekday")
+		h.httpError(w, "invalid weekday")
 		return
 	}
 
 	uuid := ps.ByName("uuid")
 	err = sc.ScheduleDelete(time.Weekday(weekday), uuid)
 	if err != nil {
-		fmt.Fprintf(w, "failed to add to the schedule: %s", err.Error())
+		h.httpError(w, fmt.Sprintf("failed to delete the schedule: %s", err.Error()))
 		return
 	}
 
 	err = sc.SaveSchedule(h.components.SchedulePath(c))
 	if err != nil {
-		fmt.Fprintf(w, "failed to save schedule: %s", err.Error())
+		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
 		return
 	}
 }

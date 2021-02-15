@@ -6,10 +6,10 @@ enableMapSet();
 
 import components from "./components";
 import schedules from "./schedules";
-import temperatureSchedule from "./temperatureSchedule";
+import notifications from "./notifications";
 
 export default combineReducers({
   components,
   schedules,
-  temperatureSchedule,
+  notifications,
 });
