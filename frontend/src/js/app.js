@@ -62,8 +62,17 @@ const App = () => (
 const DataFetcher = ({ children }) => {
   const dispatch = useDispatch();
 
-  useEffect(() => {
+  const fetchData = () => {
     dispatch(componentsFetch());
+  };
+
+  useEffect(() => {
+    fetchData();
+    // fetch data every time we regain focus
+    window.addEventListener("focus", fetchData);
+    return () => {
+      window.removeEventListener("focus", fetchData);
+    };
   }, [dispatch]);
 
   return (
