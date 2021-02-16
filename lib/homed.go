@@ -138,14 +138,20 @@ func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
 	if err := component.Update(m.Payload()); err != nil {
 		h.logger.Warn(
 			"failed to update component",
-			zap.String("error", err.Error()))
+			zap.Error(err),
+			zap.String("friendly_name", string(component.FriendlyName())),
+			zap.String("room", component.Room()),
+			zap.String("device", component.Device()))
 		return
 	}
 
 	if err := component.PostUpdate(); err != nil {
 		h.logger.Warn(
 			"failed to run the component post update",
-			zap.String("error", err.Error()))
+			zap.Error(err),
+			zap.String("friendly_name", string(component.FriendlyName())),
+			zap.String("room", component.Room()),
+			zap.String("device", component.Device()))
 		return
 	}
 
