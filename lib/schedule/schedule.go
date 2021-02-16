@@ -10,14 +10,17 @@ const maxDaysSearch = 7
 
 // Schedule holds the schedule
 type Schedule struct {
-	mu   sync.Mutex
-	Days map[time.Weekday]*DailySchedule `json:"days"`
+	mu sync.Mutex
+
+	Days         map[time.Weekday]*DailySchedule `json:"days"`
+	DefaultValue float64                         `json:"default_value"`
 }
 
 // New returns a new schedule
-func New() *Schedule {
+func New(dv float64) *Schedule {
 	schedule := &Schedule{
-		Days: map[time.Weekday]*DailySchedule{},
+		Days:         map[time.Weekday]*DailySchedule{},
+		DefaultValue: dv,
 	}
 
 	for i := 0; i < 7; i++ {
@@ -110,4 +113,13 @@ func (s *Schedule) Delete(day time.Weekday, uuid string) error {
 
 	ds := s.Days[day]
 	return ds.Delete(uuid)
+}
+
+// Value returns the scheduled value at the current time
+func (s *Schedule) Value() float64 {
+	if ts := s.Now(); ts != nil {
+		return ts.Value
+	}
+
+	return s.DefaultValue
 }

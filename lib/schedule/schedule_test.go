@@ -10,7 +10,7 @@ func TestSchedule(t *testing.T) {
 	setNow(NewTimePointer(11, 00, 00))
 	defer setNow(nil)
 
-	schedule := New()
+	schedule := New(10)
 
 	day := now().Weekday()
 	slot1 := &TimeSlot{Start: NewTime(0, 0, 0)}
@@ -30,6 +30,37 @@ func TestSchedule(t *testing.T) {
 
 	if err := schedule.Delete(day, slot1.UUID); err != nil {
 		t.Fatalf("expected to be able to delete a slot, got %s", err.Error())
+	}
+}
+
+func TestScheduleValue(t *testing.T) {
+	// Fake the now function
+	setNow(NewTimePointer(11, 00, 00))
+	defer setNow(nil)
+
+	var expected float64 = 10
+	schedule := New(expected)
+
+	got := schedule.Value()
+	if got != expected {
+		t.Errorf("expected %f, got %f", expected, got)
+	}
+
+	expected = 20
+	day := now().Weekday()
+	ts := &TimeSlot{
+		Start: NewTime(0, 0, 0),
+		Stop:  NewTimePointer(12, 0, 0),
+		Value: expected,
+	}
+
+	if err := schedule.Add(day, ts); err != nil {
+		t.Fatal(err)
+	}
+
+	got = schedule.Value()
+	if got != expected {
+		t.Errorf("expected %f, got %f", expected, got)
 	}
 }
 
@@ -65,7 +96,7 @@ func TestScheduleNext(t *testing.T) {
 		{name: "today", wd: today, ts: slot1, nt: &t4},
 	}
 
-	schedule := New()
+	schedule := New(10)
 	for _, d := range data {
 		t.Run(d.name, func(t *testing.T) {
 			if err := schedule.Add(d.wd, d.ts); err != nil {

@@ -8,6 +8,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Const for now
+const defaultValue = 14
+
 // ScheduledComponent represents a scheduled component
 type ScheduledComponent struct {
 	Component
@@ -17,7 +20,9 @@ type ScheduledComponent struct {
 
 // NewScheduledComponent returns a new scheduled component
 func NewScheduledComponent() *ScheduledComponent {
-	return &ScheduledComponent{schedule: schedule.New()}
+	return &ScheduledComponent{
+		schedule: schedule.New(defaultValue),
+	}
 }
 
 // ScheduledNextTime implements the Scheduled interface
@@ -32,7 +37,7 @@ func (c *ScheduledComponent) ScheduledNextTime() *time.Time {
 
 // ScheduledDefault implements the Scheduled interface
 func (c *ScheduledComponent) ScheduledDefault() float64 {
-	return 14
+	return c.schedule.DefaultValue
 }
 
 // CurrentSchedule implements the Scheduled interface
@@ -41,12 +46,7 @@ func (c *ScheduledComponent) CurrentSchedule() float64 {
 		return -1
 	}
 
-	ts := c.schedule.Now()
-	if ts != nil {
-		return ts.Value
-	}
-
-	return c.ScheduledDefault()
+	return c.schedule.Value()
 }
 
 // Schedule implements the Scheduled interface
