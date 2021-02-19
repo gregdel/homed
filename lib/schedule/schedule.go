@@ -14,6 +14,7 @@ type Schedule struct {
 
 	Days         map[time.Weekday]*DailySchedule `json:"days"`
 	DefaultValue float64                         `json:"default_value"`
+	Overrides    Overrides                       `json:"overrides"`
 }
 
 // New returns a new schedule
@@ -21,6 +22,7 @@ func New(dv float64) *Schedule {
 	schedule := &Schedule{
 		Days:         map[time.Weekday]*DailySchedule{},
 		DefaultValue: dv,
+		Overrides:    NewOverrides(),
 	}
 
 	for i := 0; i < 7; i++ {
@@ -47,8 +49,8 @@ func (s *Schedule) Now() *TimeSlot {
 	)
 }
 
-// Next returns the next timeslot
-func (s *Schedule) Next() (*TimeSlot, time.Weekday) {
+// nextTimeslot returns the next timeslot
+func (s *Schedule) nextTimeslot() (*TimeSlot, time.Weekday) {
 	now := now()
 
 	weekday := now.Weekday()
@@ -75,11 +77,10 @@ func (s *Schedule) Next() (*TimeSlot, time.Weekday) {
 	return nil, 0
 }
 
-// NextTime returns the timeslot and time of the next timeslot
-func (s *Schedule) NextTime() (*TimeSlot, *time.Time) {
-	ts, wd := s.Next()
+func (s *Schedule) nextTimeFromTimeSlot() *time.Time {
+	ts, wd := s.nextTimeslot()
 	if ts == nil {
-		return nil, nil
+		return nil
 	}
 
 	now := now()
@@ -92,9 +93,32 @@ func (s *Schedule) NextTime() (*TimeSlot, *time.Time) {
 	hours := time.Duration(ts.Start.Hour-now.Hour()) * time.Hour
 	minutes := time.Duration(ts.Start.Minute-now.Minute()) * time.Minute
 	seconds := time.Duration(ts.Start.Second-now.Second()) * time.Second
-	t := now.Add(days + hours + minutes + seconds)
+	scheduledTime := now.Add(days + hours + minutes + seconds)
+	return &scheduledTime
+}
 
-	return ts, &t
+// NextTime returns the timeslot and time of the next timeslot
+func (s *Schedule) NextTime() *time.Time {
+	scheduled := s.nextTimeFromTimeSlot()
+	override := s.Overrides.NextTime()
+
+	if scheduled == nil && override == nil {
+		return nil
+	}
+
+	if scheduled != nil && override != nil {
+		if scheduled.Before(*override) {
+			return scheduled
+		}
+
+		return override
+	}
+
+	if scheduled == nil {
+		return override
+	}
+
+	return scheduled
 }
 
 // Add adds a timeslot to a schedule
@@ -106,6 +130,11 @@ func (s *Schedule) Add(day time.Weekday, slot *TimeSlot) error {
 	return ds.Add(slot)
 }
 
+// AddOverride adds a schedule override
+func (s *Schedule) AddOverride(override *Override) error {
+	return s.Overrides.Add(override)
+}
+
 // Delete deletes a timeslot on a given day
 func (s *Schedule) Delete(day time.Weekday, uuid string) error {
 	s.mu.Lock()
@@ -115,8 +144,17 @@ func (s *Schedule) Delete(day time.Weekday, uuid string) error {
 	return ds.Delete(uuid)
 }
 
+// DeleteOverride deletes a scheduled override
+func (s *Schedule) DeleteOverride(id string) error {
+	return s.Overrides.Delete(id)
+}
+
 // Value returns the scheduled value at the current time
 func (s *Schedule) Value() float64 {
+	if o := s.Overrides.Now(); o != nil {
+		return o.Value
+	}
+
 	if ts := s.Now(); ts != nil {
 		return ts.Value
 	}

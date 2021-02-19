@@ -62,9 +62,24 @@ func TestScheduleValue(t *testing.T) {
 	if got != expected {
 		t.Errorf("expected %f, got %f", expected, got)
 	}
+
+	expected = 18
+	o := NewOverride(
+		now().Add(-1*time.Hour),
+		now().Add(1*time.Hour),
+		expected,
+	)
+	if err := schedule.AddOverride(o); err != nil {
+		t.Fatal(err)
+	}
+
+	got = schedule.Value()
+	if got != expected {
+		t.Errorf("expected %f, got %f", expected, got)
+	}
 }
 
-func TestScheduleNext(t *testing.T) {
+func TestScheduleNextTimeSlot(t *testing.T) {
 	// Fake the now function
 	setNow(NewTimePointer(11, 00, 00))
 	defer setNow(nil)
@@ -103,13 +118,13 @@ func TestScheduleNext(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			got, gotWeekday := schedule.Next()
+			got, gotWeekday := schedule.nextTimeslot()
 			if d.ts == nil {
 				if got != nil {
 					t.Errorf("expected nothing got %+v", got)
 				}
 
-				_, gotTime := schedule.NextTime()
+				gotTime := schedule.NextTime()
 				if gotTime != nil {
 					t.Errorf("expected not time got %+v", gotTime)
 				}
@@ -130,7 +145,7 @@ func TestScheduleNext(t *testing.T) {
 			}
 
 			if d.nt != nil {
-				_, gotTime := schedule.NextTime()
+				gotTime := schedule.NextTime()
 				if gotTime == nil {
 					t.Errorf("expected a time got nil")
 					return
@@ -141,5 +156,79 @@ func TestScheduleNext(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestScheduleNext(t *testing.T) {
+	// Let's say it's 11:00 in the morning
+	setNow(NewTimePointer(11, 00, 00))
+	defer setNow(nil)
+
+	schedule := New(10)
+	got := schedule.NextTime()
+	if got != nil {
+		t.Fatalf("expected nothing, got %s", got)
+	}
+
+	// Add a timeslot in one hour
+	if err := schedule.Add(
+		now().Weekday(),
+		&TimeSlot{UUID: "timeslot", Start: NewTime(12, 0, 0)},
+	); err != nil {
+		t.Fatal(err)
+	}
+	got = schedule.NextTime()
+	expected := now().Add(time.Hour)
+	if got == nil || !got.Equal(expected) {
+		t.Fatalf("expected %s, got %s", expected, got)
+	}
+
+	// Add an override in 1.5 hour
+	if err := schedule.AddOverride(NewOverride(
+		now().Add(90*time.Minute),
+		now().Add(120*time.Minute),
+		10,
+	)); err != nil {
+		t.Fatal(err)
+	}
+	got = schedule.NextTime()
+	if got == nil || !got.Equal(expected) {
+		t.Fatalf("expected %s, got %s", expected, got)
+	}
+
+	// Add an override in 30 minutes
+	expected = now().Add(30 * time.Minute)
+	override := &Override{
+		Start: expected,
+		Stop:  now().Add(45 * time.Minute),
+		ID:    "override",
+	}
+	if err := schedule.AddOverride(override); err != nil {
+		t.Fatal(err)
+	}
+	got = schedule.NextTime()
+	if got == nil || !got.Equal(expected) {
+		t.Fatalf("expected %s, got %s", expected, got)
+	}
+
+	// Delete the override in 30 minutes
+	if err := schedule.DeleteOverride("override"); err != nil {
+		t.Fatal(err)
+	}
+	got = schedule.NextTime()
+	expected = now().Add(time.Hour)
+	if got == nil || !got.Equal(expected) {
+		t.Fatalf("expected %s, got %s", expected, got)
+	}
+
+	// Delete the scheduled timeslot, there's only the override in 1.5 hour at
+	// this point
+	if err := schedule.Delete(now().Weekday(), "timeslot"); err != nil {
+		t.Fatal(err)
+	}
+	got = schedule.NextTime()
+	expected = now().Add(90 * time.Minute)
+	if got == nil || !got.Equal(expected) {
+		t.Fatalf("expected %s, got %s", expected, got)
 	}
 }

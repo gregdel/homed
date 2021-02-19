@@ -31,8 +31,7 @@ func (c *ScheduledComponent) ScheduledNextTime() *time.Time {
 		return nil
 	}
 
-	_, nt := c.schedule.NextTime()
-	return nt
+	return c.schedule.NextTime()
 }
 
 // ScheduledDefault implements the Scheduled interface
