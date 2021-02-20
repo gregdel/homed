@@ -44,6 +44,9 @@ const App = () => (
                 <Route path="/switches" exact>
                   <Components typesFilter={["tasmota_switch"]} />
                 </Route>
+                <Route path="/shutters" exact>
+                  <Components typesFilter={["esphome_cover"]} />
+                </Route>
                 <Route
                   path="/components/:componentId/schedule"
                   exact

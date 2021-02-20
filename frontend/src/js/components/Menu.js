@@ -8,6 +8,7 @@ import {
   mdiThermometerLines,
   mdiLightbulb,
   mdiPower,
+  mdiWindowShutter,
 } from "@mdi/js";
 
 const { Sider } = Layout;
@@ -51,6 +52,11 @@ export const AppMenu = () => {
       icon: mdiPower,
       path: "/switches",
       title: "Switches",
+    },
+    {
+      icon: mdiWindowShutter,
+      path: "/shutters",
+      title: "Roller shutters",
     },
   ];
 
