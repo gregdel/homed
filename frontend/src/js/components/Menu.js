@@ -86,7 +86,11 @@ export const AppMenu = () => {
       >
         {menu.map((entry, key) => {
           return (
-            <Menu.Item key={key} icon={<Icon path={entry.icon} size={1} />}>
+            <Menu.Item
+              key={key}
+              icon={<Icon path={entry.icon} size={1} />}
+              style={{ display: "flex", alignItems: "center" }}
+            >
               <Link to={entry.path} component={Typography.Link}>
                 {entry.title}
               </Link>
