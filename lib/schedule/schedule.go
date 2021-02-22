@@ -136,12 +136,12 @@ func (s *Schedule) AddOverride(override *Override) error {
 }
 
 // Delete deletes a timeslot on a given day
-func (s *Schedule) Delete(day time.Weekday, uuid string) error {
+func (s *Schedule) Delete(day time.Weekday, id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	ds := s.Days[day]
-	return ds.Delete(uuid)
+	return ds.Delete(id)
 }
 
 // DeleteOverride deletes a scheduled override

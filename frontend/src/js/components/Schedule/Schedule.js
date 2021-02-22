@@ -104,12 +104,12 @@ Timeline.propTypes = {
 // Remove the seconds from the displayed time
 const formatTime = (time) => time.slice(0, -3);
 
-export const TimeSlot = ({ start, stop, value, uuid, day }) => {
+export const TimeSlot = ({ start, stop, value, id, day }) => {
   const dispatch = useDispatch();
-  const { componentId: id } = useParams();
+  const { componentId } = useParams();
 
   const handleDelete = () => {
-    dispatch(deleteSchedule(id, day, uuid));
+    dispatch(deleteSchedule(componentId, day, id));
   };
 
   return (
@@ -141,7 +141,7 @@ export const TimeSlot = ({ start, stop, value, uuid, day }) => {
   );
 };
 TimeSlot.propTypes = {
-  uuid: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
   start: PropTypes.string.isRequired,
   stop: PropTypes.string,
   value: PropTypes.number.isRequired,
