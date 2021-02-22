@@ -119,9 +119,10 @@ func TestTimeMarshalJSON(t *testing.T) {
 
 func TestTimeUnmarshalJSON(t *testing.T) {
 	tt := []struct {
-		expected    *Time
-		input       []byte
-		expectedErr error
+		expected          *Time
+		input             []byte
+		expectedErr       error
+		jsonEncodingError bool
 	}{
 		{
 			input:    []byte("\"10:30:00\""),
@@ -137,22 +138,32 @@ func TestTimeUnmarshalJSON(t *testing.T) {
 		},
 		{
 			input:       []byte("\"xxxxx\""),
-			expected:    nil,
 			expectedErr: ErrInvalidTime,
 		},
 		{
 			input:       []byte("\"xx:xx:xx\""),
-			expected:    nil,
 			expectedErr: ErrInvalidTime,
+		},
+		{
+			input:             []byte("\""),
+			jsonEncodingError: true,
 		},
 	}
 
 	for _, tc := range tt {
 		t.Run(string(tc.input), func(t *testing.T) {
 			got := &Time{}
-			err := json.Unmarshal(tc.input, got)
-			if err != tc.expectedErr {
-				t.Fatalf("expected error %q, got %q", tc.expectedErr, err)
+			err := got.UnmarshalJSON(tc.input)
+			if err != nil {
+				_, ok := err.(*json.SyntaxError)
+				if tc.jsonEncodingError && !ok {
+					t.Fatalf("expected JSON encoding error got %s", err)
+					return
+				}
+
+				if !tc.jsonEncodingError && tc.expectedErr != err {
+					t.Fatalf("expected %s, got %s", tc.expectedErr, err)
+				}
 			}
 
 			if tc.expected == nil {

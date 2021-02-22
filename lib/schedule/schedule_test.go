@@ -28,7 +28,7 @@ func TestSchedule(t *testing.T) {
 		t.Errorf("expected to get slot2, got %+v", got)
 	}
 
-	if err := schedule.Delete(day, slot1.UUID); err != nil {
+	if err := schedule.Delete(day, slot1.ID); err != nil {
 		t.Fatalf("expected to be able to delete a slot, got %s", err.Error())
 	}
 }
@@ -173,7 +173,7 @@ func TestScheduleNext(t *testing.T) {
 	// Add a timeslot in one hour
 	if err := schedule.Add(
 		now().Weekday(),
-		&TimeSlot{UUID: "timeslot", Start: NewTime(12, 0, 0)},
+		&TimeSlot{ID: "timeslot", Start: NewTime(12, 0, 0)},
 	); err != nil {
 		t.Fatal(err)
 	}

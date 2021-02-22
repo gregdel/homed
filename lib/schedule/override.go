@@ -1,9 +1,8 @@
 package schedule
 
 import (
+	"fmt"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // Override represents a time override
@@ -14,6 +13,11 @@ type Override struct {
 	Value float64   `json:"value"`
 }
 
+// String implements the stringer interface
+func (o *Override) String() string {
+	return fmt.Sprintf("%f from %s to %s", o.Value, o.Start, o.Stop)
+}
+
 // NewOverride returns a new override
 func NewOverride(start, stop time.Time, value float64) *Override {
 	o := &Override{
@@ -21,6 +25,7 @@ func NewOverride(start, stop time.Time, value float64) *Override {
 		Stop:  stop,
 		Value: value,
 	}
+
 	o.generateID()
 	return o
 }
@@ -38,12 +43,5 @@ func (o *Override) generateID() {
 		return
 	}
 
-	// Generate a random uuid
-	uuid, err := uuid.NewRandom()
-	if err != nil {
-		return
-	}
-
-	// Add a random ID to the timeslot
-	o.ID = uuid.String()
+	o.ID = generateID(o)
 }

@@ -3,8 +3,6 @@ package schedule
 import (
 	"errors"
 	"sort"
-
-	"github.com/google/uuid"
 )
 
 var (
@@ -13,17 +11,6 @@ var (
 	// ErrTimeSlotNotFound is returned if the given timeslot is not found
 	ErrTimeSlotNotFound = errors.New("schedule: timeslot not found")
 )
-
-// TimeSlot holds a time slot
-type TimeSlot struct {
-	// Random id representing the time slot
-	UUID string `json:"uuid"`
-	// Required
-	Start Time `json:"start"`
-	// Optional
-	Stop  *Time   `json:"stop"`
-	Value float64 `json:"value"`
-}
 
 // DailySchedule holds a sorted slice of time slots
 type DailySchedule []*TimeSlot
@@ -68,17 +55,7 @@ func (ds *DailySchedule) Add(n *TimeSlot) error {
 		return ErrOverlappingTimeslots
 	}
 
-	if n.UUID == "" {
-		// Generate a random uuid
-		uuid, err := uuid.NewRandom()
-		if err != nil {
-			return err
-		}
-
-		// Add a random ID to the timeslot
-		n.UUID = uuid.String()
-	}
-
+	n.generateID()
 	*ds = append(*ds, n)
 
 	// Sort the schedule
@@ -87,10 +64,10 @@ func (ds *DailySchedule) Add(n *TimeSlot) error {
 }
 
 // Delete deletes a timeslot
-func (ds *DailySchedule) Delete(uuid string) error {
+func (ds *DailySchedule) Delete(id string) error {
 	var found *int
 	for i, ts := range *ds {
-		if ts.UUID == uuid {
+		if ts.ID == id {
 			found = &i
 			break
 		}

@@ -109,9 +109,8 @@ func TestDailyScheduleAdd(t *testing.T) {
 func TestDailyScheduleDelete(t *testing.T) {
 	ds := NewDailySchedule()
 
-	fakeUUID := "254f1bff-a6a8-422f-889f-99195664ca77"
 	slot1 := &TimeSlot{Start: NewTime(8, 0, 0)}
-	slot2 := &TimeSlot{Start: NewTime(9, 0, 0), UUID: fakeUUID}
+	slot2 := &TimeSlot{Start: NewTime(9, 0, 0)}
 	slot3 := &TimeSlot{Start: NewTime(10, 0, 0)}
 
 	for _, ts := range []*TimeSlot{slot1, slot2, slot3} {
@@ -121,11 +120,11 @@ func TestDailyScheduleDelete(t *testing.T) {
 		}
 	}
 
-	if slot3.UUID == "" {
-		t.Errorf("slot3 should have a UUID by now")
+	if slot3.ID == "" {
+		t.Errorf("slot3 should have an id by now")
 	}
 
-	if err := ds.Delete(fakeUUID); err != nil {
+	if err := ds.Delete(slot2.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -140,11 +139,11 @@ func TestDailyScheduleDelete(t *testing.T) {
 		t.Fatalf("expected slot 3")
 	}
 
-	if err := ds.Delete(slot3.UUID); err != nil {
+	if err := ds.Delete(slot3.ID); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := ds.Delete(slot1.UUID); err != nil {
+	if err := ds.Delete(slot1.ID); err != nil {
 		t.Fatal(err)
 	}
 
