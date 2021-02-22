@@ -30,6 +30,18 @@ export const ESPCover = ({ id }) => {
     dispatch(componentUpdate(id, action));
   };
 
+  const msg = () => {
+    if (percentOpen == 0) {
+      return "Closed";
+    }
+
+    if (percentOpen == 100) {
+      return "Opened";
+    }
+
+    return `Opened at ${percentOpen}%`;
+  };
+
   return (
     <>
       <div style={{ display: "flex", justifyContent: "center" }}>
@@ -67,7 +79,7 @@ export const ESPCover = ({ id }) => {
           justifyContent: "center",
         }}
       >
-        <span>Opened at {percentOpen}%</span>
+        <span>{msg()}</span>
       </div>
     </>
   );
