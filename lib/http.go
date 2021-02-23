@@ -1,17 +1,13 @@
 package homed
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/gregdel/homed/lib/components"
-	"github.com/gregdel/homed/lib/schedule"
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -24,8 +20,9 @@ func (h *Homed) initHTTP(addr string) error {
 	router.GET("/components", h.httpComponentList)
 	router.PUT("/components/:id", h.updateComponent)
 	router.GET("/components/:id/schedule", h.httpGetSchedule)
-	router.POST("/components/:id/schedule/:weekday", h.httpPostSchedule)
-	router.DELETE("/components/:id/schedule/:weekday/:uuid", h.httpDeleteSchedule)
+	router.POST("/components/:id/schedule/default", h.httpPostScheduleDefault)
+	router.POST("/components/:id/schedule/daily/:weekday", h.httpPostSchedule)
+	router.DELETE("/components/:id/schedule/daily/:weekday/:uuid", h.httpDeleteSchedule)
 
 	var httpFS http.FileSystem
 	if h.dev {
@@ -137,113 +134,5 @@ func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 		if err != nil {
 			break
 		}
-	}
-}
-
-func (h *Homed) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("id")
-	c, err := h.components.Get(componentID)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
-		return
-	}
-
-	sc, ok := c.(components.Scheduled)
-	if !ok {
-		h.httpError(w, "this component can not be scheduled")
-		return
-	}
-
-	h.httpRenderJSON(w, sc.Schedule())
-}
-
-func (h *Homed) httpGetCompoment(ps httprouter.Params) (components.Component, error) {
-	componentID := ps.ByName("id")
-	return h.components.Get(componentID)
-}
-
-func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("id")
-	c, err := h.components.Get(componentID)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
-		return
-	}
-
-	sc, ok := c.(components.Scheduled)
-	if !ok {
-		h.httpError(w, "this component can not be scheduled")
-		return
-	}
-
-	ts := schedule.TimeSlot{}
-	err = json.NewDecoder(r.Body).Decode(&ts)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to decode data: %s", err.Error()))
-		return
-	}
-
-	weekdayStr := ps.ByName("weekday")
-	weekday, err := strconv.Atoi(weekdayStr)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to parse weekday: %s", err.Error()))
-		return
-	}
-
-	if weekday < 0 || weekday > 6 {
-		h.httpError(w, "invalid weekday")
-		return
-	}
-
-	err = sc.ScheduleAdd(time.Weekday(weekday), &ts)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to add to the schedule: %s", err.Error()))
-		return
-	}
-
-	err = sc.SaveSchedule(h.components.SchedulePath(c))
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
-		return
-	}
-}
-
-func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("id")
-	c, err := h.components.Get(componentID)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err.Error()))
-		return
-	}
-
-	sc, ok := c.(components.Scheduled)
-	if !ok {
-		h.httpError(w, "this component can not be scheduled")
-		return
-	}
-
-	weekdayStr := ps.ByName("weekday")
-	weekday, err := strconv.Atoi(weekdayStr)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to parse weekday: %s", err.Error()))
-		return
-	}
-
-	if weekday < 0 || weekday > 6 {
-		h.httpError(w, "invalid weekday")
-		return
-	}
-
-	uuid := ps.ByName("uuid")
-	err = sc.ScheduleDelete(time.Weekday(weekday), uuid)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to delete the schedule: %s", err.Error()))
-		return
-	}
-
-	err = sc.SaveSchedule(h.components.SchedulePath(c))
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
-		return
 	}
 }

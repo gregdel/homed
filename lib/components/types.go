@@ -1,8 +1,6 @@
 package components
 
 import (
-	"time"
-
 	"github.com/gregdel/homed/lib/schedule"
 )
 
@@ -22,15 +20,10 @@ type Publisher interface {
 
 // Scheduled is an interface to handle the schedule of a component
 type Scheduled interface {
-	ScheduledNextTime() *time.Time
-	ScheduledDefault() float64
-	CurrentSchedule() float64
 	Schedule() *schedule.Schedule
 	SetSchedule(*schedule.Schedule)
-	ScheduleAdd(time.Weekday, *schedule.TimeSlot) error
-	ScheduleDelete(time.Weekday, string) error
-	LoadSchedule(string) error
-	SaveSchedule(string) error
+	SaveSchedule(path string) error
+	LoadSchedule(path string) error
 }
 
 // Sensor reprensents a sensor that holds a value

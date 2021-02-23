@@ -270,7 +270,8 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 
 func (h *Homed) setRoomsTemperatures() {
 	for roomName, component := range h.temperatureController.rooms {
-		scheduledTarget := component.CurrentSchedule()
+		schedule := component.Schedule()
+		scheduledTarget := schedule.Value()
 
 		// Update the target state
 		err := component.SetTemperatureTarget(scheduledTarget)
@@ -278,6 +279,8 @@ func (h *Homed) setRoomsTemperatures() {
 			h.logger.Error(
 				"failed to set the temperature target",
 				zap.Error(err),
+				zap.String("room", roomName),
+				zap.String("device", component.Device()),
 			)
 			continue
 		}
@@ -287,17 +290,21 @@ func (h *Homed) setRoomsTemperatures() {
 			h.logger.Error(
 				"failed to get the temperature mode",
 				zap.Error(err),
+				zap.String("room", roomName),
+				zap.String("device", component.Device()),
 			)
 			continue
 		}
 
 		if mode == components.TemperatureModeNextTimeBlock {
-			nextTime := component.ScheduledNextTime()
+			nextTime := schedule.NextTime()
 			if nextTime != nil {
 				if err := component.SetTemperatureModeManualUntil(nextTime); err != nil {
 					h.logger.Error(
 						"failed to set the temperature manual mode until",
 						zap.Error(err),
+						zap.String("room", roomName),
+						zap.String("device", component.Device()),
 					)
 					continue
 				}
@@ -309,6 +316,8 @@ func (h *Homed) setRoomsTemperatures() {
 			h.logger.Error(
 				"failed to get the end date of the manual mode",
 				zap.Error(err),
+				zap.String("room", roomName),
+				zap.String("device", component.Device()),
 			)
 			continue
 		}
@@ -318,6 +327,8 @@ func (h *Homed) setRoomsTemperatures() {
 				h.logger.Error(
 					"failed to set temperature mode",
 					zap.Error(err),
+					zap.String("room", roomName),
+					zap.String("device", component.Device()),
 				)
 				continue
 			}
@@ -326,6 +337,8 @@ func (h *Homed) setRoomsTemperatures() {
 				h.logger.Error(
 					"failed to set temperature target",
 					zap.Error(err),
+					zap.String("room", roomName),
+					zap.String("device", component.Device()),
 				)
 				continue
 			}
@@ -334,12 +347,16 @@ func (h *Homed) setRoomsTemperatures() {
 			h.logger.Error(
 				"failed to get the temperature target",
 				zap.Error(err),
+				zap.String("room", roomName),
+				zap.String("device", component.Device()),
 			)
 
 			if err := component.SetTemperatureTarget(previousTarget); err != nil {
 				h.logger.Error(
 					"failed to set temperature target",
 					zap.Error(err),
+					zap.String("room", roomName),
+					zap.String("device", component.Device()),
 				)
 				continue
 			}
@@ -350,6 +367,7 @@ func (h *Homed) setRoomsTemperatures() {
 				"failed to publish state",
 				zap.Error(err),
 				zap.String("room", roomName),
+				zap.String("device", component.Device()),
 			)
 			continue
 		}

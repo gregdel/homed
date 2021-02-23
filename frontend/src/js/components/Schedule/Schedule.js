@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
@@ -8,10 +8,11 @@ import { fetchSchedule, deleteSchedule } from "../../actions/schedule";
 import Icon from "@mdi/react";
 import { mdiTrashCanOutline } from "@mdi/js";
 
-import { Typography, Divider } from "antd";
+import { Typography, Divider, Form, Input, Button } from "antd";
 const { Title } = Typography;
 
 import { Add } from "./Add";
+import { DefaultValue } from "./DefaultValue";
 
 export const Schedule = () => {
   const dispatch = useDispatch();
@@ -36,12 +37,14 @@ export const Schedule = () => {
     <>
       <Title>Schedule</Title>
       <Divider />
+      <DefaultValue defaultValue={schedule.default_value} />
+      <Divider />
       {items}
     </>
   );
 };
 
-export const DailySchedule = ({ day = 0, data = [] }) => {
+const DailySchedule = ({ day = 0, data = [] }) => {
   const days = {
     0: "Sunday",
     1: "Monday",

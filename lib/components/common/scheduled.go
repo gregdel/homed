@@ -2,7 +2,6 @@ package common
 
 import (
 	"os"
-	"time"
 
 	"github.com/gregdel/homed/lib/schedule"
 	"gopkg.in/yaml.v2"
@@ -23,20 +22,6 @@ func NewScheduledComponent() *ScheduledComponent {
 	return &ScheduledComponent{
 		schedule: schedule.New(defaultValue),
 	}
-}
-
-// ScheduledNextTime implements the Scheduled interface
-func (c *ScheduledComponent) ScheduledNextTime() *time.Time {
-	if c.schedule == nil {
-		return nil
-	}
-
-	return c.schedule.NextTime()
-}
-
-// ScheduledDefault implements the Scheduled interface
-func (c *ScheduledComponent) ScheduledDefault() float64 {
-	return c.schedule.DefaultValue
 }
 
 // CurrentSchedule implements the Scheduled interface
@@ -60,16 +45,6 @@ func (c *ScheduledComponent) SetSchedule(s *schedule.Schedule) {
 	}
 
 	c.schedule = s
-}
-
-// ScheduleAdd implements the Scheduled interface
-func (c *ScheduledComponent) ScheduleAdd(wd time.Weekday, ts *schedule.TimeSlot) error {
-	return c.schedule.Add(wd, ts)
-}
-
-// ScheduleDelete implements the Scheduled interface
-func (c *ScheduledComponent) ScheduleDelete(wd time.Weekday, id string) error {
-	return c.schedule.Delete(wd, id)
 }
 
 // LoadSchedule implements the Scheduled interface

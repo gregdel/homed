@@ -12,9 +12,9 @@ const maxDaysSearch = 7
 type Schedule struct {
 	mu sync.Mutex
 
-	Days         map[time.Weekday]*DailySchedule `json:"days"`
-	DefaultValue float64                         `json:"default_value"`
-	Overrides    Overrides                       `json:"overrides"`
+	Days         map[time.Weekday]*DailySchedule `json:"days" yaml:"days"`
+	DefaultValue float64                         `json:"default_value" yaml:"default_value"`
+	Overrides    Overrides                       `json:"overrides" yaml:"overrides"`
 }
 
 // New returns a new schedule
