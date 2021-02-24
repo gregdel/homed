@@ -114,6 +114,41 @@ func (h *Homed) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
+func (h *Homed) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	componentID := ps.ByName("id")
+	c, err := h.components.Get(componentID)
+	if err != nil {
+		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
+		return
+	}
+
+	sc, ok := c.(components.Scheduled)
+	if !ok {
+		h.httpError(w, err.Error())
+		return
+	}
+
+	override := &schedule.Override{}
+	err = json.NewDecoder(r.Body).Decode(override)
+	if err != nil {
+		h.httpError(w, fmt.Sprintf("failed to decode data: %s", err.Error()))
+		return
+	}
+
+	schedule := sc.Schedule()
+	err = schedule.AddOverride(override)
+	if err != nil {
+		h.httpError(w, fmt.Sprintf("failed to add schedule override: %s", err))
+		return
+	}
+
+	err = sc.SaveSchedule(h.components.SchedulePath(c))
+	if err != nil {
+		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
+		return
+	}
+}
+
 func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
@@ -151,6 +186,35 @@ func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 	err = sc.SaveSchedule(h.components.SchedulePath(c))
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
+		return
+	}
+}
+
+func (h *Homed) httpDeleteScheduleOverride(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	componentID := ps.ByName("id")
+	c, err := h.components.Get(componentID)
+	if err != nil {
+		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
+		return
+	}
+
+	sc, ok := c.(components.Scheduled)
+	if !ok {
+		h.httpError(w, "this component can not be scheduled")
+		return
+	}
+
+	id := ps.ByName("overrideID")
+	schedule := sc.Schedule()
+	err = schedule.DeleteOverride(id)
+	if err != nil {
+		h.httpError(w, fmt.Sprintf("failed to delete the schedule override: %s", err))
+		return
+	}
+
+	err = sc.SaveSchedule(h.components.SchedulePath(c))
+	if err != nil {
+		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err))
 		return
 	}
 }

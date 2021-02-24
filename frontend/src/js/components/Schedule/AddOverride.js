@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 
@@ -8,9 +7,9 @@ import { Modal, Button, Form, Input } from "antd";
 import Icon from "@mdi/react";
 import { mdiCalendarPlus } from "@mdi/js";
 
-import { addSchedule } from "../../actions/schedule";
+import { addScheduleOverride } from "../../actions/schedule";
 
-export const Add = ({ day }) => {
+export const AddOverride = () => {
   const dispatch = useDispatch();
   const { componentId } = useParams();
 
@@ -30,7 +29,7 @@ export const Add = ({ day }) => {
       stop: to ? to : null,
       value: new Number(target),
     };
-    dispatch(addSchedule(componentId, day, data));
+    dispatch(addScheduleOverride(componentId, data));
   };
 
   const handleCancel = () => {
@@ -41,14 +40,13 @@ export const Add = ({ day }) => {
     <div style={{ marginTop: "0.5em" }}>
       <Button
         type="primary"
-        size="medium"
-        style={{ display: "flex", alignItems: "center" }}
+        style={{ margin: 1, display: "flex", alignItems: "center" }}
         onClick={showModal}
       >
-        <Icon path={mdiCalendarPlus} size={1} />
+        <Icon path={mdiCalendarPlus} size={1} style={{ marginRight: "2px" }} />
       </Button>
       <Modal
-        title="Add in schedule"
+        title="Add schedule override"
         visible={show}
         onOk={handleOk}
         onCancel={handleCancel}
@@ -64,10 +62,11 @@ export const Add = ({ day }) => {
             name="from"
             value={from}
             onChange={(e) => {
-              setFrom(e.target.value);
+              const date = new Date(e.target.value);
+              setFrom(date.toISOString());
             }}
           >
-            <Input type="time" />
+            <Input type="datetime-local" />
           </Form.Item>
 
           <Form.Item
@@ -75,10 +74,11 @@ export const Add = ({ day }) => {
             name="to"
             value={to}
             onChange={(e) => {
-              setTo(e.target.value);
+              const date = new Date(e.target.value);
+              setTo(date.toISOString());
             }}
           >
-            <Input type="time" />
+            <Input type="datetime-local" />
           </Form.Item>
 
           <Form.Item
@@ -96,7 +96,4 @@ export const Add = ({ day }) => {
       </Modal>
     </div>
   );
-};
-Add.propTypes = {
-  day: PropTypes.number.isRequired,
 };

@@ -21,6 +21,8 @@ func (h *Homed) initHTTP(addr string) error {
 	router.PUT("/components/:id", h.updateComponent)
 	router.GET("/components/:id/schedule", h.httpGetSchedule)
 	router.POST("/components/:id/schedule/default", h.httpPostScheduleDefault)
+	router.POST("/components/:id/schedule/overrides", h.httpPostScheduleOverrides)
+	router.DELETE("/components/:id/schedule/overrides/:overrideID", h.httpDeleteScheduleOverride)
 	router.POST("/components/:id/schedule/daily/:weekday", h.httpPostSchedule)
 	router.DELETE("/components/:id/schedule/daily/:weekday/:uuid", h.httpDeleteSchedule)
 

@@ -18,11 +18,28 @@ export const addSchedule = (id, weekday, data) =>
     { id }
   );
 
+export const addScheduleOverride = (id, data) =>
+  request(
+    "SCHEDULE_ADD_OVERRIDE",
+    configureAxios().post(`/components/${id}/schedule/overrides`, data),
+    [() => fetchSchedule(id)],
+    { id }
+  );
+
 export const deleteSchedule = (componentId, weekday, scheduleId) =>
   request(
     "SCHEDULE_DELETE",
     configureAxios().delete(
       `/components/${componentId}/schedule/daily/${weekday}/${scheduleId}`
+    ),
+    [() => fetchSchedule(componentId)]
+  );
+
+export const deleteScheduleOverride = (componentId, overrideId) =>
+  request(
+    "SCHEDULE_OVERRIDE_DELETE",
+    configureAxios().delete(
+      `/components/${componentId}/schedule/overrides/${overrideId}`
     ),
     [() => fetchSchedule(componentId)]
   );
