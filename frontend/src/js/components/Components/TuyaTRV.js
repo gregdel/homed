@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 
-import { Row, Col, Progress, Divider } from "antd";
+import { Row, Col, Progress } from "antd";
 
 import Icon from "@mdi/react";
 import { mdiBattery, mdiBattery10 } from "@mdi/js";
@@ -31,7 +31,6 @@ export const TuyaTRV = ({ id }) => {
             rotate={90}
           />
         </Col>
-        <Divider type="vertical" />
         <Progress percent={position} steps={5} />
       </Row>
 
