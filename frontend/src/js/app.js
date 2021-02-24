@@ -47,6 +47,9 @@ const App = () => (
                 <Route path="/shutters" exact>
                   <Components typesFilter={["esphome_cover"]} />
                 </Route>
+                <Route path="/aqara" exact>
+                  <Components typesFilter={["xiaomi_aqara"]} />
+                </Route>
                 <Route
                   path="/components/:componentId/schedule"
                   exact

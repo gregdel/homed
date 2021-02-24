@@ -5,6 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 import Icon from "@mdi/react";
 import {
   mdiHomeThermometer,
+  mdiThermometer,
   mdiThermometerLines,
   mdiLightbulb,
   mdiPower,
@@ -42,6 +43,11 @@ export const AppMenu = () => {
       icon: mdiThermometerLines,
       path: "/tuya",
       title: "Thermostatic valves",
+    },
+    {
+      icon: mdiThermometer,
+      path: "/aqara",
+      title: "Temperature sensors",
     },
     {
       icon: mdiLightbulb,
