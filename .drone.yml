@@ -9,7 +9,7 @@ steps:
   - ./build.sh frontend
 
 - name: golang
-  image: golang:1.16rc1-alpine3.13
+  image: golang:1.16.0-alpine3.13
   commands:
   - ./build.sh backend
 

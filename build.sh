@@ -2,11 +2,7 @@
 set -e
 
 BUILD_DIR="build"
-
-_err() {
-	echo "$@"
-	exit 1
-}
+mkdir -p "$BUILD_DIR"
 
 _cleanup_buildir() {
 	rm -rf "$BUILD_DIR"
@@ -15,13 +11,10 @@ _cleanup_buildir() {
 	touch "$BUILD_DIR/$1"
 }
 
-_cleanup_buildir
-[ -d "./$BUILD_DIR" ] || _err "Missing build dir"
-[ -d "frontend" ]     || _err "Frontend directory is missing"
-
 _backend_build() {
 	echo "Embeding files in the binary:"
 	ls -lah "$BUILD_DIR"
+	CGO_ENABLED=0 go test -v ./...
 	CGO_ENABLED=0 go build \
 		-ldflags '-extldflags "-static"' \
 		-trimpath \
@@ -39,6 +32,7 @@ _frontend_build() {
 
 case "$1" in
 	frontend)
+		_cleanup_buildir
 		_frontend_build
 		;;
 	backend)
