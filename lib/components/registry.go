@@ -4,12 +4,12 @@ import "fmt"
 
 var registeredComponents map[string]func() Component
 
+func init() {
+	registeredComponents = map[string]func() Component{}
+}
+
 // Register a component
 func Register(t Type, fn func() Component) {
-	if registeredComponents == nil {
-		registeredComponents = map[string]func() Component{}
-	}
-
 	name := string(t)
 	_, ok := registeredComponents[name]
 	if ok {

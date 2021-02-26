@@ -1,15 +1,29 @@
-package homed
+package tempd
 
 import (
+	"math"
 	"time"
 
+	"github.com/gregdel/homed/lib/apps"
 	"github.com/gregdel/homed/lib/components"
+	"github.com/gregdel/homed/lib/config"
 	"go.uber.org/zap"
 )
 
+const name = "tempd"
+
+func init() {
+	apps.Register(app())
+}
+
 // If the target is manually updated:
 // manual_until: (compute the next scheduled change || manual)
-type temperatureController struct {
+type tempd struct {
+	enabled bool
+
+	logger     *zap.Logger
+	components *components.Components
+
 	boiler components.Switch
 
 	// Wether we're in a rising or falling phase of the hysteresis algorithm
@@ -19,56 +33,61 @@ type temperatureController struct {
 	tuyas map[string][]components.TemperatureController
 }
 
-func newTemperatureController() *temperatureController {
-	return &temperatureController{
+func app() *tempd {
+	return &tempd{
 		rising: map[string]bool{},
 		rooms:  map[string]components.TemperatureControllerInternal{},
 		tuyas:  map[string][]components.TemperatureController{},
 	}
 }
 
-func (h *Homed) initTemperatureController() error {
-	if !h.temperatureControl {
-		return nil
-	}
+func (t *tempd) Name() string {
+	return name
+}
 
-	tc := newTemperatureController()
-	for _, room := range h.rooms {
-		for _, component := range h.components.ListByRoom(room.Name) {
-			switch component.Type() {
-			case components.TypeBoiler:
-				tc.boiler = component.(components.Switch)
-			case components.TypeHomedTemperature:
-				tc.rooms[room.Name] = component.(components.TemperatureControllerInternal)
-			case components.TypeTuyaTRV:
-				if len(tc.tuyas[room.Name]) == 0 {
-					tc.tuyas[room.Name] = []components.TemperatureController{}
-				}
-				tc.tuyas[room.Name] = append(
-					tc.tuyas[room.Name],
-					component.(components.TemperatureController),
-				)
-			}
-		}
-	}
-
-	h.temperatureController = tc
-
+func (t *tempd) Init(config *config.Config) error {
+	t.enabled = config.TemperatureControl
 	return nil
 }
 
-func (h *Homed) startTemperatureControl(done <-chan struct{}) {
-	fields := zap.String("app", "temperature_control")
+func (t *tempd) init() {
+	for _, component := range t.components.List() {
+		roomName := component.Room()
+		switch component.Type() {
+		case components.TypeBoiler:
+			t.boiler = component.(components.Switch)
+		case components.TypeHomedTemperature:
+			t.rooms[roomName] = component.(components.TemperatureControllerInternal)
+		case components.TypeTuyaTRV:
+			if len(t.tuyas[roomName]) == 0 {
+				t.tuyas[roomName] = []components.TemperatureController{}
+			}
+			t.tuyas[roomName] = append(
+				t.tuyas[roomName],
+				component.(components.TemperatureController),
+			)
+		}
+	}
+}
+
+func (t *tempd) Run(ctx *apps.RunCtx) error {
+	if !t.enabled {
+		ctx.Logger.Info("app is disabled", zap.String("app_name", name))
+		return nil
+	}
+
+	t.logger = ctx.Logger
+	t.components = ctx.Components
+	t.init()
+
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 
-	h.logger.Info("Starting the temperature controller", fields)
-
 	// TODO: remove this first round
-	h.updateRoomsTemperatures()
-	h.setRoomsTemperatures()
-	h.setRoomsDevicesTemperatures()
-	h.setBoilerState()
+	t.updateRoomsTemperatures()
+	t.setRoomsTemperatures()
+	t.setRoomsDevicesTemperatures()
+	t.setBoilerState()
 
 	exit := false
 	for {
@@ -77,65 +96,95 @@ func (h *Homed) startTemperatureControl(done <-chan struct{}) {
 		}
 
 		select {
-		case <-done:
+		case <-ctx.Ctx.Done():
 			exit = true
 			break
 		case <-ticker.C:
-			h.updateRoomsTemperatures()
-			h.setRoomsTemperatures()
-			h.setRoomsDevicesTemperatures()
-			h.setBoilerState()
+			t.updateRoomsTemperatures()
+			t.setRoomsTemperatures()
+			t.setRoomsDevicesTemperatures()
+			t.setBoilerState()
 		}
 	}
 
-	h.logger.Info("Exiting temperature control", fields)
+	return nil
 }
 
-func (h *Homed) updateRoomsTemperatures() {
-	for roomName, component := range h.temperatureController.rooms {
-		room, ok := h.rooms[roomName]
+// Temperature returns the temperature in the room
+func (t *tempd) roomTemperature(room string) float64 {
+	var temperature float64
+	var found float64 = 0
+
+	cs := t.components.ListByRoom(room)
+	for _, c := range cs {
+		if c.Type() == components.TypeHomedTemperature {
+			continue
+		}
+
+		if c.Type() == components.TypeTuyaTRV {
+			// Don't use this for now
+			continue
+		}
+
+		tc, ok := c.(components.TemperatureGetter)
 		if !ok {
-			h.logger.Info("failed to find room", zap.String("room", roomName))
+			continue
+		}
+
+		found = found + 1
+		t, _ := tc.Temperature()
+		temperature = (temperature + t) / found
+	}
+
+	return temperature
+}
+
+func (t *tempd) updateRoomsTemperatures() {
+	for roomName, component := range t.rooms {
+		_, ok := t.rooms[roomName]
+		if !ok {
+			t.logger.Info("failed to find room", zap.String("room", roomName))
 			continue
 		}
 
 		// Update the current room temperature
-		currentTemperature := room.Temperature(h.components.ListByRoom(roomName))
-		if currentTemperature == 0 {
+		currentTemperature := t.roomTemperature(roomName)
+		if math.IsNaN(currentTemperature) {
+			t.logger.Warn("tempd: temperature is NaN")
 			continue
 		}
 
-		h.logger.Debug(
+		t.logger.Debug(
 			"Setting homed's room temperature",
 			zap.String("room", roomName),
 			zap.Float64("temperature", currentTemperature),
 		)
 		if err := component.SetTemperature(currentTemperature); err != nil {
-			h.logger.Error(err.Error(), zap.String("room", roomName))
+			t.logger.Error(err.Error(), zap.String("room", roomName))
 			continue
 		}
 	}
 }
 
-func (h *Homed) setBoilerState() {
-	if h.temperatureController.boiler == nil {
+func (t *tempd) setBoilerState() {
+	if t.boiler == nil {
 		return
 	}
 
-	boiler := h.temperatureController.boiler
+	boiler := t.boiler
 
 	expectedBoilerState := false
 	hysteresis := 0.3
 
-	for room, component := range h.temperatureController.rooms {
-		_, ok := h.temperatureController.rising[room]
+	for room, component := range t.rooms {
+		_, ok := t.rising[room]
 		if !ok {
-			h.temperatureController.rising[room] = false
+			t.rising[room] = false
 		}
 
 		current, err := component.Temperature()
 		if err != nil {
-			h.logger.Info(
+			t.logger.Info(
 				"failed to get temperature",
 				zap.String("component_type", string(component.Type())),
 			)
@@ -144,7 +193,7 @@ func (h *Homed) setBoilerState() {
 
 		target, err := component.TemperatureTarget()
 		if err != nil {
-			h.logger.Info(
+			t.logger.Info(
 				"failed to get temperature target",
 				zap.String("component_type", string(component.Type())),
 				zap.String("component_id", component.ID()),
@@ -162,51 +211,51 @@ func (h *Homed) setBoilerState() {
 		}
 
 		if current > max {
-			if h.temperatureController.rising[room] {
-				h.logger.Info("boiler entering the falling phase", zapFields...)
+			if t.rising[room] {
+				t.logger.Info("boiler entering the falling phase", zapFields...)
 			}
-			h.temperatureController.rising[room] = false
+			t.rising[room] = false
 		}
 
 		if current < min {
-			if !h.temperatureController.rising[room] {
-				h.logger.Info("boiler entering the rising phase", zapFields...)
+			if !t.rising[room] {
+				t.logger.Info("boiler entering the rising phase", zapFields...)
 			}
-			h.temperatureController.rising[room] = true
+			t.rising[room] = true
 		}
 
-		if h.temperatureController.rising[room] && (current < max) {
-			h.logger.Debug("boiler should be on", zapFields...)
+		if t.rising[room] && (current < max) {
+			t.logger.Debug("boiler should be on", zapFields...)
 			expectedBoilerState = true
 			break
 		}
 	}
 
 	if boiler.IsOn() == expectedBoilerState {
-		h.logger.Debug("boiler already in the good state", zap.Bool("state", expectedBoilerState))
+		t.logger.Debug("boiler already in the good state", zap.Bool("state", expectedBoilerState))
 		return
 	}
 
-	h.logger.Info("changing boiler state", zap.Bool("state", expectedBoilerState))
+	t.logger.Info("changing boiler state", zap.Bool("state", expectedBoilerState))
 
-	err := h.temperatureController.boiler.Set(expectedBoilerState)
+	err := t.boiler.Set(expectedBoilerState)
 	if err != nil {
-		h.logger.Error(err.Error())
+		t.logger.Error(err.Error())
 	}
 }
 
-func (h *Homed) setRoomsDevicesTemperatures() {
-	for roomName, component := range h.temperatureController.rooms {
+func (t *tempd) setRoomsDevicesTemperatures() {
+	for roomName, component := range t.rooms {
 		target, err := component.TemperatureTarget()
 		if err != nil {
-			h.logger.Error(
+			t.logger.Error(
 				"failed to get temperature target",
 				zap.Error(err),
 			)
 			continue
 		}
 
-		tuyas, ok := h.temperatureController.tuyas[roomName]
+		tuyas, ok := t.tuyas[roomName]
 		if !ok {
 			continue
 		}
@@ -222,14 +271,14 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 			allowedError := 0.3
 
 			if newCalibration < (calibration-allowedError) || newCalibration > (calibration+allowedError) {
-				h.logger.Info(
+				t.logger.Info(
 					"recalibrating the tuya",
 					zap.String("room", roomName),
 					zap.Float64("calibration", newCalibration),
 				)
 				err = tuya.SetTemperatureCalibration(newCalibration)
 				if err != nil {
-					h.logger.Error(
+					t.logger.Error(
 						"failed to calibrate tuya",
 						zap.Error(err),
 					)
@@ -239,7 +288,7 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 
 			tuyaTarget, err := tuya.TemperatureTarget()
 			if err != nil {
-				h.logger.Error(
+				t.logger.Error(
 					"failed to get tuya's temperature target",
 					zap.Error(err),
 				)
@@ -250,7 +299,7 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 				continue
 			}
 
-			h.logger.Info(
+			t.logger.Info(
 				"should configure the tuya to the target",
 				zap.String("room", roomName),
 				zap.Float64("target", target),
@@ -258,7 +307,7 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 
 			err = tuya.SetTemperatureTarget(target)
 			if err != nil {
-				h.logger.Error(
+				t.logger.Error(
 					"failed to set tuya's temperature target",
 					zap.Error(err),
 				)
@@ -268,15 +317,15 @@ func (h *Homed) setRoomsDevicesTemperatures() {
 	}
 }
 
-func (h *Homed) setRoomsTemperatures() {
-	for roomName, component := range h.temperatureController.rooms {
+func (t *tempd) setRoomsTemperatures() {
+	for roomName, component := range t.rooms {
 		schedule := component.Schedule()
 		scheduledTarget := schedule.Value()
 
 		// Update the target state
 		err := component.SetTemperatureTarget(scheduledTarget)
 		if err != nil {
-			h.logger.Error(
+			t.logger.Error(
 				"failed to set the temperature target",
 				zap.Error(err),
 				zap.String("room", roomName),
@@ -287,7 +336,7 @@ func (h *Homed) setRoomsTemperatures() {
 
 		mode, err := component.TemperatureMode()
 		if err != nil {
-			h.logger.Error(
+			t.logger.Error(
 				"failed to get the temperature mode",
 				zap.Error(err),
 				zap.String("room", roomName),
@@ -300,7 +349,7 @@ func (h *Homed) setRoomsTemperatures() {
 			nextTime := schedule.NextTime()
 			if nextTime != nil {
 				if err := component.SetTemperatureModeManualUntil(nextTime); err != nil {
-					h.logger.Error(
+					t.logger.Error(
 						"failed to set the temperature manual mode until",
 						zap.Error(err),
 						zap.String("room", roomName),
@@ -313,7 +362,7 @@ func (h *Homed) setRoomsTemperatures() {
 
 		manualUntil, err := component.TemperatureModeManualUntil()
 		if err != nil {
-			h.logger.Error(
+			t.logger.Error(
 				"failed to get the end date of the manual mode",
 				zap.Error(err),
 				zap.String("room", roomName),
@@ -324,7 +373,7 @@ func (h *Homed) setRoomsTemperatures() {
 
 		if manualUntil != nil && time.Now().After(*manualUntil) {
 			if err := component.SetTemperatureMode(components.TemperatureModeAuto); err != nil {
-				h.logger.Error(
+				t.logger.Error(
 					"failed to set temperature mode",
 					zap.Error(err),
 					zap.String("room", roomName),
@@ -334,7 +383,7 @@ func (h *Homed) setRoomsTemperatures() {
 			}
 
 			if err := component.SetTemperatureModeManualUntil(nil); err != nil {
-				h.logger.Error(
+				t.logger.Error(
 					"failed to set temperature target",
 					zap.Error(err),
 					zap.String("room", roomName),
@@ -344,7 +393,7 @@ func (h *Homed) setRoomsTemperatures() {
 			}
 
 			previousTarget, err := component.TemperatureTarget()
-			h.logger.Error(
+			t.logger.Error(
 				"failed to get the temperature target",
 				zap.Error(err),
 				zap.String("room", roomName),
@@ -352,7 +401,7 @@ func (h *Homed) setRoomsTemperatures() {
 			)
 
 			if err := component.SetTemperatureTarget(previousTarget); err != nil {
-				h.logger.Error(
+				t.logger.Error(
 					"failed to set temperature target",
 					zap.Error(err),
 					zap.String("room", roomName),
@@ -363,7 +412,7 @@ func (h *Homed) setRoomsTemperatures() {
 		}
 
 		if err := component.PublishState(); err != nil {
-			h.logger.Error(
+			t.logger.Error(
 				"failed to publish state",
 				zap.Error(err),
 				zap.String("room", roomName),

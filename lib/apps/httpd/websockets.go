@@ -1,4 +1,4 @@
-package homed
+package httpd
 
 import (
 	"github.com/google/uuid"
@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (h *Homed) registerWebsocket(ws *websocket.Conn) (string, error) {
+func (h *httpd) registerWebsocket(ws *websocket.Conn) (string, error) {
 	u, err := uuid.NewRandom()
 	if err != nil {
 		return "", err
@@ -21,12 +21,12 @@ func (h *Homed) registerWebsocket(ws *websocket.Conn) (string, error) {
 	return uuid, nil
 }
 
-func (h *Homed) unregisterWebsocket(uuid string) {
+func (h *httpd) unregisterWebsocket(uuid string) {
 	delete(h.websockets, uuid)
 	h.logger.Info("websocket unregistered", zap.String("uuid", uuid))
 }
 
-func (h *Homed) publishToWebsocket(component components.Component) {
+func (h *httpd) publishToWebsocket(component components.Component) {
 	data := components.NewComponentJSON(component)
 	for uuid, ws := range h.websockets {
 		err := ws.WriteJSON(data)

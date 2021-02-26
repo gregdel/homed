@@ -2,6 +2,7 @@ package components
 
 import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -41,6 +42,10 @@ type Component interface {
 	Device() string
 	SetDevice(string)
 
+	// Config
+	Config() *config.Component
+	SetConfig(*config.Component)
+
 	// Update is called every time a new mqtt payload is received on the state
 	// topic
 	Update([]byte) error
@@ -65,6 +70,7 @@ type Component interface {
 	SetCommandTopic(string)
 	SetInternal(bool)
 	SetMQTTClient(mqtt.Client)
+	MQTTClient() mqtt.Client
 
 	// ID
 	ID() string

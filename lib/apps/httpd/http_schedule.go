@@ -1,4 +1,4 @@
-package homed
+package httpd
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ var (
 	errComponentCannotBeScheduled = errors.New("homed: component cannot be scheduled")
 )
 
-func (h *Homed) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {
@@ -34,7 +34,7 @@ func (h *Homed) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httpr
 	h.httpRenderJSON(w, sc.Schedule())
 }
 
-func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {
@@ -81,7 +81,7 @@ func (h *Homed) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 	}
 }
 
-func (h *Homed) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {
@@ -114,7 +114,7 @@ func (h *Homed) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
-func (h *Homed) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {
@@ -149,7 +149,7 @@ func (h *Homed) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {
@@ -190,7 +190,7 @@ func (h *Homed) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 	}
 }
 
-func (h *Homed) httpDeleteScheduleOverride(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) httpDeleteScheduleOverride(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {

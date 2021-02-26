@@ -5,6 +5,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gregdel/homed/lib/config"
 )
 
 // Component represents a base component
@@ -12,6 +13,7 @@ type Component struct {
 	CommandTopic string `json:"-"`
 	StateTopic   string `json:"-"`
 	IsInternal   bool   `json:"-"`
+	config       *config.Component
 
 	mqttClient mqtt.Client
 
@@ -51,6 +53,22 @@ func (c *Component) SetStateTopic(topic string) {
 // SetMQTTClient implements the Component interface
 func (c *Component) SetMQTTClient(client mqtt.Client) {
 	c.mqttClient = client
+}
+
+// MQTTClient implements the Component interface
+func (c *Component) MQTTClient() mqtt.Client {
+	return c.mqttClient
+}
+
+// Config implements the Component interface
+func (c *Component) Config() *config.Component {
+	return c.config
+}
+
+// SetConfig implements the Component interface
+func (c *Component) SetConfig(config *config.Component) {
+	c.config = config
+	return
 }
 
 // SetInternal implements the Component interface

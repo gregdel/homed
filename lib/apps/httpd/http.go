@@ -1,53 +1,16 @@
-package homed
+package httpd
 
 import (
 	"fmt"
-	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func (h *Homed) initHTTP(addr string) error {
-	router := httprouter.New()
-	router.Handler("GET", "/metrics", promhttp.Handler())
-	router.GET("/events", h.websocketEvents)
-
-	router.GET("/components", h.httpComponentList)
-	router.PUT("/components/:id", h.updateComponent)
-	router.GET("/components/:id/schedule", h.httpGetSchedule)
-	router.POST("/components/:id/schedule/default", h.httpPostScheduleDefault)
-	router.POST("/components/:id/schedule/overrides", h.httpPostScheduleOverrides)
-	router.DELETE("/components/:id/schedule/overrides/:overrideID", h.httpDeleteScheduleOverride)
-	router.POST("/components/:id/schedule/daily/:weekday", h.httpPostSchedule)
-	router.DELETE("/components/:id/schedule/daily/:weekday/:uuid", h.httpDeleteSchedule)
-
-	var httpFS http.FileSystem
-	if h.dev {
-		httpFS = http.Dir("frontend/build")
-	} else {
-		f, err := fs.Sub(h.embedFS, "build")
-		if err != nil {
-			return err
-		}
-
-		httpFS = http.FS(f)
-	}
-	router.NotFound = http.FileServer(httpFS)
-
-	h.httpServer = &http.Server{
-		Addr:    addr,
-		Handler: router,
-	}
-
-	return nil
-}
-
-func (h *Homed) httpRender(w http.ResponseWriter, status string, data interface{}) {
+func (h *httpd) httpRender(w http.ResponseWriter, status string, data interface{}) {
 	o := struct {
 		Status string      `json:"status"`
 		Data   interface{} `json:"data"`
@@ -61,19 +24,19 @@ func (h *Homed) httpRender(w http.ResponseWriter, status string, data interface{
 	}
 }
 
-func (h *Homed) httpRenderJSON(w http.ResponseWriter, data interface{}) {
+func (h *httpd) httpRenderJSON(w http.ResponseWriter, data interface{}) {
 	h.httpRender(w, "success", data)
 }
 
-func (h *Homed) httpError(w http.ResponseWriter, msg string) {
+func (h *httpd) httpError(w http.ResponseWriter, msg string) {
 	h.httpRender(w, "error", msg)
 }
 
-func (h *Homed) httpComponentList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) httpComponentList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	h.httpRenderJSON(w, h.components)
 }
 
-func (h *Homed) updateComponent(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) updateComponent(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id := ps.ByName("id")
 
 	component, err := h.components.Get(id)
@@ -95,7 +58,7 @@ func (h *Homed) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 }
 
-func (h *Homed) websocketEvents(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	const (
 		// Ping every 30 seconds, must be less than pongWait
 		pingWait = 10 * time.Second

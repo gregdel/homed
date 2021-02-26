@@ -3,73 +3,37 @@ package homed
 import (
 	"context"
 	"embed"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gorilla/websocket"
+	"github.com/gregdel/homed/lib/apps"
 	"github.com/gregdel/homed/lib/components"
-	"github.com/unrolled/render"
+	"github.com/gregdel/homed/lib/config"
 	"go.uber.org/zap"
 )
 
 // Homed needs to be used to load data efficiently
 type Homed struct {
-	basePath           string
-	dev                bool
-	temperatureControl bool
-
-	logger *zap.Logger
-
-	httpServer *http.Server
-	render     *render.Render
-	websockets map[string]*websocket.Conn
-
-	mqttClient mqtt.Client
-
+	config     *config.Config
+	logger     *zap.Logger
 	components *components.Components
-	rooms      map[string]*Room
-	devices    map[string]*Device
-
-	stateTopics map[string]components.Component
-	cmdTopics   map[string]components.Component
-
-	embedFS *embed.FS
-
-	scheduleFile          string
-	temperatureController *temperatureController
 }
 
 // New returns a new Homed
 func New(configPath string, embedFS *embed.FS) (*Homed, error) {
-	homed := &Homed{
-		embedFS: embedFS,
+	homed := &Homed{}
 
-		websockets: map[string]*websocket.Conn{},
-
-		render: render.New(),
-
-		rooms:   map[string]*Room{},
-		devices: map[string]*Device{},
-
-		stateTopics: map[string]components.Component{},
-		cmdTopics:   map[string]components.Component{},
+	config := &config.Config{
+		EmbedFS: embedFS,
 	}
-
-	config := &Config{}
 	if err := readFile(configPath, config); err != nil {
 		return nil, err
 	}
+	homed.config = config
 
 	homed.components = components.New(config.DataPath)
-
-	opts := mqtt.NewClientOptions().AddBroker(config.MQTT.Broker)
-	homed.mqttClient = mqtt.NewClient(opts)
-
-	homed.dev = config.Dev
-	homed.temperatureControl = config.TemperatureControl
 
 	var err error
 	if config.Debug {
@@ -81,153 +45,59 @@ func New(configPath string, embedFS *embed.FS) (*Homed, error) {
 		return nil, err
 	}
 
+	opts := mqtt.NewClientOptions().AddBroker(config.MQTT.Broker)
+	mqttClient := mqtt.NewClient(opts)
+
+	devices := map[string]struct{}{}
+
 	for _, d := range config.Devices {
-		_, ok := homed.devices[d.Name]
+		_, ok := devices[d.Name]
 		if ok {
 			return nil, ErrDuplicateDevice
 		}
 
-		room, ok := homed.rooms[d.Room]
-		if !ok {
-			room = NewRoom(d.Room)
-			homed.rooms[d.Room] = room
-		}
-
-		device := NewDevice(d.Name)
-		device.Room = room
-		homed.devices[device.Name] = device
-		room.AddDevice(device)
-
 		for _, cfg := range d.Components {
-			component, err := homed.components.Add(cfg, homed.mqttClient, room.Name, device.Name)
+			_, err := homed.components.Add(cfg, mqttClient, d.Room, d.Name)
 			if err != nil {
 				homed.logger.Error(
 					"failed to add component",
 					zap.Error(err),
-					zap.String("device_name", device.Name),
-					zap.String("room_name", room.Name),
+					zap.String("device_name", d.Name),
+					zap.String("room_name", d.Room),
 				)
 			}
-
-			if component.Internal() {
-				homed.cmdTopics[cfg.CommandTopic] = component
-			}
-
-			homed.stateTopics[cfg.StateTopic] = component
 		}
-	}
-
-	if err := homed.initHTTP(config.HTTP.Addr); err != nil {
-		return nil, err
-	}
-
-	if err := homed.initTemperatureController(); err != nil {
-		return nil, err
 	}
 
 	return homed, nil
 }
 
-func (h *Homed) handleMessage(c mqtt.Client, m mqtt.Message) {
-	component, ok := h.stateTopics[m.Topic()]
-	if !ok {
-		h.logger.Warn("Topic not found", zap.String("topic", m.Topic()))
-		return
-	}
-
-	if err := component.Update(m.Payload()); err != nil {
-		h.logger.Warn(
-			"failed to update component",
-			zap.Error(err),
-			zap.String("friendly_name", string(component.FriendlyName())),
-			zap.String("room", component.Room()),
-			zap.String("device", component.Device()))
-		return
-	}
-
-	if err := component.PostUpdate(); err != nil {
-		h.logger.Warn(
-			"failed to run the component post update",
-			zap.Error(err),
-			zap.String("friendly_name", string(component.FriendlyName())),
-			zap.String("room", component.Room()),
-			zap.String("device", component.Device()))
-		return
-	}
-
-	h.publishToWebsocket(component)
-
-	h.logger.Sync()
-}
-
-func (h *Homed) handleCommand(c mqtt.Client, m mqtt.Message) {
-	component, ok := h.cmdTopics[m.Topic()]
-	if !ok {
-		h.logger.Warn("Topic not found", zap.String("topic", m.Topic()))
-		return
-	}
-
-	if err := component.ExecCommand(m.Payload()); err != nil {
-		h.logger.Warn(
-			"failed to write component command",
-			zap.String("error", err.Error()))
-		return
-	}
-
-	h.logger.Debug(
-		"Writing component command",
-		zap.String("topic", m.Topic()),
-		zap.String("value", string(m.Payload())),
-	)
-	h.logger.Sync()
-}
-
 // Run runs the app
 func (h *Homed) Run() error {
+	a := apps.New()
+	if err := a.Init(h.config); err != nil {
+		return err
+	}
+
 	sigs := make(chan os.Signal, 1)
-	done := make(chan struct{})
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	h.logger.Info("Connecting to MQTT")
-	token := h.mqttClient.Connect()
-	if token.Wait() && token.Error() != nil {
-		return token.Error()
-	}
-
-	for topic := range h.stateTopics {
-		h.logger.Info("Subscribing to status topic", zap.String("topic", topic))
-		token = h.mqttClient.Subscribe(topic, 0, h.handleMessage)
-		if token.Wait() && token.Error() != nil {
-			return token.Error()
-		}
-	}
-
-	for topic := range h.cmdTopics {
-		h.logger.Info("Subscribing to command topic", zap.String("topic", topic))
-		token = h.mqttClient.Subscribe(topic, 0, h.handleCommand)
-		if token.Wait() && token.Error() != nil {
-			return token.Error()
-		}
-	}
-
+	componentChan := make(chan components.Component)
+	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-sigs
-		close(done)
-		h.httpServer.Shutdown(context.Background())
+		cancel()
+		close(componentChan)
 	}()
 
-	if h.temperatureControl {
-		// Start the temperature control function
-		go h.startTemperatureControl(done)
+	runCtx := &apps.RunCtx{
+		Ctx:              ctx,
+		Logger:           h.logger,
+		Components:       h.components,
+		ComponentUpdated: componentChan,
 	}
 
-	h.logger.Info("Starting HTTP server")
-	if err := h.httpServer.ListenAndServe(); err != nil {
-		h.logger.Error("Failed to start http server", zap.Error(err))
-	}
-
-	h.logger.Info("Disconnecting from the MQTT broker")
-	h.mqttClient.Disconnect(250)
+	a.Run(runCtx)
 
 	return nil
 }

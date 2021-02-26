@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -107,7 +108,7 @@ func (c *Components) ListByRoom(room string) []Component {
 }
 
 // Add adds a component to the component slice
-func (c *Components) Add(cfg Config, client mqtt.Client, roomName, deviceName string) (Component, error) {
+func (c *Components) Add(cfg config.Component, client mqtt.Client, roomName, deviceName string) (Component, error) {
 	component, err := newComponent(cfg.Type)
 	if err != nil {
 		return nil, err
@@ -147,14 +148,17 @@ func (c *Components) Add(cfg Config, client mqtt.Client, roomName, deviceName st
 
 	}
 
-	// TODO: find a better solution
+	// TODO: remove and use the config
+	component.SetInternal(cfg.Internal)
 	component.SetCommandTopic(cfg.CommandTopic)
 	component.SetStateTopic(cfg.StateTopic)
-	component.SetInternal(cfg.Internal)
+	component.SetFriendlyName(cfg.FriendlyName)
+
+	// TODO: find a better solution
 	component.SetMQTTClient(client)
 	component.SetRoom(roomName)
 	component.SetDevice(deviceName)
-	component.SetFriendlyName(cfg.FriendlyName)
+	component.SetConfig(&cfg)
 
 	if sc, ok := component.(Scheduled); ok {
 		// TODO: check and log the error

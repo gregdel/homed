@@ -19,6 +19,10 @@ import (
 	_ "github.com/gregdel/homed/lib/components/tuya_trv"
 	_ "github.com/gregdel/homed/lib/components/wifi_signal"
 	_ "github.com/gregdel/homed/lib/components/xiaomi_aqara"
+
+	_ "github.com/gregdel/homed/lib/apps/httpd"
+	_ "github.com/gregdel/homed/lib/apps/mqttd"
+	_ "github.com/gregdel/homed/lib/apps/tempd"
 )
 
 //go:embed build
