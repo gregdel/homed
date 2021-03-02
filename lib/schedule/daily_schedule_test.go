@@ -94,6 +94,14 @@ func TestDailyScheduleAdd(t *testing.T) {
 			name:        "before everything else",
 			newTimeSlot: &TimeSlot{Start: NewTime(0, 0, 0)},
 		},
+		{
+			name: "stop before start",
+			newTimeSlot: &TimeSlot{
+				Start: NewTime(17, 30, 0),
+				Stop:  NewTimePointer(0, 0, 0),
+			},
+			expected: ErrStopBeforeStart,
+		},
 	}
 
 	for _, tc := range tt {

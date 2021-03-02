@@ -8,6 +8,8 @@ import (
 var (
 	// ErrOverlappingTimeslots is returns two timeslots overlaps
 	ErrOverlappingTimeslots = errors.New("schedule: overlapping timeslots")
+	// ErrStopBeforeStart is returns if the stop is before the start
+	ErrStopBeforeStart = errors.New("schedule: stop before start")
 	// ErrTimeSlotNotFound is returned if the given timeslot is not found
 	ErrTimeSlotNotFound = errors.New("schedule: timeslot not found")
 )
@@ -39,6 +41,10 @@ func (ds DailySchedule) Swap(i, j int) {
 func (ds *DailySchedule) Add(n *TimeSlot) error {
 	if n == nil {
 		return nil
+	}
+
+	if err := n.validate(); err != nil {
+		return err
 	}
 
 	// Check if there is a timeslot at the new time slot start

@@ -35,6 +35,10 @@ func (o *Override) validate() error {
 		return ErrInvalidTime
 	}
 
+	if o.Stop.Before(o.Start) {
+		return ErrStopBeforeStart
+	}
+
 	return nil
 }
 

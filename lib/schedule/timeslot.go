@@ -21,6 +21,14 @@ func (t *TimeSlot) String() string {
 	return fmt.Sprintf("%f from %s to %s", t.Value, t.Start, t.Stop)
 }
 
+func (t *TimeSlot) validate() error {
+	if t.Stop != nil && t.Stop.Before(t.Start) {
+		return ErrStopBeforeStart
+	}
+
+	return nil
+}
+
 func (t *TimeSlot) generateID() {
 	if t.ID != "" {
 		return

@@ -69,6 +69,14 @@ func TestOverridesAdd(t *testing.T) {
 				Stop:  n.Add(-1 * time.Hour),
 			},
 		},
+		{
+			name: "stop before start",
+			override: &Override{
+				Start: n.Add(-1 * time.Hour),
+				Stop:  n.Add(-2 * time.Hour),
+			},
+			expected: ErrStopBeforeStart,
+		},
 	}
 
 	for _, tc := range tt {
