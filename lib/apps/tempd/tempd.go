@@ -184,20 +184,32 @@ func (t *tempd) setBoilerState() {
 
 		current, err := component.Temperature()
 		if err != nil {
-			t.logger.Info(
+			t.logger.Warn(
 				"failed to get temperature",
 				zap.String("component_type", string(component.Type())),
+				zap.Error(err),
 			)
+			continue
+		}
+
+		if current == 0 {
+			t.logger.Info("the temperature is reported to be 0, this is unlikely, let's ignore this for now")
 			continue
 		}
 
 		target, err := component.TemperatureTarget()
 		if err != nil {
-			t.logger.Info(
+			t.logger.Warn(
 				"failed to get temperature target",
 				zap.String("component_type", string(component.Type())),
 				zap.String("component_id", component.ID()),
+				zap.Error(err),
 			)
+			continue
+		}
+
+		if target == 0 {
+			t.logger.Info("the temperature target is 0, this is unlikely, let's ignore this for now")
 			continue
 		}
 
