@@ -25,6 +25,7 @@ func (ds *DeviceStatus) Update(value []byte) error {
 		ds.Available = true
 	case "offline":
 		ds.Available = false
+	default:
 		return fmt.Errorf("device status: invalid component status: %s", v)
 	}
 	return nil
