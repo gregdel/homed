@@ -45,7 +45,7 @@ const App = () => (
                   <Components typesFilter={["tasmota_switch"]} />
                 </Route>
                 <Route path="/shutters" exact>
-                  <Components typesFilter={["esphome_cover"]} />
+                  <Components typesFilter={["roller_shutter"]} />
                 </Route>
                 <Route path="/aqara" exact>
                   <Components typesFilter={["xiaomi_aqara"]} />

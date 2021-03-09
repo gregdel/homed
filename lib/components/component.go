@@ -20,7 +20,7 @@ var (
 	TypeTuyaTRV          Type = "tuya_trv"
 	TypeBoiler           Type = "boiler"
 	TypeESPHomeLight     Type = "esphome_light"
-	TypeESPHomeCover     Type = "esphome_cover"
+	TypeRollerShutter    Type = "roller_shutter"
 	TypeTasmotaSwitch    Type = "tasmota_switch"
 	TypeXiaomiAqara      Type = "xiaomi_aqara"
 )

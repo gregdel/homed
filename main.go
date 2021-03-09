@@ -22,6 +22,7 @@ import (
 
 	_ "github.com/gregdel/homed/lib/apps/httpd"
 	_ "github.com/gregdel/homed/lib/apps/mqttd"
+	_ "github.com/gregdel/homed/lib/apps/rollershutters"
 	_ "github.com/gregdel/homed/lib/apps/tempd"
 )
 

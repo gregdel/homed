@@ -57,7 +57,7 @@ export const Component = ({
     case "esphome_light":
       typedComponent = <ESPLight id={id} />;
       break;
-    case "esphome_cover":
+    case "roller_shutter":
       typedComponent = <ESPCover id={id} />;
       break;
     case "homed_temperature":

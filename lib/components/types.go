@@ -35,3 +35,11 @@ type Sensor interface {
 type BinarySensor interface {
 	IsOn() bool
 }
+
+// RollerShutter is an interface to reprensents a roller shutter
+type RollerShutter interface {
+	OpenedAt() float64
+	IsOpen() bool
+	IsClosed() bool
+	OpenAt(float64) error
+}
