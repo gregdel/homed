@@ -44,7 +44,7 @@ func (r *rollerShutters) nextEvent() (time.Time, bool) {
 	// 8h (+0-30min) open
 	openStart := time.Date(
 		now.Year(), now.Month(), now.Day(),
-		8, 0, 0, 0,
+		7, 0, 0, 0,
 		now.Location(),
 	)
 
@@ -56,7 +56,7 @@ func (r *rollerShutters) nextEvent() (time.Time, bool) {
 	// 19h(+0-30min) close
 	closeStart := time.Date(
 		now.Year(), now.Month(), now.Day(),
-		19, 0, 0, 0,
+		20, 30, 0, 0,
 		now.Location(),
 	)
 
@@ -68,7 +68,6 @@ func (r *rollerShutters) nextEvent() (time.Time, bool) {
 }
 
 func (r *rollerShutters) Run(ctx *apps.RunCtx) error {
-	var rs components.RollerShutter
 	for _, component := range ctx.Components.List() {
 		if component.Type() != components.TypeRollerShutter {
 			continue
@@ -95,7 +94,7 @@ func (r *rollerShutters) Run(ctx *apps.RunCtx) error {
 		case <-ctx.Ctx.Done():
 			return nil
 		case <-time.After(duration):
-			if rs.IsOpen() == open {
+			if r.rs.IsOpen() == open {
 				ctx.Logger.Info("roller shutter already in good state")
 				continue
 			}
@@ -103,10 +102,10 @@ func (r *rollerShutters) Run(ctx *apps.RunCtx) error {
 			var err error
 			if open {
 				ctx.Logger.Info("openning the roller shutters")
-				err = rs.OpenAt(100)
+				err = r.rs.Open()
 			} else {
 				ctx.Logger.Info("closing the roller shutter")
-				err = rs.OpenAt(0)
+				err = r.rs.Close()
 			}
 
 			if err != nil {

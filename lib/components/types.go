@@ -38,8 +38,10 @@ type BinarySensor interface {
 
 // RollerShutter is an interface to reprensents a roller shutter
 type RollerShutter interface {
-	OpenedAt() float64
+	Open() error
+	Close() error
+	Stop() error
 	IsOpen() bool
 	IsClosed() bool
-	OpenAt(float64) error
+	OpenedAt() float64
 }

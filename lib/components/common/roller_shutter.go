@@ -1,11 +1,5 @@
 package common
 
-import (
-	"fmt"
-	"math"
-	"strconv"
-)
-
 // RollerShutter represents a generic roller shutter
 type RollerShutter struct {
 	GenericSensor
@@ -29,13 +23,17 @@ func (rs *RollerShutter) IsClosed() bool {
 	return !rs.IsOpen()
 }
 
-// OpenAt implements the RollerShutter interface
-func (rs *RollerShutter) OpenAt(v float64) error {
-	value := int(math.Round(v))
+// Open implements the RollerShutter interface
+func (rs *RollerShutter) Open() error {
+	return rs.WriteCommand([]byte("open"))
+}
 
-	if value < 0 || value > 100 {
-		return fmt.Errorf("common: invalid roller shutter opening value: %d", value)
-	}
+// Close implements the RollerShutter interface
+func (rs *RollerShutter) Close() error {
+	return rs.WriteCommand([]byte("close"))
+}
 
-	return rs.WriteCommand([]byte(strconv.Itoa(value)))
+// Stop implements the RollerShutter interface
+func (rs *RollerShutter) Stop() error {
+	return rs.WriteCommand([]byte("stop"))
 }
