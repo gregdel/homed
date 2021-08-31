@@ -20,8 +20,8 @@ type Light struct {
 
 // NewLight returns a new light component
 func NewLight() components.Component {
-	payloadOn, _ := json.Marshal(lightState{State: "ON"})
-	payloadOff, _ := json.Marshal(lightState{State: "OFF"})
+	payloadOn, _ := json.Marshal(NewLightState(true))
+	payloadOff, _ := json.Marshal(NewLightState(false))
 
 	return &Light{
 		Switch: common.NewSwitch(payloadOn, payloadOff),
@@ -51,11 +51,21 @@ func (l *Light) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	}
 }
 
-type lightState struct {
+// LightState represents the json data of the light state
+type LightState struct {
 	State string `json:"state"`
 }
 
-func (ls *lightState) isOn() bool {
+// NewLightState returns a new light state
+func NewLightState(on bool) *LightState {
+	if on {
+		return &LightState{State: "ON"}
+	}
+
+	return &LightState{State: "OFF"}
+}
+
+func (ls *LightState) isOn() bool {
 	if ls.State == "ON" {
 		return true
 	}
@@ -65,7 +75,7 @@ func (ls *lightState) isOn() bool {
 
 // Update implements the Component interface
 func (l *Light) Update(value []byte) error {
-	ls := lightState{}
+	ls := LightState{}
 	if err := json.Unmarshal(value, &ls); err != nil {
 		return err
 	}

@@ -156,3 +156,13 @@ func (c *Component) ExecCommand(data []byte) error {
 
 	return nil
 }
+
+// PublishToStateTopic publishes data to the state topic
+func (c *Component) PublishToStateTopic(data []byte) error {
+	token := c.mqttClient.Publish(c.StateTopic, 0, true, data)
+	if token.Wait() && token.Error() != nil {
+		return token.Error()
+	}
+
+	return nil
+}

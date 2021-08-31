@@ -7,6 +7,7 @@ type Config struct {
 	Debug              bool   `yaml:"debug"`
 	DataPath           string `yaml:"data_path"`
 	TemperatureControl bool   `yaml:"temperature_control"`
+	FakeHome           bool   `yaml:"fake_home"`
 	Dev                bool   `yaml:"dev"`
 	MQTT               struct {
 		Broker string `yaml:"broker"`

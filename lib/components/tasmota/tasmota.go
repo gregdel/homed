@@ -48,12 +48,23 @@ func (s *Switch) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	}
 }
 
+// SwitchData represents a tasmota switch payload
+type SwitchData struct {
+	Power string `json:"POWER"`
+}
+
+// NewSwitchData returns a new SwitchData
+func NewSwitchData(on bool) *SwitchData {
+	if on {
+		return &SwitchData{Power: "ON"}
+	}
+
+	return &SwitchData{Power: "OFF"}
+}
+
 // Update implements the Component interface
 func (s *Switch) Update(value []byte) error {
-	data := struct {
-		Power string `json:"POWER"`
-	}{}
-
+	data := SwitchData{}
 	if err := json.Unmarshal(value, &data); err != nil {
 		return err
 	}

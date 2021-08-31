@@ -65,6 +65,8 @@ type Component interface {
 	WriteCommand(data []byte) error
 	// ExecCommand executes a command (for internal components)
 	ExecCommand(data []byte) error
+	// PublishToStateTopic publishes raw data to the state topic
+	PublishToStateTopic(data []byte) error
 
 	SetStateTopic(string)
 	SetCommandTopic(string)

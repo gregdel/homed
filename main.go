@@ -20,6 +20,7 @@ import (
 	_ "github.com/gregdel/homed/lib/components/wifi_signal"
 	_ "github.com/gregdel/homed/lib/components/xiaomi_aqara"
 
+	_ "github.com/gregdel/homed/lib/apps/fakehome"
 	_ "github.com/gregdel/homed/lib/apps/httpd"
 	_ "github.com/gregdel/homed/lib/apps/mqttd"
 	_ "github.com/gregdel/homed/lib/apps/rollershutters"
