@@ -7,6 +7,7 @@ import { Temperature } from "./Temperature";
 import { Humidity } from "./Humidity";
 import { DeviceStatus } from "./DeviceStatus";
 import { TuyaTRV } from "./TuyaTRV";
+import { SaswellTRV } from "./SaswellTRV";
 import { WifiSignal } from "./WifiSignal";
 import { RTL433 } from "./RTL433";
 import { Boiler } from "./Boiler";
@@ -41,6 +42,9 @@ export const Component = ({
       break;
     case "tuya_trv":
       typedComponent = <TuyaTRV id={id} />;
+      break;
+    case "saswell_trv":
+      typedComponent = <SaswellTRV id={id} />;
       break;
     case "wifi_signal":
       typedComponent = <WifiSignal id={id} />;

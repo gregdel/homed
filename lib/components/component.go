@@ -18,6 +18,7 @@ var (
 	TypeHumidity         Type = "humidity"
 	TypeWifiSignal       Type = "wifi_signal"
 	TypeTuyaTRV          Type = "tuya_trv"
+	TypeSaswellTRV       Type = "saswell_trv"
 	TypeBoiler           Type = "boiler"
 	TypeESPHomeLight     Type = "esphome_light"
 	TypeRollerShutter    Type = "roller_shutter"

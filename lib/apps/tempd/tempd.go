@@ -30,14 +30,14 @@ type tempd struct {
 	rising map[string]bool
 
 	rooms map[string]components.TemperatureControllerInternal
-	tuyas map[string][]components.TemperatureController
+	trvs  map[string][]components.TemperatureController
 }
 
 func app() *tempd {
 	return &tempd{
 		rising: map[string]bool{},
 		rooms:  map[string]components.TemperatureControllerInternal{},
-		tuyas:  map[string][]components.TemperatureController{},
+		trvs:   map[string][]components.TemperatureController{},
 	}
 }
 
@@ -50,6 +50,14 @@ func (t *tempd) Init(config *config.Config) error {
 	return nil
 }
 
+func (t *tempd) addTrv(roomName string, tc components.TemperatureController) {
+	if len(t.trvs[roomName]) == 0 {
+		t.trvs[roomName] = []components.TemperatureController{}
+	}
+
+	t.trvs[roomName] = append(t.trvs[roomName], tc)
+}
+
 func (t *tempd) init() {
 	for _, component := range t.components.List() {
 		roomName := component.Room()
@@ -58,14 +66,10 @@ func (t *tempd) init() {
 			t.boiler = component.(components.Switch)
 		case components.TypeHomedTemperature:
 			t.rooms[roomName] = component.(components.TemperatureControllerInternal)
+		case components.TypeSaswellTRV:
+			t.addTrv(roomName, component.(components.TemperatureController))
 		case components.TypeTuyaTRV:
-			if len(t.tuyas[roomName]) == 0 {
-				t.tuyas[roomName] = []components.TemperatureController{}
-			}
-			t.tuyas[roomName] = append(
-				t.tuyas[roomName],
-				component.(components.TemperatureController),
-			)
+			t.addTrv(roomName, component.(components.TemperatureController))
 		}
 	}
 }
@@ -121,7 +125,7 @@ func (t *tempd) roomTemperature(room string) float64 {
 			continue
 		}
 
-		if c.Type() == components.TypeTuyaTRV {
+		if c.Type() == components.TypeTuyaTRV || c.Type() == components.TypeSaswellTRV {
 			// Don't use this for now
 			continue
 		}
@@ -267,16 +271,16 @@ func (t *tempd) setRoomsDevicesTemperatures() {
 			continue
 		}
 
-		tuyas, ok := t.tuyas[roomName]
+		trvs, ok := t.trvs[roomName]
 		if !ok {
 			continue
 		}
 
 		current, _ := component.Temperature()
-		for _, tuya := range tuyas {
+		for _, trv := range trvs {
 			// Compute the new calibration
-			computedTemp, _ := tuya.Temperature()
-			calibration, _ := tuya.TemperatureCalibration()
+			computedTemp, _ := trv.Temperature()
+			calibration, _ := trv.TemperatureCalibration()
 			temp := computedTemp - calibration
 			// Only keep on decimal of precision
 			newCalibration := current - temp
@@ -284,43 +288,43 @@ func (t *tempd) setRoomsDevicesTemperatures() {
 
 			if newCalibration < (calibration-allowedError) || newCalibration > (calibration+allowedError) {
 				t.logger.Info(
-					"recalibrating the tuya",
+					"recalibrating the trv",
 					zap.String("room", roomName),
 					zap.Float64("calibration", newCalibration),
 				)
-				err = tuya.SetTemperatureCalibration(newCalibration)
+				err = trv.SetTemperatureCalibration(newCalibration)
 				if err != nil {
 					t.logger.Error(
-						"failed to calibrate tuya",
+						"failed to calibrate trv",
 						zap.Error(err),
 					)
 				}
 
 			}
 
-			tuyaTarget, err := tuya.TemperatureTarget()
+			trvTarget, err := trv.TemperatureTarget()
 			if err != nil {
 				t.logger.Error(
-					"failed to get tuya's temperature target",
+					"failed to get trv's temperature target",
 					zap.Error(err),
 				)
 				continue
 			}
 
-			if tuyaTarget == target {
+			if trvTarget == target {
 				continue
 			}
 
 			t.logger.Info(
-				"should configure the tuya to the target",
+				"should configure the trv to the target",
 				zap.String("room", roomName),
 				zap.Float64("target", target),
 			)
 
-			err = tuya.SetTemperatureTarget(target)
+			err = trv.SetTemperatureTarget(target)
 			if err != nil {
 				t.logger.Error(
-					"failed to set tuya's temperature target",
+					"failed to set trv's temperature target",
 					zap.Error(err),
 				)
 				continue

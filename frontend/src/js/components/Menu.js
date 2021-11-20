@@ -41,7 +41,7 @@ export const AppMenu = () => {
     },
     {
       icon: mdiThermometerLines,
-      path: "/tuya",
+      path: "/trv",
       title: "Thermostatic valves",
     },
     {
