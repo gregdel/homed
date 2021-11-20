@@ -41,10 +41,10 @@ func (r *rollerShutters) nextEvent() (time.Time, bool) {
 	// Random minutes between 0 and 30
 	minutes := time.Duration(rd.Intn(30)) * time.Minute
 
-	// 8h (+0-30min) open
+	// sunrise (open)
 	openStart := time.Date(
 		now.Year(), now.Month(), now.Day(),
-		7, 0, 0, 0,
+		8, 10, 0, 0,
 		now.Location(),
 	)
 
@@ -53,10 +53,10 @@ func (r *rollerShutters) nextEvent() (time.Time, bool) {
 		return openStart.Add(minutes), true
 	}
 
-	// 19h(+0-30min) close
+	// sunset (close)
 	closeStart := time.Date(
 		now.Year(), now.Month(), now.Day(),
-		20, 30, 0, 0,
+		16, 55, 0, 0,
 		now.Location(),
 	)
 
