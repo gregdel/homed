@@ -1,9 +1,9 @@
 const path = require("path");
 const webpack = require("webpack");
 
-const TerserPlugin = require("terser-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WebpackPwaManifest = require("webpack-pwa-manifest");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 var mode = "development";
 if (process.env.NODE_ENV === "production") {
@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === "production") {
   BUILD_DIR = path.resolve(__dirname, "../build");
 }
 
-module.exports = {
+const config = {
   mode: mode,
   entry: path.join(SRC_DIR, "js/app.js"),
 
@@ -25,6 +25,7 @@ module.exports = {
     publicPath: "",
     path: BUILD_DIR,
     filename: "[contenthash]-app.js",
+    assetModuleFilename: "[contenthash]-[name][ext][query]",
   },
 
   plugins: [
@@ -45,6 +46,7 @@ module.exports = {
       theme_color: "#001529",
       display: "standalone",
       orientation: "omit",
+      publicPath: "/",
       scope: "/",
       start_url: "/",
       icons: [
@@ -59,6 +61,9 @@ module.exports = {
         },
       ],
     }),
+    new MiniCssExtractPlugin({
+      filename: "[contenthash].css",
+    }),
   ],
 
   module: {
@@ -70,32 +75,17 @@ module.exports = {
       },
       {
         test: /\.css$/i,
-        use: ["style-loader", "css-loader"],
+        use: [MiniCssExtractPlugin.loader, "css-loader"],
       },
       {
         test: /\.svg$/,
-        use: ["file-loader?name=[hash]-[name].[ext]"],
+        type: "asset",
       },
     ],
   },
 
-  optimization: {
-    minimizer: [new TerserPlugin()],
-
-    splitChunks: {
-      cacheGroups: {
-        vendors: {
-          priority: -10,
-          test: /[\\/]node_modules[\\/]/,
-        },
-      },
-
-      chunks: "async",
-      minChunks: 1,
-      minSize: 30000,
-      name: false,
-    },
-  },
-
-  devtool: mode === "production" ? "source-map" : "inline-source-map",
+  optimization: {},
+  devtool: mode === "production" ? false : "source-map",
 };
+
+module.exports = config;

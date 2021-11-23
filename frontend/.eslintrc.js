@@ -19,4 +19,9 @@ module.exports = {
   },
   plugins: ["import", "react", "react-hooks"],
   rules: {},
+  settings: {
+    react: {
+      version: "detect",
+    },
+  },
 };
