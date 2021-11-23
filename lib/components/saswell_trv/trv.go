@@ -16,6 +16,10 @@ func init() {
 	components.Register(components.TypeSaswellTRV, New)
 }
 
+// CalibrationOffset is used to remove a fixed number of degrees to force the
+// TRV to open the van
+const CalibrationOffset = 4
+
 // SystemMode represents the system modes
 type SystemMode string
 
@@ -111,18 +115,20 @@ func (t *SaswellTRV) Temperature() (float64, error) {
 
 // TemperatureTarget implements the TemperatureController interface
 func (t *SaswellTRV) TemperatureTarget() (float64, error) {
-	return t.HeatingSetpoint, nil
+	return t.HeatingSetpoint - CalibrationOffset, nil
 }
 
 // SetTemperatureTarget implements the TemperatureController interface
 func (t *SaswellTRV) SetTemperatureTarget(temperature float64) error {
-	if temperature == t.HeatingSetpoint {
+	target, _ := t.TemperatureTarget()
+	newTarget := temperature + CalibrationOffset
+	if target == newTarget {
 		return nil
 	}
 
 	s := struct {
 		SetPoint float64 `json:"current_heating_setpoint"`
-	}{SetPoint: formatFloat(temperature)}
+	}{SetPoint: formatFloat(newTarget)}
 
 	return t.write(s)
 }
@@ -144,9 +150,16 @@ func (t *SaswellTRV) TemperatureCalibration() (float64, error) {
 
 // SetTemperatureCalibration implements the TemperatureController interface
 func (t *SaswellTRV) SetTemperatureCalibration(c float64) error {
+	// Let's try integers to calibrate the temperature
+	if c > 0 {
+		c = math.Round(c)
+	} else {
+		c = math.Ceil(c)
+	}
+
 	s := struct {
 		Calibration float64 `json:"local_temperature_calibration"`
-	}{Calibration: formatFloat(c)}
+	}{Calibration: c}
 
 	return t.write(s)
 }
