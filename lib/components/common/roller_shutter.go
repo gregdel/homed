@@ -12,10 +12,7 @@ func (rs *RollerShutter) OpenedAt() float64 {
 
 // IsOpen implements the RollerShutter interface
 func (rs *RollerShutter) IsOpen() bool {
-	if rs.Value == 100 {
-		return true
-	}
-	return false
+	return rs.Value == 100
 }
 
 // IsClosed implements the RollerShutter interface

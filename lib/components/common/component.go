@@ -33,11 +33,7 @@ func (c *Component) PostUpdate() error {
 
 // ReadOnly implements the Component interface
 func (c *Component) ReadOnly() bool {
-	if c.CommandTopic == "" {
-		return true
-	}
-
-	return false
+	return c.CommandTopic == ""
 }
 
 // SetCommandTopic implements the Component interface
@@ -68,7 +64,6 @@ func (c *Component) Config() *config.Component {
 // SetConfig implements the Component interface
 func (c *Component) SetConfig(config *config.Component) {
 	c.config = config
-	return
 }
 
 // SetInternal implements the Component interface

@@ -2,7 +2,6 @@ package httpd
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -11,10 +10,6 @@ import (
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/schedule"
 	"github.com/julienschmidt/httprouter"
-)
-
-var (
-	errComponentCannotBeScheduled = errors.New("homed: component cannot be scheduled")
 )
 
 func (h *httpd) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

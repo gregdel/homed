@@ -54,10 +54,7 @@ func (b *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
 
 func (b *Boiler) stateFromData(value []byte) bool {
 	data := string(value)
-	if data == "ON" {
-		return true
-	}
-	return false
+	return data == "ON"
 }
 
 // WriteCommand implements the Component interface

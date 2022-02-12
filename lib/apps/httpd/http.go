@@ -60,12 +60,8 @@ func (h *httpd) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 
 func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	const (
-		// Ping every 30 seconds, must be less than pongWait
-		pingWait = 10 * time.Second
 		// Time allowed to read the next pong message from the client
 		pongWait = 15 * time.Second
-		// Time allowed to write to the client
-		writeWait = 10 * time.Second
 	)
 
 	upgrader := websocket.Upgrader{

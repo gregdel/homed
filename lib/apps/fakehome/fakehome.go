@@ -10,8 +10,9 @@ import (
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/boiler"
 	"github.com/gregdel/homed/lib/components/esphome"
+	saswell "github.com/gregdel/homed/lib/components/saswell_trv"
 	"github.com/gregdel/homed/lib/components/tasmota"
-	trv "github.com/gregdel/homed/lib/components/tuya_trv"
+	tuya "github.com/gregdel/homed/lib/components/tuya_trv"
 	xiaomi "github.com/gregdel/homed/lib/components/xiaomi_aqara"
 	"github.com/gregdel/homed/lib/config"
 	"go.uber.org/zap"
@@ -95,7 +96,7 @@ func (fh *FakeHome) Run(ctx *apps.RunCtx) error {
 		select {
 		case <-ctx.Ctx.Done():
 			exit = true
-			break
+			return nil
 		case <-ticker.C:
 			fh.updateStates()
 		}
@@ -121,7 +122,10 @@ func (fh *FakeHome) handleCommand(c mqtt.Client, msg mqtt.Message) {
 	case *boiler.Boiler:
 		errUpdate = x.Update(msg.Payload())
 		errPublish = fh.publishState(x, nil)
-	case *trv.TuyaTRV:
+	case *tuya.TuyaTRV:
+		errUpdate = x.Update(msg.Payload())
+		errPublish = fh.publishState(x, nil)
+	case *saswell.SaswellTRV:
 		errUpdate = x.Update(msg.Payload())
 		errPublish = fh.publishState(x, nil)
 	case *esphome.Light:
@@ -143,8 +147,6 @@ func (fh *FakeHome) handleCommand(c mqtt.Client, msg mqtt.Message) {
 	if errPublish != nil {
 		fh.logger.Warn("failed to publish component state", zap.String("topic", msg.Topic()))
 	}
-
-	return
 }
 
 func (fh *FakeHome) updateStates() {
@@ -156,8 +158,11 @@ func (fh *FakeHome) updateStates() {
 			c.Temp = 18
 			c.Pressure = 1000
 			err = fh.publishState(c, nil)
-		case *trv.TuyaTRV:
+		case *tuya.TuyaTRV:
 			c.LocalTemperature = 18
+			err = fh.publishState(c, nil)
+		case *saswell.SaswellTRV:
+			c.LocalTemperature = 17
 			err = fh.publishState(c, nil)
 		}
 
@@ -167,8 +172,6 @@ func (fh *FakeHome) updateStates() {
 
 		err = nil
 	}
-
-	return
 }
 
 func (fh *FakeHome) publishState(c components.Component, data interface{}) error {

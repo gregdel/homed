@@ -12,9 +12,11 @@ _cleanup_buildir() {
 }
 
 _backend_build() {
+	echo "Running tests..."
+	CGO_ENABLED=0 go test -v ./...
+
 	echo "Embeding files in the binary:"
 	ls -lah "$BUILD_DIR"
-	CGO_ENABLED=0 go test -v ./...
 	CGO_ENABLED=0 go build \
 		-ldflags '-extldflags "-static"' \
 		-trimpath \

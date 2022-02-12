@@ -56,7 +56,7 @@ func (r *rollerShutters) nextEvent() (time.Time, bool) {
 	// sunset (close)
 	closeStart := time.Date(
 		now.Year(), now.Month(), now.Day(),
-		16, 55, 0, 0,
+		17, 55, 0, 0,
 		now.Location(),
 	)
 

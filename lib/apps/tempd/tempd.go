@@ -93,16 +93,10 @@ func (t *tempd) Run(ctx *apps.RunCtx) error {
 	t.setRoomsDevicesTemperatures()
 	t.setBoilerState()
 
-	exit := false
 	for {
-		if exit {
-			break
-		}
-
 		select {
 		case <-ctx.Ctx.Done():
-			exit = true
-			break
+			return nil
 		case <-ticker.C:
 			t.updateRoomsTemperatures()
 			t.setRoomsTemperatures()
@@ -110,8 +104,6 @@ func (t *tempd) Run(ctx *apps.RunCtx) error {
 			t.setBoilerState()
 		}
 	}
-
-	return nil
 }
 
 // Temperature returns the temperature in the room
@@ -282,9 +274,12 @@ func (t *tempd) setRoomsDevicesTemperatures() {
 			computedTemp, _ := trv.Temperature()
 			calibration, _ := trv.TemperatureCalibration()
 			temp := computedTemp - calibration
-			// Only keep on decimal of precision
+
 			newCalibration := current - temp
 			allowedError := 0.3
+
+			// Only keep on decimal of precision
+			newCalibration = math.Round(newCalibration*10) / 10
 
 			if newCalibration < (calibration-allowedError) || newCalibration > (calibration+allowedError) {
 				t.logger.Info(

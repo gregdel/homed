@@ -66,11 +66,7 @@ func NewLightState(on bool) *LightState {
 }
 
 func (ls *LightState) isOn() bool {
-	if ls.State == "ON" {
-		return true
-	}
-
-	return false
+	return ls.State == "ON"
 }
 
 // Update implements the Component interface

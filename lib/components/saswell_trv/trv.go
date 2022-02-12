@@ -18,7 +18,7 @@ func init() {
 
 // CalibrationOffset is used to remove a fixed number of degrees to force the
 // TRV to open the van
-const CalibrationOffset = 4
+const CalibrationOffset = 2
 
 // SystemMode represents the system modes
 type SystemMode string

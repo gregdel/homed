@@ -35,5 +35,4 @@ func (t *TimeSlot) generateID() {
 	}
 
 	t.ID = generateID(t)
-	return
 }

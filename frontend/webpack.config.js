@@ -6,9 +6,6 @@ const WebpackPwaManifest = require("webpack-pwa-manifest");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 var mode = "development";
-if (process.env.NODE_ENV === "production") {
-  mode = "production";
-}
 
 var SRC_DIR = path.resolve(__dirname, "src");
 var BUILD_DIR = path.resolve(__dirname, "build");
