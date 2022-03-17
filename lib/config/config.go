@@ -9,7 +9,12 @@ type Config struct {
 	TemperatureControl bool   `yaml:"temperature_control"`
 	FakeHome           bool   `yaml:"fake_home"`
 	Dev                bool   `yaml:"dev"`
-	MQTT               struct {
+	Location           struct {
+		Latitude  float64 `yaml:"latitude"`
+		Longitude float64 `yaml:"longitude"`
+		UTCOffset float64 `yaml:"utc_offset"`
+	} `yaml:"location"`
+	MQTT struct {
 		Broker string `yaml:"broker"`
 	} `yaml:"mqtt"`
 	HTTP struct {

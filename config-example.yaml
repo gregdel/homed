@@ -8,6 +8,10 @@ mqtt:
 http:
   addr: ":9091"
 
+location:
+  latitude: 50.62955091282183
+  longitude: 3.055823770700181
+
 devices:
 - name: device_1
   room: room_1
