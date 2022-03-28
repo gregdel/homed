@@ -11,7 +11,6 @@ import (
 	"github.com/gregdel/homed/lib/components/boiler"
 	"github.com/gregdel/homed/lib/components/esphome"
 	saswell "github.com/gregdel/homed/lib/components/saswell_trv"
-	"github.com/gregdel/homed/lib/components/tasmota"
 	tuya "github.com/gregdel/homed/lib/components/tuya_trv"
 	xiaomi "github.com/gregdel/homed/lib/components/xiaomi_aqara"
 	"github.com/gregdel/homed/lib/config"
@@ -136,13 +135,6 @@ func (fh *FakeHome) handleCommand(c mqtt.Client, msg mqtt.Message) {
 	case *esphome.Switch:
 		errUpdate = x.Update(payload)
 		errPublish = fh.publishState(x, payload)
-	case *tasmota.Switch:
-		if string(msg.Payload()) == "ON" {
-			x.On = true
-		} else {
-			x.On = false
-		}
-		errPublish = fh.publishState(x, tasmota.NewSwitchData(x.IsOn()))
 	}
 
 	if errUpdate != nil {

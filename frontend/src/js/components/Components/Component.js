@@ -11,7 +11,6 @@ import { SaswellTRV } from "./SaswellTRV";
 import { WifiSignal } from "./WifiSignal";
 import { RTL433 } from "./RTL433";
 import { Boiler } from "./Boiler";
-import { TasmotaSwitch } from "./TasmotaSwitch";
 import { ESPLight } from "./EspLight";
 import { ESPSwitch } from "./EspSwitch";
 import { ESPCover } from "./EspCover";
@@ -55,9 +54,6 @@ export const Component = ({
       break;
     case "boiler":
       typedComponent = <Boiler id={id} />;
-      break;
-    case "tasmota_switch":
-      typedComponent = <TasmotaSwitch id={id} />;
       break;
     case "esphome_light":
       typedComponent = <ESPLight id={id} />;

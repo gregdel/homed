@@ -15,7 +15,6 @@ import (
 	_ "github.com/gregdel/homed/lib/components/humidity"
 	_ "github.com/gregdel/homed/lib/components/rtl433"
 	_ "github.com/gregdel/homed/lib/components/saswell_trv"
-	_ "github.com/gregdel/homed/lib/components/tasmota"
 	_ "github.com/gregdel/homed/lib/components/temperature"
 	_ "github.com/gregdel/homed/lib/components/tuya_trv"
 	_ "github.com/gregdel/homed/lib/components/wifi_signal"
