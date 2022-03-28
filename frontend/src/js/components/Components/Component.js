@@ -13,6 +13,7 @@ import { RTL433 } from "./RTL433";
 import { Boiler } from "./Boiler";
 import { TasmotaSwitch } from "./TasmotaSwitch";
 import { ESPLight } from "./EspLight";
+import { ESPSwitch } from "./EspSwitch";
 import { ESPCover } from "./EspCover";
 import { XiaomiAqara } from "./XiaomiAqara";
 
@@ -60,6 +61,9 @@ export const Component = ({
       break;
     case "esphome_light":
       typedComponent = <ESPLight id={id} />;
+      break;
+    case "esphome_switch":
+      typedComponent = <ESPSwitch id={id} />;
       break;
     case "roller_shutter":
       typedComponent = <ESPCover id={id} />;

@@ -42,7 +42,7 @@ const App = () => (
                   <Components typesFilter={["esphome_light"]} />
                 </Route>
                 <Route path="/switches" exact>
-                  <Components typesFilter={["tasmota_switch"]} />
+                  <Components typesFilter={["esphome_switch"]} />
                 </Route>
                 <Route path="/shutters" exact>
                   <Components typesFilter={["roller_shutter"]} />

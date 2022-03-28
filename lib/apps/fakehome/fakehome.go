@@ -116,21 +116,26 @@ func (fh *FakeHome) handleCommand(c mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
+	payload := msg.Payload()
+
 	var errUpdate error
 	var errPublish error
 	switch x := component.(type) {
 	case *boiler.Boiler:
-		errUpdate = x.Update(msg.Payload())
+		errUpdate = x.Update(payload)
 		errPublish = fh.publishState(x, nil)
 	case *tuya.TuyaTRV:
-		errUpdate = x.Update(msg.Payload())
+		errUpdate = x.Update(payload)
 		errPublish = fh.publishState(x, nil)
 	case *saswell.SaswellTRV:
-		errUpdate = x.Update(msg.Payload())
+		errUpdate = x.Update(payload)
 		errPublish = fh.publishState(x, nil)
 	case *esphome.Light:
-		errUpdate = x.Update(msg.Payload())
+		errUpdate = x.Update(payload)
 		errPublish = fh.publishState(x, esphome.NewLightState(x.IsOn()))
+	case *esphome.Switch:
+		errUpdate = x.Update(payload)
+		errPublish = fh.publishState(x, payload)
 	case *tasmota.Switch:
 		if string(msg.Payload()) == "ON" {
 			x.On = true
@@ -177,6 +182,10 @@ func (fh *FakeHome) updateStates() {
 func (fh *FakeHome) publishState(c components.Component, data interface{}) error {
 	if data == nil {
 		data = c
+	} else {
+		if b, ok := data.([]byte); ok {
+			return c.PublishToStateTopic(b)
+		}
 	}
 
 	buf := bytes.Buffer{}

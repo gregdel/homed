@@ -1,5 +1,10 @@
 package common
 
+import (
+	"bytes"
+	"fmt"
+)
+
 // Switch represents a generic switch
 type Switch struct {
 	BinarySensor
@@ -42,4 +47,18 @@ func (s *Switch) Toggle() error {
 	}
 
 	return s.SetOn()
+}
+
+// Update implements the Component interface
+func (s *Switch) Update(value []byte) error {
+	switch {
+	case bytes.Equal(value, s.payloadOn):
+		s.On = true
+	case bytes.Equal(value, s.payloadOff):
+		s.On = false
+	default:
+		return fmt.Errorf("switch: invalid payload: %s", value)
+	}
+
+	return nil
 }
