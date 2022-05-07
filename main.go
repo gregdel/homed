@@ -9,6 +9,7 @@ import (
 	homed "github.com/gregdel/homed/lib"
 
 	_ "github.com/gregdel/homed/lib/components/boiler"
+	_ "github.com/gregdel/homed/lib/components/common"
 	_ "github.com/gregdel/homed/lib/components/device_status"
 	_ "github.com/gregdel/homed/lib/components/esphome"
 	_ "github.com/gregdel/homed/lib/components/homed_temperature"

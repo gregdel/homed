@@ -2,18 +2,19 @@ import React from "react";
 import PropTypes from "prop-types";
 import moment from "moment";
 
-import { HomedTemperature } from "./HomedTemperature";
-import { Temperature } from "./Temperature";
-import { Humidity } from "./Humidity";
-import { DeviceStatus } from "./DeviceStatus";
-import { TuyaTRV } from "./TuyaTRV";
-import { SaswellTRV } from "./SaswellTRV";
-import { WifiSignal } from "./WifiSignal";
-import { RTL433 } from "./RTL433";
 import { Boiler } from "./Boiler";
+import { DeviceStatus } from "./DeviceStatus";
+import { ESPCover } from "./EspCover";
 import { ESPLight } from "./EspLight";
 import { ESPSwitch } from "./EspSwitch";
-import { ESPCover } from "./EspCover";
+import { HomedTemperature } from "./HomedTemperature";
+import { Humidity } from "./Humidity";
+import { PowerMeter } from "./PowerMeter";
+import { RTL433 } from "./RTL433";
+import { SaswellTRV } from "./SaswellTRV";
+import { Temperature } from "./Temperature";
+import { TuyaTRV } from "./TuyaTRV";
+import { WifiSignal } from "./WifiSignal";
 import { XiaomiAqara } from "./XiaomiAqara";
 
 import { Card } from "antd";
@@ -69,6 +70,9 @@ export const Component = ({
       break;
     case "xiaomi_aqara":
       typedComponent = <XiaomiAqara id={id} />;
+      break;
+    case "power_meter":
+      typedComponent = <PowerMeter id={id} />;
       break;
     default:
       typedComponent = <>Unhandled {type}</>;
