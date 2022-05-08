@@ -28,3 +28,15 @@ func SingleCollector(s Component, labels prometheus.Labels, fn func() float64) [
 		),
 	}
 }
+
+// SingleBoolCollector returns a single prometheus collector
+func SingleBoolCollector(s Component, labels prometheus.Labels, fn func() bool) []prometheus.Collector {
+	convert := func() float64 {
+		if fn() {
+			return 1
+		}
+		return 0
+	}
+
+	return SingleCollector(s, labels, convert)
+}

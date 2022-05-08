@@ -132,6 +132,13 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 
 // PublishState publishes the mqtt state of the component
 func (h *HomedTemperature) PublishState() error {
+	if h.Device() == nil {
+		return components.ErrMissingDevice
+	}
+	if !h.Device().Online {
+		h.Device().Online = true
+	}
+
 	data, err := json.Marshal(h.Data)
 	if err != nil {
 		return err

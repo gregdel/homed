@@ -340,7 +340,7 @@ func (t *tempd) setRoomsTemperatures() {
 				"failed to set the temperature target",
 				zap.Error(err),
 				zap.String("room", roomName),
-				zap.String("device", component.Device()),
+				zap.String("device", component.Device().Name),
 			)
 			continue
 		}
@@ -351,7 +351,7 @@ func (t *tempd) setRoomsTemperatures() {
 				"failed to get the temperature mode",
 				zap.Error(err),
 				zap.String("room", roomName),
-				zap.String("device", component.Device()),
+				zap.String("device", component.Device().Name),
 			)
 			continue
 		}
@@ -364,7 +364,7 @@ func (t *tempd) setRoomsTemperatures() {
 						"failed to set the temperature manual mode until",
 						zap.Error(err),
 						zap.String("room", roomName),
-						zap.String("device", component.Device()),
+						zap.String("device", component.Device().Name),
 					)
 					continue
 				}
@@ -377,7 +377,7 @@ func (t *tempd) setRoomsTemperatures() {
 				"failed to get the end date of the manual mode",
 				zap.Error(err),
 				zap.String("room", roomName),
-				zap.String("device", component.Device()),
+				zap.String("device", component.Device().Name),
 			)
 			continue
 		}
@@ -388,7 +388,7 @@ func (t *tempd) setRoomsTemperatures() {
 					"failed to set temperature mode",
 					zap.Error(err),
 					zap.String("room", roomName),
-					zap.String("device", component.Device()),
+					zap.String("device", component.Device().Name),
 				)
 				continue
 			}
@@ -398,7 +398,7 @@ func (t *tempd) setRoomsTemperatures() {
 					"failed to set temperature target",
 					zap.Error(err),
 					zap.String("room", roomName),
-					zap.String("device", component.Device()),
+					zap.String("device", component.Device().Name),
 				)
 				continue
 			}
@@ -408,7 +408,7 @@ func (t *tempd) setRoomsTemperatures() {
 				"failed to get the temperature target",
 				zap.Error(err),
 				zap.String("room", roomName),
-				zap.String("device", component.Device()),
+				zap.String("device", component.Device().Name),
 			)
 
 			if err := component.SetTemperatureTarget(previousTarget); err != nil {
@@ -416,7 +416,7 @@ func (t *tempd) setRoomsTemperatures() {
 					"failed to set temperature target",
 					zap.Error(err),
 					zap.String("room", roomName),
-					zap.String("device", component.Device()),
+					zap.String("device", component.Device().Name),
 				)
 				continue
 			}
@@ -427,7 +427,7 @@ func (t *tempd) setRoomsTemperatures() {
 				"failed to publish state",
 				zap.Error(err),
 				zap.String("room", roomName),
-				zap.String("device", component.Device()),
+				zap.String("device", component.Device().Name),
 			)
 			continue
 		}

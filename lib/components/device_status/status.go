@@ -1,6 +1,9 @@
 package status
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
@@ -13,7 +16,7 @@ func init() {
 // DeviceStatus is a component that reports the status of a device
 type DeviceStatus struct {
 	common.Component
-	common.DeviceStatus
+	Online bool `json:"online"`
 }
 
 // NewDeviceStatus returns a new status component
@@ -22,24 +25,33 @@ func NewDeviceStatus() components.Component {
 }
 
 // Type implements the Component interface
-func (s *DeviceStatus) Type() components.Type {
+func (ds *DeviceStatus) Type() components.Type {
 	return components.TypeDeviceStatus
 }
 
 // Collectors implements the Component interface
-func (s *DeviceStatus) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	return []prometheus.Collector{
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        "homed_device_status",
-				ConstLabels: labels,
-			},
-			func() float64 {
-				if s.IsAvailable() {
-					return 1
-				}
-				return 0
-			},
-		),
+func (ds *DeviceStatus) Collectors(labels prometheus.Labels) []prometheus.Collector {
+	return components.SingleBoolCollector(ds, labels, func() bool { return ds.Online })
+}
+
+// Update implements the Component interface
+func (ds *DeviceStatus) Update(value []byte) error {
+	v := strings.ToLower(string(value))
+	switch v {
+	case "online":
+		ds.Online = true
+	case "offline":
+		ds.Online = false
+	default:
+		return fmt.Errorf("device status: invalid component status: %s", v)
 	}
+
+	if ds.Device() == nil {
+		return components.ErrMissingDevice
+	}
+
+	// Update the device state
+	ds.Device().Online = ds.Online
+
+	return nil
 }

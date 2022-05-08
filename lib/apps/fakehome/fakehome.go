@@ -10,6 +10,7 @@ import (
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/boiler"
 	"github.com/gregdel/homed/lib/components/common"
+	status "github.com/gregdel/homed/lib/components/device_status"
 	"github.com/gregdel/homed/lib/components/esphome"
 	saswell "github.com/gregdel/homed/lib/components/saswell_trv"
 	tuya "github.com/gregdel/homed/lib/components/tuya_trv"
@@ -163,8 +164,9 @@ func (fh *FakeHome) updateStates() {
 			c.LocalTemperature = 17
 			err = fh.publishState(c, nil)
 		case *common.PowerMeter:
-			c.Value = 150
 			err = fh.publishState(c, []byte("150"))
+		case *status.DeviceStatus:
+			err = fh.publishState(c, []byte("online"))
 		}
 
 		if err != nil {

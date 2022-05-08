@@ -48,23 +48,11 @@ func New(configPath string, embedFS *embed.FS) (*Homed, error) {
 	opts := mqtt.NewClientOptions().AddBroker(config.MQTT.Broker)
 	mqttClient := mqtt.NewClient(opts)
 
-	devices := map[string]struct{}{}
-
 	for _, d := range config.Devices {
-		_, ok := devices[d.Name]
-		if ok {
-			return nil, ErrDuplicateDevice
-		}
-
 		for _, cfg := range d.Components {
 			_, err := homed.components.Add(cfg, mqttClient, d.Room, d.Name)
 			if err != nil {
-				homed.logger.Error(
-					"failed to add component",
-					zap.Error(err),
-					zap.String("device_name", d.Name),
-					zap.String("room_name", d.Room),
-				)
+				return nil, err
 			}
 		}
 	}

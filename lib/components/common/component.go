@@ -1,10 +1,10 @@
 package common
 
 import (
-	"fmt"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/config"
 )
 
@@ -14,14 +14,14 @@ type Component struct {
 	StateTopic   string `json:"-"`
 	IsInternal   bool   `json:"-"`
 	config       *config.Component
+	device       *components.Device
 
 	mqttClient mqtt.Client
 
-	Cid        string     `json:"id"`
-	UpdatedAt  *time.Time `json:"updated_at"`
-	RoomName   string     `json:"room_name"`
-	DeviceName string     `json:"device_name"`
-	Name       string     `json:"friendly_name"`
+	Cid       string     `json:"id"`
+	UpdatedAt *time.Time `json:"updated_at"`
+	RoomName  string     `json:"room_name"`
+	Name      string     `json:"friendly_name"`
 }
 
 // PostUpdate implements the Component interface
@@ -97,13 +97,13 @@ func (c *Component) SetRoom(name string) {
 }
 
 // Device implements the Component interface
-func (c *Component) Device() string {
-	return c.DeviceName
+func (c *Component) Device() *components.Device {
+	return c.device
 }
 
 // SetDevice implements the Component interface
-func (c *Component) SetDevice(name string) {
-	c.DeviceName = name
+func (c *Component) SetDevice(d *components.Device) {
+	c.device = d
 }
 
 // FriendlyName implements the Component interface
@@ -119,11 +119,19 @@ func (c *Component) SetFriendlyName(n string) {
 // WriteCommand implements the Component interface
 func (c *Component) WriteCommand(data []byte) error {
 	if c.mqttClient == nil {
-		return fmt.Errorf("components: missing mqtt client")
+		return components.ErrMissingMQTTClient
 	}
 
 	if c.ReadOnly() {
-		return fmt.Errorf("components: component is read only")
+		return components.ErrComponentReadOnly
+	}
+
+	if c.Device() == nil {
+		return components.ErrMissingDevice
+	}
+
+	if !c.Device().Online {
+		return components.ErrDeviceOffline
 	}
 
 	token := c.mqttClient.Publish(c.CommandTopic, 0, false, data)
@@ -137,11 +145,11 @@ func (c *Component) WriteCommand(data []byte) error {
 // ExecCommand implements the Component interface
 func (c *Component) ExecCommand(data []byte) error {
 	if c.mqttClient == nil {
-		return fmt.Errorf("components: missing mqtt client")
+		return components.ErrMissingMQTTClient
 	}
 
 	if !c.IsInternal {
-		return fmt.Errorf("components: only internal components have exec commands")
+		return components.ErrExecNotInternal
 	}
 
 	token := c.mqttClient.Publish(c.StateTopic, 0, true, data)

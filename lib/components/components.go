@@ -17,9 +17,10 @@ type Components struct {
 
 	dataPath string
 
-	byID     map[string]Component
-	byRoom   map[string][]string
-	byDevice map[string][]string
+	byID   map[string]Component
+	byRoom map[string][]string
+
+	devices map[string]*Device
 }
 
 // New returns a new Components type
@@ -28,7 +29,8 @@ func New(dataPath string) *Components {
 		dataPath: dataPath,
 		byID:     map[string]Component{},
 		byRoom:   map[string][]string{},
-		byDevice: map[string][]string{},
+
+		devices: map[string]*Device{},
 	}
 }
 
@@ -109,6 +111,12 @@ func (c *Components) ListByRoom(room string) []Component {
 
 // Add adds a component to the component slice
 func (c *Components) Add(cfg config.Component, client mqtt.Client, roomName, deviceName string) (Component, error) {
+	device, ok := c.devices[deviceName]
+	if !ok {
+		device = NewDevice(deviceName, roomName)
+	}
+	c.devices[device.Name] = device
+
 	component, err := newComponent(cfg.Type)
 	if err != nil {
 		return nil, err
@@ -134,6 +142,10 @@ func (c *Components) Add(cfg config.Component, client mqtt.Client, roomName, dev
 
 	component.SetID(id)
 
+	if err := device.AddComponent(component); err != nil {
+		return nil, err
+	}
+
 	labels := prometheus.Labels{
 		"device": deviceName,
 		"room":   roomName,
@@ -157,7 +169,7 @@ func (c *Components) Add(cfg config.Component, client mqtt.Client, roomName, dev
 	// TODO: find a better solution
 	component.SetMQTTClient(client)
 	component.SetRoom(roomName)
-	component.SetDevice(deviceName)
+	component.SetDevice(device)
 	component.SetConfig(&cfg)
 
 	if sc, ok := component.(Scheduled); ok {
@@ -173,11 +185,6 @@ func (c *Components) Add(cfg config.Component, client mqtt.Client, roomName, dev
 		c.byRoom[roomName] = []string{}
 	}
 	c.byRoom[roomName] = append(c.byRoom[roomName], id)
-
-	if len(c.byDevice[deviceName]) == 0 {
-		c.byDevice[deviceName] = []string{}
-	}
-	c.byDevice[deviceName] = append(c.byDevice[deviceName], id)
 
 	c.mu.Unlock()
 

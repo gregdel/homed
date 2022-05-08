@@ -92,27 +92,27 @@ func (m *mqttd) Run(ctx *apps.RunCtx) error {
 func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {
 	component, ok := m.stateTopics[msg.Topic()]
 	if !ok {
-		m.logger.Warn("Topic not found", zap.String("topic", msg.Topic()))
+		m.logger.Warn("topic not found", zap.String("topic", msg.Topic()))
 		return
+	}
+
+	fields := []zap.Field{
+		zap.String("friendly_name", string(component.FriendlyName())),
+		zap.String("room", component.Room()),
+		zap.String("device", component.Device().Name),
 	}
 
 	if err := component.Update(msg.Payload()); err != nil {
 		m.logger.Warn(
 			"failed to update component",
-			zap.Error(err),
-			zap.String("friendly_name", string(component.FriendlyName())),
-			zap.String("room", component.Room()),
-			zap.String("device", component.Device()))
+			append(fields, zap.Error(err))...)
 		return
 	}
 
 	if err := component.PostUpdate(); err != nil {
 		m.logger.Warn(
 			"failed to run the component post update",
-			zap.Error(err),
-			zap.String("friendly_name", string(component.FriendlyName())),
-			zap.String("room", component.Room()),
-			zap.String("device", component.Device()))
+			append(fields, zap.Error(err))...)
 		return
 	}
 

@@ -42,8 +42,8 @@ type Component interface {
 	SetRoom(string)
 
 	// Device
-	Device() string
-	SetDevice(string)
+	Device() *Device
+	SetDevice(d *Device)
 
 	// Config
 	Config() *config.Component
