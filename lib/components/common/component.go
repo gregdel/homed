@@ -130,7 +130,7 @@ func (c *Component) WriteCommand(data []byte) error {
 		return components.ErrMissingDevice
 	}
 
-	if !c.Device().Online {
+	if !c.IsInternal && !c.Device().Online {
 		return components.ErrDeviceOffline
 	}
 
