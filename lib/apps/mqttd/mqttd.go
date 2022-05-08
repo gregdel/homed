@@ -1,6 +1,8 @@
 package mqttd
 
 import (
+	"context"
+
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/apps"
 	"github.com/gregdel/homed/lib/components"
@@ -38,18 +40,59 @@ func (m *mqttd) Name() string {
 
 func (m *mqttd) Init(config *config.Config) error {
 	m.config = config
+
+	opts := mqtt.
+		NewClientOptions().
+		AddBroker(config.MQTT.Broker).
+		SetOnConnectHandler(m.onConnectHandler).
+		SetReconnectingHandler(m.reconnectingHandler).
+		SetConnectionLostHandler(m.connectionLostHandler)
+	m.client = mqtt.NewClient(opts)
+
 	return nil
 }
 
-func (m *mqttd) Run(ctx *apps.RunCtx) error {
-	m.logger = ctx.Logger
-	m.components = ctx.Components
-	m.updateChan = ctx.ComponentUpdated
+func (m *mqttd) onConnectHandler(mqtt.Client) {
+	m.logger.Info("connected to the broker")
 
-	for _, c := range ctx.Components.List() {
-		if m.client == nil && c.MQTTClient() != nil {
-			m.client = c.MQTTClient()
+	for topic := range m.stateTopics {
+		m.logger.Info("subscribing to status topic", zap.String("topic", topic))
+		token := m.client.Subscribe(topic, 0, m.handleMessage)
+		if token.Wait() && token.Error() != nil {
+			m.logger.Error("failed to subscribe to the status topic",
+				zap.String("topic", topic),
+				zap.Error(token.Error()),
+			)
 		}
+	}
+
+	for topic := range m.cmdTopics {
+		m.logger.Info("subscribing to command topic", zap.String("topic", topic))
+		token := m.client.Subscribe(topic, 0, m.handleCommand)
+		if token.Wait() && token.Error() != nil {
+			m.logger.Error("failed to subscribe to the command topic",
+				zap.String("topic", topic),
+				zap.Error(token.Error()),
+			)
+		}
+	}
+}
+
+func (m *mqttd) reconnectingHandler(mqtt.Client, *mqtt.ClientOptions) {
+	m.logger.Info("attempting to connect to the mqtt broker")
+}
+
+func (m *mqttd) connectionLostHandler(mqtt.Client, error) {
+	m.logger.Info("connection to the mqtt broker is lost")
+}
+
+func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
+	m.logger = config.Logger
+	m.components = config.Components
+	m.updateChan = config.ComponentUpdated
+
+	for _, c := range m.components.List() {
+		c.SetMQTTClient(m.client)
 
 		cfg := c.Config()
 		if c.Internal() {
@@ -65,23 +108,7 @@ func (m *mqttd) Run(ctx *apps.RunCtx) error {
 		return token.Error()
 	}
 
-	for topic := range m.stateTopics {
-		m.logger.Info("subscribing to status topic", zap.String("topic", topic))
-		token = m.client.Subscribe(topic, 0, m.handleMessage)
-		if token.Wait() && token.Error() != nil {
-			return token.Error()
-		}
-	}
-
-	for topic := range m.cmdTopics {
-		m.logger.Info("subscribing to command topic", zap.String("topic", topic))
-		token = m.client.Subscribe(topic, 0, m.handleCommand)
-		if token.Wait() && token.Error() != nil {
-			return token.Error()
-		}
-	}
-
-	<-ctx.Ctx.Done()
+	<-ctx.Done()
 
 	m.logger.Info("disconnecting from the MQTT broker")
 	m.client.Disconnect(250)

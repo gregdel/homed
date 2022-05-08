@@ -76,12 +76,12 @@ func (h *httpd) Name() string {
 	return name
 }
 
-func (h *httpd) Run(ctx *apps.RunCtx) error {
-	h.logger = ctx.Logger
-	h.components = ctx.Components
+func (h *httpd) Run(ctx context.Context, config *apps.Config) error {
+	h.logger = config.Logger
+	h.components = config.Components
 
 	go func() {
-		<-ctx.Ctx.Done()
+		<-ctx.Done()
 
 		timeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
@@ -92,7 +92,7 @@ func (h *httpd) Run(ctx *apps.RunCtx) error {
 	}()
 
 	go func() {
-		for component := range ctx.ComponentUpdated {
+		for component := range config.ComponentUpdated {
 			h.publishToWebsocket(component)
 		}
 	}()

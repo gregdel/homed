@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"sync"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -110,7 +109,7 @@ func (c *Components) ListByRoom(room string) []Component {
 }
 
 // Add adds a component to the component slice
-func (c *Components) Add(cfg config.Component, client mqtt.Client, roomName, deviceName string) (Component, error) {
+func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Component, error) {
 	device, ok := c.devices[deviceName]
 	if !ok {
 		device = NewDevice(deviceName, roomName)
@@ -167,7 +166,6 @@ func (c *Components) Add(cfg config.Component, client mqtt.Client, roomName, dev
 	component.SetFriendlyName(cfg.FriendlyName)
 
 	// TODO: find a better solution
-	component.SetMQTTClient(client)
 	component.SetDevice(device)
 	component.SetConfig(&cfg)
 

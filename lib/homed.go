@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/apps"
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/config"
@@ -45,12 +44,9 @@ func New(configPath string, embedFS *embed.FS) (*Homed, error) {
 		return nil, err
 	}
 
-	opts := mqtt.NewClientOptions().AddBroker(config.MQTT.Broker)
-	mqttClient := mqtt.NewClient(opts)
-
 	for _, d := range config.Devices {
 		for _, cfg := range d.Components {
-			_, err := homed.components.Add(cfg, mqttClient, d.Room, d.Name)
+			_, err := homed.components.Add(cfg, d.Room, d.Name)
 			if err != nil {
 				return nil, err
 			}
@@ -78,14 +74,13 @@ func (h *Homed) Run() error {
 		close(componentChan)
 	}()
 
-	runCtx := &apps.RunCtx{
-		Ctx:              ctx,
+	runConfig := &apps.Config{
 		Logger:           h.logger,
 		Components:       h.components,
 		ComponentUpdated: componentChan,
 	}
 
-	a.Run(runCtx)
+	a.Run(ctx, runConfig)
 
 	return nil
 }

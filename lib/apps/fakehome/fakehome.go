@@ -2,6 +2,7 @@ package fakehome
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"time"
 
@@ -57,19 +58,23 @@ func (fh *FakeHome) Init(c *config.Config) error {
 }
 
 // Run implements the App interface
-func (fh *FakeHome) Run(ctx *apps.RunCtx) error {
+func (fh *FakeHome) Run(ctx context.Context, config *apps.Config) error {
 	if !fh.enabled {
-		ctx.Logger.Info("app is disabled", zap.String("app_name", appName))
+		config.Logger.Info("app is disabled", zap.String("app_name", appName))
 		return nil
 	}
 
-	fh.logger = ctx.Logger
-	fh.components = ctx.Components
+	fh.logger = config.Logger
+	fh.components = config.Components
 
-	opts := mqtt.NewClientOptions().AddBroker(fh.config.MQTT.Broker)
+	opts := mqtt.NewClientOptions().
+		AddBroker(fh.config.MQTT.Broker).
+		SetOnConnectHandler(fh.mqttOnConnectHandler).
+		SetConnectionLostHandler(fh.mqttOnConnectionLostHandler).
+		SetDefaultPublishHandler(fh.commandHandler)
 	fh.client = mqtt.NewClient(opts)
 
-	for _, c := range ctx.Components.List() {
+	for _, c := range config.Components.List() {
 		cfg := c.Config()
 		if !c.Internal() && cfg.CommandTopic != "" {
 			fh.cmdTopics[cfg.CommandTopic] = c
@@ -82,20 +87,12 @@ func (fh *FakeHome) Run(ctx *apps.RunCtx) error {
 		return token.Error()
 	}
 
-	for topic := range fh.cmdTopics {
-		fh.logger.Info("subscribing to command topic", zap.String("topic", topic))
-		token = fh.client.Subscribe(topic, 0, fh.handleCommand)
-		if token.Wait() && token.Error() != nil {
-			return token.Error()
-		}
-	}
-
 	ticker := time.NewTicker(30 * time.Second)
 	var exit bool
 	fh.updateStates()
 	for {
 		select {
-		case <-ctx.Ctx.Done():
+		case <-ctx.Done():
 			exit = true
 			return nil
 		case <-ticker.C:
@@ -110,7 +107,26 @@ func (fh *FakeHome) Run(ctx *apps.RunCtx) error {
 	return nil
 }
 
-func (fh *FakeHome) handleCommand(c mqtt.Client, msg mqtt.Message) {
+func (fh *FakeHome) mqttOnConnectHandler(c mqtt.Client) {
+	fh.logger.Info("connected to mqtt")
+
+	for topic := range fh.cmdTopics {
+		fh.logger.Info("subscribing to command topic", zap.String("topic", topic))
+		token := fh.client.Subscribe(topic, 0, nil)
+		if token.Wait() && token.Error() != nil {
+			fh.logger.Error("failed to subscribe to the command topic",
+				zap.String("topic", topic),
+				zap.Error(token.Error()),
+			)
+		}
+	}
+}
+
+func (fh *FakeHome) mqttOnConnectionLostHandler(mqtt.Client, error) {
+	fh.logger.Info("connection to the mqtt broker is lost")
+}
+
+func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	component, ok := fh.cmdTopics[msg.Topic()]
 	if !ok {
 		fh.logger.Warn("topic not found", zap.String("topic", msg.Topic()))
@@ -149,6 +165,11 @@ func (fh *FakeHome) handleCommand(c mqtt.Client, msg mqtt.Message) {
 }
 
 func (fh *FakeHome) updateStates() {
+	if !fh.client.IsConnectionOpen() {
+		fh.logger.Info("mqtt broker not connected, not updating states")
+		return
+	}
+
 	var err error
 	for _, component := range fh.components.List() {
 		switch c := component.(type) {

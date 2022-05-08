@@ -1,6 +1,7 @@
 package ro
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"time"
@@ -40,7 +41,7 @@ func (r *rollerShutters) Init(config *config.Config) error {
 	return nil
 }
 
-func (r *rollerShutters) getSunriseSunset(ctx *apps.RunCtx, t time.Time) (time.Time, time.Time) {
+func (r *rollerShutters) getSunriseSunset(config *apps.Config, t time.Time) (time.Time, time.Time) {
 	_, utcOffset := t.Zone()
 	p := sunrisesunset.Parameters{
 		Latitude:  r.config.Location.Latitude,
@@ -51,7 +52,7 @@ func (r *rollerShutters) getSunriseSunset(ctx *apps.RunCtx, t time.Time) (time.T
 
 	sunrise, sunset, err := p.GetSunriseSunset()
 	if err != nil {
-		ctx.Logger.Error(
+		config.Logger.Error(
 			"failed to get sunrise / sunset times, falling back",
 			zap.Error(err),
 		)
@@ -66,7 +67,7 @@ func (r *rollerShutters) getSunriseSunset(ctx *apps.RunCtx, t time.Time) (time.T
 
 // nextEvent returns the time of the next event and the next state (open/close)
 // as a bool.
-func (r *rollerShutters) nextEvent(ctx *apps.RunCtx) (time.Time, bool) {
+func (r *rollerShutters) nextEvent(config *apps.Config) (time.Time, bool) {
 	now := time.Now()
 
 	// Random minutes between 0 and random delay
@@ -74,12 +75,12 @@ func (r *rollerShutters) nextEvent(ctx *apps.RunCtx) (time.Time, bool) {
 	rd := rand.New(s)
 	minutes := time.Duration(rd.Intn(randomDelay)) * time.Minute
 
-	sunrise, sunset := r.getSunriseSunset(ctx, now)
+	sunrise, sunset := r.getSunriseSunset(config, now)
 
 	// Open the roller shutter 0 to X minutes after the sunrise
 	openTime := sunrise.Add(-1 * minutes)
 	if now.Before(openTime) {
-		ctx.Logger.Info(
+		config.Logger.Info(
 			"settting roller shutter open time",
 			zap.Time("sunrise", sunrise),
 			zap.Duration("offset", -1*minutes),
@@ -90,7 +91,7 @@ func (r *rollerShutters) nextEvent(ctx *apps.RunCtx) (time.Time, bool) {
 	// Close the roller shutter X minutes after the sunset
 	closeTime := sunset.Add(minutes)
 	if now.Before(closeTime) {
-		ctx.Logger.Info(
+		config.Logger.Info(
 			"settting roller close time",
 			zap.Time("sunset", sunset),
 			zap.Duration("offset", minutes),
@@ -99,8 +100,8 @@ func (r *rollerShutters) nextEvent(ctx *apps.RunCtx) (time.Time, bool) {
 	}
 
 	// We're after the sunset, get the sunrise of the next morning
-	sunrise, _ = r.getSunriseSunset(ctx, now.Add(24*time.Hour))
-	ctx.Logger.Info(
+	sunrise, _ = r.getSunriseSunset(config, now.Add(24*time.Hour))
+	config.Logger.Info(
 		"settting roller shutter open time to the next day",
 		zap.Time("sunrise", sunrise),
 		zap.Duration("offset", -1*minutes),
@@ -109,8 +110,8 @@ func (r *rollerShutters) nextEvent(ctx *apps.RunCtx) (time.Time, bool) {
 }
 
 // update finds the roller shutter in the component list
-func (r *rollerShutters) update(ctx *apps.RunCtx) error {
-	for _, component := range ctx.Components.List() {
+func (r *rollerShutters) update(config *apps.Config) error {
+	for _, component := range config.Components.List() {
 		if component.Type() != components.TypeRollerShutter {
 			continue
 		}
@@ -122,42 +123,42 @@ func (r *rollerShutters) update(ctx *apps.RunCtx) error {
 	return fmt.Errorf("roller_shutters: failed to find component")
 }
 
-func (r *rollerShutters) Run(ctx *apps.RunCtx) error {
+func (r *rollerShutters) Run(ctx context.Context, config *apps.Config) error {
 	if r.rs == nil {
-		if err := r.update(ctx); err != nil {
+		if err := r.update(config); err != nil {
 			return err
 		}
 	}
 
 	for {
-		event, open := r.nextEvent(ctx)
+		event, open := r.nextEvent(config)
 		duration := event.Sub(time.Now())
 
-		ctx.Logger.Info("setting next event",
+		config.Logger.Info("setting next event",
 			zap.Time("next_event", event),
 			zap.Duration("sleep_duration", duration),
 		)
 
 		select {
-		case <-ctx.Ctx.Done():
+		case <-ctx.Done():
 			return nil
 		case <-time.After(duration):
 			if r.rs.IsOpen() == open {
-				ctx.Logger.Info("roller shutter already in good state")
+				config.Logger.Info("roller shutter already in good state")
 				continue
 			}
 
 			var err error
 			if open {
-				ctx.Logger.Info("openning the roller shutters")
+				config.Logger.Info("openning the roller shutters")
 				err = r.rs.Open()
 			} else {
-				ctx.Logger.Info("closing the roller shutter")
+				config.Logger.Info("closing the roller shutter")
 				err = r.rs.Close()
 			}
 
 			if err != nil {
-				ctx.Logger.Info("failed to change the roller shutter state", zap.Error(err))
+				config.Logger.Info("failed to change the roller shutter state", zap.Error(err))
 			}
 		}
 	}

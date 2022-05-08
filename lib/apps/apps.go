@@ -20,12 +20,11 @@ func init() {
 type App interface {
 	Name() string
 	Init(*config.Config) error
-	Run(*RunCtx) error
+	Run(context.Context, *Config) error
 }
 
-// RunCtx reprensents the run context of an app
-type RunCtx struct {
-	Ctx              context.Context
+// Config reprensents the running config of an app
+type Config struct {
 	Logger           *zap.Logger
 	Components       *components.Components
 	ComponentUpdated chan components.Component
@@ -68,21 +67,25 @@ func (a *Apps) Init(config *config.Config) error {
 }
 
 // Run starts all the apps
-func (a *Apps) Run(ctx *RunCtx) {
+func (a *Apps) Run(parentCtx context.Context, config *Config) {
+	ctx, cancel := context.WithCancel(parentCtx)
+	defer cancel()
+
 	for _, app := range a.m {
 		a.wg.Add(1)
-		go func(app App) {
+		go func(app App, cancel context.CancelFunc) {
 			defer a.wg.Done()
 
 			z := zap.String("app_name", app.Name())
 
-			ctx.Logger.Info("starting app", z)
-			if err := app.Run(ctx); err != nil {
-				ctx.Logger.Error("run failed", z, zap.Error(err))
+			config.Logger.Info("starting app", z)
+			if err := app.Run(ctx, config); err != nil {
+				config.Logger.Error("run failed", z, zap.Error(err))
+				cancel()
 				return
 			}
-			ctx.Logger.Info("app stopped", z)
-		}(app)
+			config.Logger.Info("app stopped", z)
+		}(app, cancel)
 	}
 
 	a.wg.Wait()

@@ -1,6 +1,7 @@
 package tempd
 
 import (
+	"context"
 	"math"
 	"time"
 
@@ -74,14 +75,14 @@ func (t *tempd) init() {
 	}
 }
 
-func (t *tempd) Run(ctx *apps.RunCtx) error {
+func (t *tempd) Run(ctx context.Context, config *apps.Config) error {
 	if !t.enabled {
-		ctx.Logger.Info("app is disabled", zap.String("app_name", name))
+		config.Logger.Info("app is disabled", zap.String("app_name", name))
 		return nil
 	}
 
-	t.logger = ctx.Logger
-	t.components = ctx.Components
+	t.logger = config.Logger
+	t.components = config.Components
 	t.init()
 
 	ticker := time.NewTicker(time.Minute)
@@ -95,7 +96,7 @@ func (t *tempd) Run(ctx *apps.RunCtx) error {
 
 	for {
 		select {
-		case <-ctx.Ctx.Done():
+		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
 			t.updateRoomsTemperatures()
