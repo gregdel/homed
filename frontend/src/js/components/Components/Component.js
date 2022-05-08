@@ -26,6 +26,7 @@ export const Component = ({
   extra,
   roomName,
   deviceName,
+  online,
   friendlyName,
   updatedAt,
   noCard,
@@ -83,10 +84,12 @@ export const Component = ({
     return typedComponent;
   }
 
-  var prettyDate = "";
-  const m = moment(updatedAt, "YYYY-MM-DD HH:mm:ss Z");
-  if (m.isValid()) {
-    prettyDate = m.fromNow();
+  var status = "offline";
+  if (online === true) {
+    const m = moment(updatedAt, "YYYY-MM-DD HH:mm:ss Z");
+    if (m.isValid()) {
+      status = m.fromNow();
+    }
   }
 
   const newTitle =
@@ -94,7 +97,7 @@ export const Component = ({
       ? friendlyName
       : `${roomName} - ${type} - ${deviceName}`;
   return (
-    <Card title={title ? title : newTitle} extra={extra ? extra : prettyDate}>
+    <Card title={title ? title : newTitle} extra={extra ? extra : status}>
       {typedComponent}
     </Card>
   );
@@ -108,6 +111,7 @@ Component.propTypes = {
   friendlyName: PropTypes.string,
   roomName: PropTypes.string,
   deviceName: PropTypes.string,
+  online: PropTypes.bool.isRequired,
   updatedAt: PropTypes.string,
   title: PropTypes.string,
   extra: PropTypes.any,
