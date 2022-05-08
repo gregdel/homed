@@ -14,13 +14,13 @@ type Component struct {
 	StateTopic   string `json:"-"`
 	IsInternal   bool   `json:"-"`
 	config       *config.Component
-	device       *components.Device
+
+	Dev *components.Device `json:"device"`
 
 	mqttClient mqtt.Client
 
 	Cid       string     `json:"id"`
 	UpdatedAt *time.Time `json:"updated_at"`
-	RoomName  string     `json:"room_name"`
 	Name      string     `json:"friendly_name"`
 }
 
@@ -86,24 +86,14 @@ func (c *Component) Internal() bool {
 	return c.IsInternal
 }
 
-// Room implements the Component interface
-func (c *Component) Room() string {
-	return c.RoomName
-}
-
-// SetRoom implements the Component interface
-func (c *Component) SetRoom(name string) {
-	c.RoomName = name
-}
-
 // Device implements the Component interface
 func (c *Component) Device() *components.Device {
-	return c.device
+	return c.Dev
 }
 
 // SetDevice implements the Component interface
 func (c *Component) SetDevice(d *components.Device) {
-	c.device = d
+	c.Dev = d
 }
 
 // FriendlyName implements the Component interface

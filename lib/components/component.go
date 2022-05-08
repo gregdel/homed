@@ -37,10 +37,6 @@ type Component interface {
 	FriendlyName() string
 	SetFriendlyName(string)
 
-	// Room
-	Room() string
-	SetRoom(string)
-
 	// Device
 	Device() *Device
 	SetDevice(d *Device)

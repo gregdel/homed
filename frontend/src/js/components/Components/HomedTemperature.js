@@ -24,8 +24,8 @@ export const HomedTemperature = ({ id }) => {
     values: {
       current,
       target,
-      room_name: room,
       mode,
+      device,
       manual_target: manualTarget,
       manual_until: manualUntil,
     },
@@ -135,7 +135,7 @@ export const HomedTemperature = ({ id }) => {
 
   return (
     <Card
-      title={prettyName(room)}
+      title={prettyName(device.room)}
       extra={
         <Link to={`/components/${id}/schedule`} style={{ color: "#000000d9" }}>
           <Icon path={mdiAvTimer} size={1} />

@@ -98,7 +98,7 @@ func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {
 
 	fields := []zap.Field{
 		zap.String("friendly_name", string(component.FriendlyName())),
-		zap.String("room", component.Room()),
+		zap.String("room", component.Device().Room),
 		zap.String("device", component.Device().Name),
 	}
 

@@ -60,7 +60,7 @@ func (t *tempd) addTrv(roomName string, tc components.TemperatureController) {
 
 func (t *tempd) init() {
 	for _, component := range t.components.List() {
-		roomName := component.Room()
+		roomName := component.Device().Room
 		switch component.Type() {
 		case components.TypeBoiler:
 			t.boiler = component.(components.Switch)

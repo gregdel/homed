@@ -9,10 +9,10 @@ import (
 type Device struct {
 	mu sync.Mutex
 
-	Name       string
-	Room       string
-	Online     bool
-	Components map[string]Component
+	Name       string               `json:"name"`
+	Room       string               `json:"room"`
+	Online     bool                 `json:"online"`
+	Components map[string]Component `json:"-"`
 }
 
 // NewDevice returns a new device

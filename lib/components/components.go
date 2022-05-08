@@ -168,7 +168,6 @@ func (c *Components) Add(cfg config.Component, client mqtt.Client, roomName, dev
 
 	// TODO: find a better solution
 	component.SetMQTTClient(client)
-	component.SetRoom(roomName)
 	component.SetDevice(device)
 	component.SetConfig(&cfg)
 
