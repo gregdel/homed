@@ -6,6 +6,7 @@ import Icon from "@mdi/react";
 import {
   mdiHomeThermometer,
   mdiThermometer,
+  mdiLightningBolt,
   mdiThermometerLines,
   mdiLightbulb,
   mdiPower,
@@ -53,6 +54,11 @@ export const AppMenu = () => {
       icon: mdiLightbulb,
       path: "/lights",
       title: "Lights",
+    },
+    {
+      icon: mdiLightningBolt,
+      path: "/power",
+      title: "Power consumption",
     },
     {
       icon: mdiPower,
