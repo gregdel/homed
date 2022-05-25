@@ -12,6 +12,7 @@ type Type string
 // Types
 var (
 	TypePowerMeter Type = "power_meter"
+	TypeCounter    Type = "counter"
 
 	TypeHomedTemperature Type = "homed_temperature"
 	TypeTemperature      Type = "temperature"
