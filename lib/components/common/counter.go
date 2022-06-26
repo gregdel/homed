@@ -27,5 +27,13 @@ func (c *Counter) Type() components.Type {
 
 // Collectors implements the Component interface
 func (c *Counter) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	return components.SingleCollector(c, labels, func() float64 { return c.Value })
+	return []prometheus.Collector{
+		prometheus.NewCounterFunc(
+			prometheus.CounterOpts{
+				Name:        "homed_counter",
+				ConstLabels: labels,
+			},
+			func() float64 { return c.Value },
+		),
+	}
 }
