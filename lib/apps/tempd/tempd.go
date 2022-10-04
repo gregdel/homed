@@ -13,12 +13,12 @@ import (
 
 const name = "tempd"
 
+const defaultHysteresis = 0.3
+
 func init() {
 	apps.Register(app())
 }
 
-// If the target is manually updated:
-// manual_until: (compute the next scheduled change || manual)
 type tempd struct {
 	enabled bool
 
@@ -28,7 +28,8 @@ type tempd struct {
 	boiler components.Switch
 
 	// Wether we're in a rising or falling phase of the hysteresis algorithm
-	rising map[string]bool
+	rising     map[string]bool
+	hysteresis float64
 
 	rooms map[string]components.TemperatureControllerInternal
 	trvs  map[string][]components.TemperatureController
@@ -48,6 +49,7 @@ func (t *tempd) Name() string {
 
 func (t *tempd) Init(config *config.Config) error {
 	t.enabled = config.TemperatureControl
+	t.hysteresis = defaultHysteresis
 	return nil
 }
 
@@ -75,6 +77,13 @@ func (t *tempd) init() {
 	}
 }
 
+func (t *tempd) run() {
+	t.updateTemperatureValues()
+	t.updateTemperatureMode()
+	t.recalibrateTRVs()
+	t.setBoilerState()
+}
+
 func (t *tempd) Run(ctx context.Context, config *apps.Config) error {
 	if !t.enabled {
 		config.Logger.Info("app is disabled", zap.String("app_name", name))
@@ -88,28 +97,19 @@ func (t *tempd) Run(ctx context.Context, config *apps.Config) error {
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 
-	// TODO: remove this first round
-	t.updateRoomsTemperatures()
-	t.setRoomsTemperatures()
-	t.setRoomsDevicesTemperatures()
-	t.setBoilerState()
-
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			t.updateRoomsTemperatures()
-			t.setRoomsTemperatures()
-			t.setRoomsDevicesTemperatures()
-			t.setBoilerState()
+			t.run()
 		}
 	}
 }
 
 // Temperature returns the temperature in the room
 func (t *tempd) roomTemperature(room string) float64 {
-	var temperature float64
+	var temperature float64 = 0
 	var found float64 = 0
 
 	cs := t.components.ListByRoom(room)
@@ -128,24 +128,37 @@ func (t *tempd) roomTemperature(room string) float64 {
 			continue
 		}
 
-		found = found + 1
-		t, _ := tc.Temperature()
-		temperature = (temperature + t) / found
+		v, err := tc.Temperature()
+		if err != nil {
+			t.logger.Warn("failed to get room temperature from component",
+				zap.String("room", room),
+				zap.String("friendly_name", c.FriendlyName()),
+				zap.Error(err))
+			continue
+		}
+		found++
+		temperature += v
 	}
 
-	return temperature
+	if found == 0 {
+		return 0
+	}
+
+	return (temperature / found)
 }
 
-func (t *tempd) updateRoomsTemperatures() {
-	for roomName, component := range t.rooms {
-		_, ok := t.rooms[roomName]
+// This function get the temperature from multiple devices in the room and set
+// the homed's own temperature
+func (t *tempd) updateTemperatureValues() {
+	for room, component := range t.rooms {
+		_, ok := t.rooms[room]
 		if !ok {
-			t.logger.Info("failed to find room", zap.String("room", roomName))
+			t.logger.Info("failed to find room", zap.String("room", room))
 			continue
 		}
 
 		// Update the current room temperature
-		currentTemperature := t.roomTemperature(roomName)
+		currentTemperature := t.roomTemperature(room)
 		if math.IsNaN(currentTemperature) {
 			t.logger.Warn("tempd: temperature is NaN")
 			continue
@@ -153,11 +166,11 @@ func (t *tempd) updateRoomsTemperatures() {
 
 		t.logger.Debug(
 			"Setting homed's room temperature",
-			zap.String("room", roomName),
+			zap.String("room", room),
 			zap.Float64("temperature", currentTemperature),
 		)
 		if err := component.SetTemperature(currentTemperature); err != nil {
-			t.logger.Error(err.Error(), zap.String("room", roomName))
+			t.logger.Warn(err.Error(), zap.String("room", room))
 			continue
 		}
 	}
@@ -171,21 +184,16 @@ func (t *tempd) setBoilerState() {
 	boiler := t.boiler
 
 	expectedBoilerState := false
-	hysteresis := 0.3
 
-	for room, component := range t.rooms {
+	for room, controller := range t.rooms {
 		_, ok := t.rising[room]
 		if !ok {
 			t.rising[room] = false
 		}
 
-		current, err := component.Temperature()
+		current, err := controller.Temperature()
 		if err != nil {
-			t.logger.Warn(
-				"failed to get temperature",
-				zap.String("component_type", string(component.Type())),
-				zap.Error(err),
-			)
+			t.logger.Warn("failed to get temperature", zap.Error(err))
 			continue
 		}
 
@@ -194,12 +202,12 @@ func (t *tempd) setBoilerState() {
 			continue
 		}
 
-		target, err := component.TemperatureTarget()
+		target, err := controller.TemperatureTarget()
 		if err != nil {
 			t.logger.Warn(
 				"failed to get temperature target",
-				zap.String("component_type", string(component.Type())),
-				zap.String("component_id", component.ID()),
+				zap.String("component_type", string(controller.Type())),
+				zap.String("component_id", controller.ID()),
 				zap.Error(err),
 			)
 			continue
@@ -210,8 +218,8 @@ func (t *tempd) setBoilerState() {
 			continue
 		}
 
-		min := target - hysteresis
-		max := target + hysteresis
+		min := target - t.hysteresis
+		max := target + t.hysteresis
 
 		zapFields := []zap.Field{
 			zap.String("room", room),
@@ -249,61 +257,90 @@ func (t *tempd) setBoilerState() {
 
 	err := t.boiler.Set(expectedBoilerState)
 	if err != nil {
-		t.logger.Error(err.Error())
+		t.logger.Warn("failed to set boiler state",
+			zap.Bool("state", expectedBoilerState), zap.Error(err))
 	}
 }
 
-func (t *tempd) setRoomsDevicesTemperatures() {
-	for roomName, component := range t.rooms {
-		target, err := component.TemperatureTarget()
+func (t *tempd) recalibrateTRVs() {
+	for room, controller := range t.rooms {
+		target, err := controller.TemperatureTarget()
 		if err != nil {
-			t.logger.Error(
+			t.logger.Warn(
 				"failed to get temperature target",
 				zap.Error(err),
 			)
 			continue
 		}
 
-		trvs, ok := t.trvs[roomName]
-		if !ok {
+		roomTemperature, err := controller.Temperature()
+		if err != nil {
+			t.logger.Warn("failed to get temperature", zap.Error(err))
 			continue
 		}
 
-		current, _ := component.Temperature()
-		for _, trv := range trvs {
-			// Compute the new calibration
-			computedTemp, _ := trv.Temperature()
-			calibration, _ := trv.TemperatureCalibration()
-			temp := computedTemp - calibration
+		trvs, ok := t.trvs[room]
+		if !ok {
+			t.logger.Warn("failed to get trvs",
+				zap.String("room", room), zap.Error(err))
+			continue
+		}
 
-			newCalibration := current - temp
-			allowedError := 0.3
+		for _, trv := range trvs {
+			zapFields := []zap.Field{
+				zap.String("room", room),
+				zap.String("friendly_name", trv.FriendlyName()),
+			}
+
+			// Compute the new calibration
+			TRVTemperature, err := trv.Temperature()
+			if err != nil {
+				t.logger.Warn("failed to get trv temperature",
+					append(zapFields, zap.Error(err))...)
+				continue
+			}
+
+			calibration, err := trv.TemperatureCalibration()
+			if err != nil {
+				t.logger.Warn("failed to get trv temperature calibration",
+					append(zapFields, zap.Error(err))...)
+				continue
+			}
+
+			trvMesuredTemperature := TRVTemperature - calibration
+
+			delta := roomTemperature - trvMesuredTemperature
+			allowedError := 1.0
 
 			// Only keep on decimal of precision
-			newCalibration = math.Round(newCalibration*10) / 10
+			delta = math.Round(delta*10) / 10
 
-			if newCalibration < (calibration-allowedError) || newCalibration > (calibration+allowedError) {
+			if delta < -10 || delta > 10 {
 				t.logger.Info(
-					"recalibrating the trv",
-					zap.String("room", roomName),
-					zap.Float64("calibration", newCalibration),
-				)
-				err = trv.SetTemperatureCalibration(newCalibration)
-				if err != nil {
-					t.logger.Error(
-						"failed to calibrate trv",
-						zap.Error(err),
-					)
-				}
+					"invalid calibration, resetting calibration to 0",
+					append(zapFields, zap.Float64("calibration", delta))...)
+				delta = 0
+			}
 
+			if math.Abs(calibration-delta) > allowedError {
+				t.logger.Info("recalibrating the trv",
+					append(zapFields,
+						zap.Float64("old_calibration", calibration),
+						zap.Float64("new_calibraton", delta),
+						zap.Float64("calibraton_diff", math.Abs(calibration-delta)),
+						zap.Float64("allowed_error", allowedError),
+					)...)
+				err = trv.SetTemperatureCalibration(delta)
+				if err != nil {
+					t.logger.Warn("failed to calibrate trv",
+						append(zapFields, zap.Error(err))...)
+				}
 			}
 
 			trvTarget, err := trv.TemperatureTarget()
 			if err != nil {
-				t.logger.Error(
-					"failed to get trv's temperature target",
-					zap.Error(err),
-				)
+				t.logger.Warn("failed to get trv's temperature target",
+					append(zapFields, zap.Error(err))...)
 				continue
 			}
 
@@ -311,49 +348,48 @@ func (t *tempd) setRoomsDevicesTemperatures() {
 				continue
 			}
 
-			t.logger.Info(
-				"should configure the trv to the target",
-				zap.String("room", roomName),
-				zap.Float64("target", target),
-			)
+			t.logger.Info("should configure the trv to the target",
+				append(zapFields, zap.Float64("target", target))...)
 
 			err = trv.SetTemperatureTarget(target)
 			if err != nil {
-				t.logger.Error(
-					"failed to set trv's temperature target",
-					zap.Error(err),
-				)
+				t.logger.Warn("failed to set trv's temperature target",
+					append(zapFields, zap.Error(err))...)
 				continue
 			}
 		}
 	}
 }
 
-func (t *tempd) setRoomsTemperatures() {
+func (t *tempd) updateTemperatureMode() {
 	for roomName, component := range t.rooms {
 		schedule := component.Schedule()
 		scheduledTarget := schedule.Value()
 
-		// Update the target state
-		err := component.SetTemperatureTarget(scheduledTarget)
+		zapFields := []zap.Field{
+			zap.String("room", roomName),
+			zap.String("device", component.Device().Name),
+		}
+
+		currentTarget, err := component.TemperatureTarget()
 		if err != nil {
-			t.logger.Error(
-				"failed to set the temperature target",
-				zap.Error(err),
-				zap.String("room", roomName),
-				zap.String("device", component.Device().Name),
-			)
-			continue
+			t.logger.Warn("failed to get the current temperature target",
+				append(zapFields, zap.Error(err))...)
+		}
+
+		if currentTarget != scheduledTarget {
+			err := component.SetTemperatureTarget(scheduledTarget)
+			if err != nil {
+				t.logger.Warn("failed to set the temperature target",
+					append(zapFields, zap.Error(err))...)
+				continue
+			}
 		}
 
 		mode, err := component.TemperatureMode()
 		if err != nil {
-			t.logger.Error(
-				"failed to get the temperature mode",
-				zap.Error(err),
-				zap.String("room", roomName),
-				zap.String("device", component.Device().Name),
-			)
+			t.logger.Warn("failed to get the temperature mode",
+				append(zapFields, zap.Error(err))...)
 			continue
 		}
 
@@ -361,12 +397,8 @@ func (t *tempd) setRoomsTemperatures() {
 			nextTime := schedule.NextTime()
 			if nextTime != nil {
 				if err := component.SetTemperatureModeManualUntil(nextTime); err != nil {
-					t.logger.Error(
-						"failed to set the temperature manual mode until",
-						zap.Error(err),
-						zap.String("room", roomName),
-						zap.String("device", component.Device().Name),
-					)
+					t.logger.Warn("failed to set the temperature manual mode until",
+						append(zapFields, zap.Error(err))...)
 					continue
 				}
 			}
@@ -374,62 +406,38 @@ func (t *tempd) setRoomsTemperatures() {
 
 		manualUntil, err := component.TemperatureModeManualUntil()
 		if err != nil {
-			t.logger.Error(
-				"failed to get the end date of the manual mode",
-				zap.Error(err),
-				zap.String("room", roomName),
-				zap.String("device", component.Device().Name),
-			)
+			t.logger.Warn("failed to get the end date of the manual mode",
+				append(zapFields, zap.Error(err))...)
 			continue
 		}
 
 		if manualUntil != nil && time.Now().After(*manualUntil) {
 			if err := component.SetTemperatureMode(components.TemperatureModeAuto); err != nil {
-				t.logger.Error(
-					"failed to set temperature mode",
-					zap.Error(err),
-					zap.String("room", roomName),
-					zap.String("device", component.Device().Name),
-				)
+				t.logger.Warn("failed to set temperature mode",
+					append(zapFields, zap.Error(err))...)
 				continue
 			}
 
 			if err := component.SetTemperatureModeManualUntil(nil); err != nil {
-				t.logger.Error(
-					"failed to set temperature target",
-					zap.Error(err),
-					zap.String("room", roomName),
-					zap.String("device", component.Device().Name),
-				)
+				t.logger.Warn("failed to reset the override mode",
+					append(zapFields, zap.Error(err))...)
 				continue
 			}
 
 			previousTarget, err := component.TemperatureTarget()
-			t.logger.Error(
-				"failed to get the temperature target",
-				zap.Error(err),
-				zap.String("room", roomName),
-				zap.String("device", component.Device().Name),
-			)
+			t.logger.Warn("failed to get the temperature target",
+				append(zapFields, zap.Error(err))...)
 
 			if err := component.SetTemperatureTarget(previousTarget); err != nil {
-				t.logger.Error(
-					"failed to set temperature target",
-					zap.Error(err),
-					zap.String("room", roomName),
-					zap.String("device", component.Device().Name),
-				)
+				t.logger.Warn("failed to set temperature target",
+					append(zapFields, zap.Error(err))...)
 				continue
 			}
 		}
 
 		if err := component.PublishState(); err != nil {
-			t.logger.Error(
-				"failed to publish state",
-				zap.Error(err),
-				zap.String("room", roomName),
-				zap.String("device", component.Device().Name),
-			)
+			t.logger.Warn("failed to publish state",
+				append(zapFields, zap.Error(err))...)
 			continue
 		}
 	}

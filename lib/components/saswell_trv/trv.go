@@ -110,6 +110,11 @@ func (t *SaswellTRV) SetTemperature(float64) error {
 
 // Temperature implements the TemperatureGetter interface
 func (t *SaswellTRV) Temperature() (float64, error) {
+	if !t.Device().Online {
+		return 0, components.ErrDeviceOffline
+	}
+
+	// The exposed temperature uses the current temperature calibration
 	return t.LocalTemperature, nil
 }
 
@@ -150,16 +155,9 @@ func (t *SaswellTRV) TemperatureCalibration() (float64, error) {
 
 // SetTemperatureCalibration implements the TemperatureController interface
 func (t *SaswellTRV) SetTemperatureCalibration(c float64) error {
-	// Let's try integers to calibrate the temperature
-	if c > 0 {
-		c = math.Round(c)
-	} else {
-		c = math.Ceil(c)
-	}
-
 	s := struct {
 		Calibration float64 `json:"local_temperature_calibration"`
-	}{Calibration: c}
+	}{Calibration: math.Round(c)}
 
 	return t.write(s)
 }

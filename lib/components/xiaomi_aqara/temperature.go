@@ -69,5 +69,9 @@ func (c *Climate) Update(value []byte) error {
 
 // Temperature implements the TemperatureGetter interface
 func (c *Climate) Temperature() (float64, error) {
+	if !c.Device().Online {
+		return 0, components.ErrDeviceOffline
+	}
+
 	return c.Temp, nil
 }
