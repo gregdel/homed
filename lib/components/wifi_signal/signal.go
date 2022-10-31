@@ -28,5 +28,9 @@ func (s *WifiSignal) Type() components.Type {
 
 // Collectors implements the Component interface
 func (s *WifiSignal) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	return components.SingleCollector(s, labels, func() float64 { return s.Value })
+	return []prometheus.Collector{
+		components.GaugeCollector("wifi_signal", labels,
+			func() float64 { return s.Value },
+		),
+	}
 }

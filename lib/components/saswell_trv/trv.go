@@ -53,33 +53,12 @@ func (t *SaswellTRV) Type() components.Type {
 
 // Collectors implements the Component interface
 func (t *SaswellTRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	prefix := "homed_tuya_trv"
 	return []prometheus.Collector{
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        prefix + "temperature",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("temperature", labels,
 			func() float64 { return t.LocalTemperature },
 		),
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        prefix + "heating_set_point",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("heating_set_point", labels,
 			func() float64 { return t.HeatingSetpoint },
-		),
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        prefix + "battery_low",
-				ConstLabels: labels,
-			},
-			func() float64 {
-				if t.BatteryLow {
-					return 1
-				}
-				return 0
-			},
 		),
 	}
 }

@@ -31,7 +31,11 @@ func (t *Temperature) Type() components.Type {
 
 // Collectors implements the Component interface
 func (t *Temperature) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	return components.SingleCollector(t, labels, func() float64 { return t.Value })
+	return []prometheus.Collector{
+		components.GaugeCollector("temperature", labels,
+			func() float64 { return t.Value },
+		),
+	}
 }
 
 // Temperature implements the TemperatureGetter interface

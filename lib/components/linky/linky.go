@@ -33,28 +33,14 @@ func (l *Linky) Type() components.Type {
 
 // Collectors implements the Component interface
 func (l *Linky) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	// TODO: add a linky prefix ??
-	prefix := "linky_"
 	return []prometheus.Collector{
-		prometheus.NewCounterFunc(
-			prometheus.CounterOpts{
-				Name:        prefix + "hp",
-				ConstLabels: labels,
-			},
+		components.CounterCollector("linky_hp", labels,
 			func() float64 { return float64(l.CounterHP) },
 		),
-		prometheus.NewCounterFunc(
-			prometheus.CounterOpts{
-				Name:        prefix + "hc",
-				ConstLabels: labels,
-			},
+		components.CounterCollector("linky_hc", labels,
 			func() float64 { return float64(l.CounterHC) },
 		),
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        prefix + "current_power",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("power", labels,
 			func() float64 { return float64(l.CurrentPower) },
 		),
 	}

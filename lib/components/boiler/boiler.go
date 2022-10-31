@@ -37,11 +37,7 @@ func (b *Boiler) Type() components.Type {
 // Collectors implements the Component interface
 func (b *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        "homed_boiler",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("boiler", labels,
 			func() float64 {
 				if b.On {
 					return 1

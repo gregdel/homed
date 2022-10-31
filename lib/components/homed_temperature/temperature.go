@@ -60,22 +60,16 @@ func (h *HomedTemperature) Type() components.Type {
 
 // Collectors implements the Component interface
 func (h *HomedTemperature) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	prefix := "homed_temperature_control_"
 	return []prometheus.Collector{
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        prefix + "current",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("temperature_control_current", labels,
 			func() float64 { return h.Current },
 		),
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        prefix + "target",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("temperature_control_target", labels,
 			func() float64 {
-				t, _ := h.TemperatureTarget()
+				t, err := h.TemperatureTarget()
+				if err != nil {
+					return 0
+				}
 				return t
 			},
 		),

@@ -36,11 +36,7 @@ func (l *Light) Type() components.Type {
 // Collectors implements the Component interface
 func (l *Light) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        "homed_light",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("light", labels,
 			func() float64 {
 				if l.On {
 					return 1

@@ -31,7 +31,15 @@ func (ds *DeviceStatus) Type() components.Type {
 
 // Collectors implements the Component interface
 func (ds *DeviceStatus) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	return components.SingleBoolCollector(ds, labels, func() bool { return ds.Online })
+	return []prometheus.Collector{
+		components.GaugeCollector("device_status", labels,
+			func() float64 {
+				if ds.Online {
+					return 1
+				}
+				return 0
+			},
+		)}
 }
 
 // Update implements the Component interface

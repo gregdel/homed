@@ -28,5 +28,9 @@ func (h *Humidity) Type() components.Type {
 
 // Collectors implements the Component interface
 func (h *Humidity) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	return components.SingleCollector(h, labels, func() float64 { return h.Value })
+	return []prometheus.Collector{
+		components.GaugeCollector("humidity", labels,
+			func() float64 { return h.Value },
+		),
+	}
 }

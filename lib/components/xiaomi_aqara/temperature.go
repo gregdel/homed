@@ -36,27 +36,14 @@ func (c *Climate) Type() components.Type {
 
 // Collectors implements the Component interface
 func (c *Climate) Collectors(labels prometheus.Labels) []prometheus.Collector {
-	prefix := "homed_xiaomi_aqara"
 	return []prometheus.Collector{
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        prefix + "temperature",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("temperature", labels,
 			func() float64 { return c.Temp },
 		),
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        prefix + "pressure",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("pressure", labels,
 			func() float64 { return c.Pressure },
 		),
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        prefix + "humidity",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("humidity", labels,
 			func() float64 { return c.Humidity },
 		),
 	}

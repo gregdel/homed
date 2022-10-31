@@ -31,11 +31,7 @@ func (s *Switch) Type() components.Type {
 // Collectors implements the Component interface
 func (s *Switch) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
-		prometheus.NewGaugeFunc(
-			prometheus.GaugeOpts{
-				Name:        "switch",
-				ConstLabels: labels,
-			},
+		components.GaugeCollector("switch", labels,
 			func() float64 {
 				if s.On {
 					return 1
