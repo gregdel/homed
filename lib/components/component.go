@@ -27,6 +27,7 @@ var (
 	TypeESPHomeSwitch    Type = "esphome_switch"
 	TypeRollerShutter    Type = "roller_shutter"
 	TypeXiaomiAqara      Type = "xiaomi_aqara"
+	TypeLinky            Type = "linky"
 )
 
 // Component represents a component

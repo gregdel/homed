@@ -14,6 +14,7 @@ import (
 	_ "github.com/gregdel/homed/lib/components/esphome"
 	_ "github.com/gregdel/homed/lib/components/homed_temperature"
 	_ "github.com/gregdel/homed/lib/components/humidity"
+	_ "github.com/gregdel/homed/lib/components/linky"
 	_ "github.com/gregdel/homed/lib/components/rtl433"
 	_ "github.com/gregdel/homed/lib/components/saswell_trv"
 	_ "github.com/gregdel/homed/lib/components/temperature"
