@@ -13,7 +13,13 @@ import (
 
 const name = "tempd"
 
-const defaultHysteresis = 0.3
+const (
+	defaultHysteresis = 0.3
+	// Max calibration offset
+	trvCalibrationMaxOffset = 15
+	// Allowed calibration threshold before scheduling a new calibration
+	trvCalibrationThreshold = 1
+)
 
 func init() {
 	apps.Register(app())
@@ -310,25 +316,24 @@ func (t *tempd) recalibrateTRVs() {
 			trvMesuredTemperature := TRVTemperature - calibration
 
 			delta := roomTemperature - trvMesuredTemperature
-			allowedError := 1.0
 
 			// Only keep on decimal of precision
 			delta = math.Round(delta*10) / 10
 
-			if delta < -10 || delta > 10 {
+			if math.Abs(delta) > trvCalibrationMaxOffset {
 				t.logger.Info(
 					"invalid calibration, resetting calibration to 0",
 					append(zapFields, zap.Float64("calibration", delta))...)
 				delta = 0
 			}
 
-			if math.Abs(calibration-delta) > allowedError {
+			if math.Abs(calibration-delta) > trvCalibrationThreshold {
 				t.logger.Info("recalibrating the trv",
 					append(zapFields,
 						zap.Float64("old_calibration", calibration),
 						zap.Float64("new_calibraton", delta),
 						zap.Float64("calibraton_diff", math.Abs(calibration-delta)),
-						zap.Float64("allowed_error", allowedError),
+						zap.Float64("calibration_threshold", trvCalibrationThreshold),
 					)...)
 				err = trv.SetTemperatureCalibration(delta)
 				if err != nil {
