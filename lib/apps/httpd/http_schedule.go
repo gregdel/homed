@@ -69,7 +69,7 @@ func (h *httpd) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	err = sc.SaveSchedule(h.components.SchedulePath(c))
+	err = sc.SaveSchedule(schedule)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
 		return
@@ -102,7 +102,7 @@ func (h *httpd) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, 
 
 	schedule := sc.Schedule()
 	schedule.DefaultValue = d.Value
-	err = sc.SaveSchedule(h.components.SchedulePath(c))
+	err = sc.SaveSchedule(schedule)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
 		return
@@ -137,7 +137,7 @@ func (h *httpd) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = sc.SaveSchedule(h.components.SchedulePath(c))
+	err = sc.SaveSchedule(schedule)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
 		return
@@ -178,7 +178,7 @@ func (h *httpd) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	err = sc.SaveSchedule(h.components.SchedulePath(c))
+	err = sc.SaveSchedule(schedule)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
 		return
@@ -207,7 +207,7 @@ func (h *httpd) httpDeleteScheduleOverride(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = sc.SaveSchedule(h.components.SchedulePath(c))
+	err = sc.SaveSchedule(schedule)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err))
 		return

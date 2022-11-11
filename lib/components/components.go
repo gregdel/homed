@@ -3,10 +3,10 @@ package components
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"sync"
 
 	"github.com/gregdel/homed/lib/config"
+	"github.com/gregdel/homed/lib/schedule"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -19,7 +19,8 @@ type Components struct {
 	byID   map[string]Component
 	byRoom map[string][]string
 
-	devices map[string]*Device
+	schedules map[string]*schedule.Schedule
+	devices   map[string]*Device
 }
 
 // New returns a new Components type
@@ -29,7 +30,8 @@ func New(dataPath string) *Components {
 		byID:     map[string]Component{},
 		byRoom:   map[string][]string{},
 
-		devices: map[string]*Device{},
+		schedules: map[string]*schedule.Schedule{},
+		devices:   map[string]*Device{},
 	}
 }
 
@@ -170,8 +172,19 @@ func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Com
 	component.SetConfig(&cfg)
 
 	if sc, ok := component.(Scheduled); ok {
-		// TODO: check and log the error
-		sc.LoadSchedule(c.SchedulePath(component))
+		schedulePath := schedulePath(c.dataPath, cfg.ScheduleName)
+
+		schedule, ok := c.schedules[cfg.ScheduleName]
+		if !ok {
+			schedule, err = loadSchedule(schedulePath)
+			if err != nil {
+				return nil, err
+			}
+
+			c.schedules[cfg.ScheduleName] = schedule
+		}
+
+		sc.SetSchedule(schedule, schedulePath, cfg.ScheduleName)
 	}
 
 	c.mu.Lock()
@@ -186,9 +199,4 @@ func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Com
 	c.mu.Unlock()
 
 	return component, nil
-}
-
-// SchedulePath returns the schedule file path of a component
-func (c *Components) SchedulePath(component Component) string {
-	return filepath.Join(c.dataPath, component.ID()+".yaml")
 }

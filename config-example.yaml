@@ -30,3 +30,30 @@ devices:
     state_topic: zigbee2mqtt/device_2
     command_topic: zigbee2mqtt/device_2/set/current_heating_setpoint
     friendly_name: Tuya in room 2
+
+- name: homed_temperature_kitchen
+  room: kitchen
+  components:
+  - type: homed_temperature
+    schedule_name: temperature_floor_0
+    internal: true
+    state_topic: home/homed/temperature/rooms/kitchen/state
+    command_topic: home/homed/temperature/rooms/kitchen/command
+
+- name: homed_temperature_living_room
+  room: living_room
+  components:
+  - type: homed_temperature
+    schedule_name: temperature_floor_0
+    internal: true
+    state_topic: home/homed/temperature/rooms/living_romm/state
+    command_topic: home/homed/temperature/rooms/living_room/command
+
+- name: homed_temperature_bedroom
+  room: bedroom
+  components:
+  - type: homed_temperature
+    schedule_name: temperature_bedroom
+    internal: true
+    state_topic: home/homed/temperature/rooms/bedroom/state
+    command_topic: home/homed/temperature/rooms/bedroom/command
