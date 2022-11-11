@@ -37,7 +37,12 @@ export const Components = ({ typesFilter, noCard }) => {
             ? 1
             : 0;
         }
-        return a.roomName < b.roomName ? -1 : a.roomName > b.roomName ? 1 : 0;
+
+        if (a.roomName !== undefined && b.roomName !== undefined) {
+          return a.roomName < b.roomName ? -1 : a.roomName > b.roomName ? 1 : 0;
+        }
+
+        return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
       })
   );
 

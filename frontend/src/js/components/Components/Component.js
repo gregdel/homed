@@ -111,7 +111,7 @@ Component.propTypes = {
   friendlyName: PropTypes.string,
   roomName: PropTypes.string,
   deviceName: PropTypes.string,
-  online: PropTypes.bool.isRequired,
+  online: PropTypes.bool,
   updatedAt: PropTypes.string,
   title: PropTypes.string,
   extra: PropTypes.any,
