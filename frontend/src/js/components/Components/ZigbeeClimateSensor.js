@@ -20,10 +20,12 @@ export const ZigbeeClimateSensor = ({ id }) => {
         <Icon path={mdiWaterPercent} size={1} />
         Humidity: {humidity}%
       </div>
-      <div style={{ display: "flex" }}>
-        <Icon path={mdiGauge} size={1} />
-        Pressure: {pressure}hPa
-      </div>
+      {pressure !== 0 && (
+        <div style={{ display: "flex" }}>
+          <Icon path={mdiGauge} size={1} />
+          Pressure: {pressure}hPa
+        </div>
+      )}
     </div>
   );
 };
