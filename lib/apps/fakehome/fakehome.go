@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"strconv"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -11,11 +12,9 @@ import (
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/boiler"
 	"github.com/gregdel/homed/lib/components/common"
-	status "github.com/gregdel/homed/lib/components/device_status"
-	"github.com/gregdel/homed/lib/components/esphome"
 	saswell "github.com/gregdel/homed/lib/components/saswell_trv"
 	tuya "github.com/gregdel/homed/lib/components/tuya_trv"
-	xiaomi "github.com/gregdel/homed/lib/components/xiaomi_aqara"
+	zClimate "github.com/gregdel/homed/lib/components/zigbee2mqtt/climate_sensor"
 	"github.com/gregdel/homed/lib/config"
 	"go.uber.org/zap"
 )
@@ -140,19 +139,19 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	switch x := component.(type) {
 	case *boiler.Boiler:
 		errUpdate = x.Update(payload)
-		errPublish = fh.publishState(x, nil)
+		errPublish = x.PublishToStateTopic(payload)
 	case *tuya.TuyaTRV:
 		errUpdate = x.Update(payload)
-		errPublish = fh.publishState(x, nil)
+		errPublish = fh.publishStateJSON(x)
 	case *saswell.SaswellTRV:
 		errUpdate = x.Update(payload)
-		errPublish = fh.publishState(x, nil)
-	case *esphome.Light:
+		errPublish = fh.publishStateJSON(x)
+	case *common.BinaryLight:
 		errUpdate = x.Update(payload)
-		errPublish = fh.publishState(x, esphome.NewLightState(x.IsOn()))
-	case *esphome.Switch:
+		errPublish = x.PublishToStateTopic(payload)
+	case *common.Switch:
 		errUpdate = x.Update(payload)
-		errPublish = fh.publishState(x, payload)
+		errPublish = x.PublishToStateTopic(payload)
 	}
 
 	if errUpdate != nil {
@@ -171,23 +170,25 @@ func (fh *FakeHome) updateStates() {
 	}
 
 	var err error
-	for _, component := range fh.components.List() {
+	for i, component := range fh.components.List() {
 		switch c := component.(type) {
-		case *xiaomi.Climate:
+		case *zClimate.Sensor:
 			c.Humidity = 60
-			c.Temp = 18
-			c.Pressure = 1000
-			err = fh.publishState(c, nil)
+			c.Temp = float64((i % 3) + 15)
+			if i%2 == 0 {
+				c.Pressure = 1000
+			}
+			err = fh.publishStateJSON(c)
 		case *tuya.TuyaTRV:
-			c.LocalTemperature = 18
-			err = fh.publishState(c, nil)
+			c.LocalTemperature = float64((i % 5) + 15)
+			err = fh.publishStateJSON(c)
 		case *saswell.SaswellTRV:
-			c.LocalTemperature = 17
-			err = fh.publishState(c, nil)
+			c.LocalTemperature = float64((i % 5) + 15)
+			err = fh.publishStateJSON(c)
 		case *common.PowerMeter:
-			err = fh.publishState(c, []byte("150"))
-		case *status.DeviceStatus:
-			err = fh.publishState(c, []byte("online"))
+			err = c.PublishToStateTopic([]byte(strconv.Itoa((i % 4 * 100))))
+		case *common.DeviceStatus:
+			err = c.PublishToStateTopic([]byte("online"))
 		}
 
 		if err != nil {
@@ -198,19 +199,10 @@ func (fh *FakeHome) updateStates() {
 	}
 }
 
-func (fh *FakeHome) publishState(c components.Component, data interface{}) error {
-	if data == nil {
-		data = c
-	} else {
-		if b, ok := data.([]byte); ok {
-			return c.PublishToStateTopic(b)
-		}
-	}
-
+func (fh *FakeHome) publishStateJSON(c components.Component) error {
 	buf := bytes.Buffer{}
-	if err := json.NewEncoder(&buf).Encode(data); err != nil {
+	if err := json.NewEncoder(&buf).Encode(c); err != nil {
 		return err
 	}
-
 	return c.PublishToStateTopic(buf.Bytes())
 }

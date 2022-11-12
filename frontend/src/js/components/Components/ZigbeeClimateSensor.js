@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import Icon from "@mdi/react";
 import { mdiThermometer, mdiWaterPercent, mdiGauge } from "@mdi/js";
 
-export const XiaomiAqara = ({ id }) => {
+export const ZigbeeClimateSensor = ({ id }) => {
   const { humidity, pressure, temperature } = useSelector(
     (state) => state.components.components.get(id).values
   );
@@ -28,6 +28,6 @@ export const XiaomiAqara = ({ id }) => {
   );
 };
 
-XiaomiAqara.propTypes = {
+ZigbeeClimateSensor.propTypes = {
   id: PropTypes.string.isRequired,
 };

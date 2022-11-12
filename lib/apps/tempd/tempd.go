@@ -189,7 +189,7 @@ func (t *tempd) setBoilerState() {
 
 	boiler := t.boiler
 
-	expectedBoilerState := false
+	shouldTurnOn := false
 
 	for room, controller := range t.rooms {
 		_, ok := t.rising[room]
@@ -249,22 +249,27 @@ func (t *tempd) setBoilerState() {
 
 		if t.rising[room] && (current < max) {
 			t.logger.Debug("boiler should be on", zapFields...)
-			expectedBoilerState = true
+			shouldTurnOn = true
 			break
 		}
 	}
 
-	if boiler.IsOn() == expectedBoilerState {
-		t.logger.Debug("boiler already in the good state", zap.Bool("state", expectedBoilerState))
+	if boiler.IsOn() == shouldTurnOn {
+		t.logger.Debug("boiler already in the good state", zap.Bool("state", shouldTurnOn))
 		return
 	}
 
-	t.logger.Info("changing boiler state", zap.Bool("state", expectedBoilerState))
+	t.logger.Info("changing boiler state", zap.Bool("state", shouldTurnOn))
 
-	err := t.boiler.Set(expectedBoilerState)
+	var err error
+	if shouldTurnOn {
+		err = t.boiler.TurnOn()
+	} else {
+		err = t.boiler.TurnOff()
+	}
 	if err != nil {
 		t.logger.Warn("failed to set boiler state",
-			zap.Bool("state", expectedBoilerState), zap.Error(err))
+			zap.Bool("state", shouldTurnOn), zap.Error(err))
 	}
 }
 

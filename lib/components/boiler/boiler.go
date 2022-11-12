@@ -24,9 +24,7 @@ type Boiler struct {
 
 // NewBoiler returns a new status component
 func NewBoiler() components.Component {
-	return &Boiler{
-		Switch: common.NewSwitch([]byte("ON"), []byte("OFF")),
-	}
+	return &Boiler{}
 }
 
 // Type implements the Component interface
@@ -48,18 +46,8 @@ func (b *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	}
 }
 
-func (b *Boiler) stateFromData(value []byte) bool {
-	data := string(value)
-	return data == "ON"
-}
-
 // WriteCommand implements the Component interface
 func (b *Boiler) WriteCommand(data []byte) error {
-	newState := b.stateFromData(data)
-	if newState == b.On {
-		return nil
-	}
-
 	now := time.Now()
 	if b.LastStateChange == nil {
 		b.LastStateChange = &now
@@ -69,11 +57,5 @@ func (b *Boiler) WriteCommand(data []byte) error {
 		}
 	}
 
-	return b.Set(newState)
-}
-
-// Update implements the Component interface
-func (b *Boiler) Update(value []byte) error {
-	b.On = b.stateFromData(value)
-	return nil
+	return b.Switch.WriteCommand(data)
 }

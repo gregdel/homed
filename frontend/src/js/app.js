@@ -39,19 +39,19 @@ const App = () => (
                   <Components typesFilter={["tuya_trv", "saswell_trv"]} />
                 </Route>
                 <Route path="/lights" exact>
-                  <Components typesFilter={["esphome_light"]} />
+                  <Components typesFilter={["binary_light"]} />
                 </Route>
                 <Route path="/power" exact>
                   <Components typesFilter={["power_meter"]} />
                 </Route>
                 <Route path="/switches" exact>
-                  <Components typesFilter={["esphome_switch"]} />
+                  <Components typesFilter={["switch"]} />
                 </Route>
                 <Route path="/shutters" exact>
                   <Components typesFilter={["roller_shutter"]} />
                 </Route>
-                <Route path="/aqara" exact>
-                  <Components typesFilter={["xiaomi_aqara"]} />
+                <Route path="/climate_sensors" exact>
+                  <Components typesFilter={["zigbee_climate_sensor"]} />
                 </Route>
                 <Route
                   path="/components/:componentId/schedule"

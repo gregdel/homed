@@ -1,15 +1,14 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-
 import PropTypes from "prop-types";
 
-import { mdiLightbulbOnOutline, mdiLightbulbOn } from "@mdi/js";
+import { mdiPower } from "@mdi/js";
 
 import { IconToggle } from "./common/IconToggle";
 
 import { componentUpdate } from "../../actions/components";
 
-export const ESPLight = ({ id }) => {
+export const Switch = ({ id }) => {
   const dispatch = useDispatch();
   const data = useSelector((state) => state.components.components.get(id));
   if (!data) {
@@ -19,20 +18,14 @@ export const ESPLight = ({ id }) => {
   const on = data.values.on;
 
   const toggle = () => {
-    const data = { state: on ? "OFF" : "ON" };
-    dispatch(componentUpdate(id, data));
+    dispatch(componentUpdate(id, on ? "OFF" : "ON"));
   };
 
   return (
-    <IconToggle
-      iconOn={mdiLightbulbOn}
-      iconOff={mdiLightbulbOnOutline}
-      toggle={toggle}
-      on={on}
-    />
+    <IconToggle iconOn={mdiPower} iconOff={mdiPower} toggle={toggle} on={on} />
   );
 };
 
-ESPLight.propTypes = {
+Switch.propTypes = {
   id: PropTypes.string.isRequired,
 };

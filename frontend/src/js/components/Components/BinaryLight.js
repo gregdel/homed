@@ -1,14 +1,15 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
+
 import PropTypes from "prop-types";
 
-import { mdiPower } from "@mdi/js";
+import { mdiLightbulbOnOutline, mdiLightbulbOn } from "@mdi/js";
 
 import { IconToggle } from "./common/IconToggle";
 
 import { componentUpdate } from "../../actions/components";
 
-export const ESPSwitch = ({ id }) => {
+export const BinaryLight = ({ id }) => {
   const dispatch = useDispatch();
   const data = useSelector((state) => state.components.components.get(id));
   if (!data) {
@@ -22,10 +23,15 @@ export const ESPSwitch = ({ id }) => {
   };
 
   return (
-    <IconToggle iconOn={mdiPower} iconOff={mdiPower} toggle={toggle} on={on} />
+    <IconToggle
+      iconOn={mdiLightbulbOn}
+      iconOff={mdiLightbulbOnOutline}
+      toggle={toggle}
+      on={on}
+    />
   );
 };
 
-ESPSwitch.propTypes = {
+BinaryLight.propTypes = {
   id: PropTypes.string.isRequired,
 };

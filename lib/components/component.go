@@ -11,23 +11,22 @@ type Type string
 
 // Types
 var (
-	TypePowerMeter Type = "power_meter"
-	TypeCounter    Type = "counter"
+	// Common components
+	TypePowerMeter    Type = "power_meter"
+	TypeCounter       Type = "counter"
+	TypeSwitch        Type = "switch"
+	TypeBinaryLight   Type = "binary_light"
+	TypeWifiSignal    Type = "wifi_signal"
+	TypeDeviceStatus  Type = "device_status"
+	TypeRollerShutter Type = "roller_shutter"
 
-	TypeHomedTemperature Type = "homed_temperature"
-	TypeTemperature      Type = "temperature"
-	TypeRTL433           Type = "rtl_433"
-	TypeDeviceStatus     Type = "device_status"
-	TypeHumidity         Type = "humidity"
-	TypeWifiSignal       Type = "wifi_signal"
-	TypeTuyaTRV          Type = "tuya_trv"
-	TypeSaswellTRV       Type = "saswell_trv"
-	TypeBoiler           Type = "boiler"
-	TypeESPHomeLight     Type = "esphome_light"
-	TypeESPHomeSwitch    Type = "esphome_switch"
-	TypeRollerShutter    Type = "roller_shutter"
-	TypeXiaomiAqara      Type = "xiaomi_aqara"
-	TypeLinky            Type = "linky"
+	// Other components
+	TypeHomedTemperature    Type = "homed_temperature"
+	TypeTuyaTRV             Type = "tuya_trv"
+	TypeSaswellTRV          Type = "saswell_trv"
+	TypeBoiler              Type = "boiler"
+	TypeZigbeeClimateSensor Type = "zigbee_climate_sensor"
+	TypeLinky               Type = "linky"
 )
 
 // Component represents a component

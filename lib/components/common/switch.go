@@ -1,64 +1,74 @@
 package common
 
 import (
-	"bytes"
 	"fmt"
+
+	"github.com/gregdel/homed/lib/components"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+func init() {
+	components.Register(components.TypeSwitch, NewSwitch)
+}
 
 // Switch represents a generic switch
 type Switch struct {
 	BinarySensor
-
-	payloadOn  []byte
-	payloadOff []byte
 }
 
 // NewSwitch returns a new switch
-func NewSwitch(payloadOn, payloadOff []byte) Switch {
-	return Switch{
-		payloadOn:  payloadOn,
-		payloadOff: payloadOff,
-	}
+func NewSwitch() components.Component {
+	return &Switch{}
 }
 
-// SetOn implements the Status interface
-func (s *Switch) SetOn() error {
-	return s.WriteCommand(s.payloadOn)
+// TurnOn implements the switch interface
+func (s *Switch) TurnOn() error {
+	return s.WriteCommand([]byte("ON"))
 }
 
-// SetOff implements the Status interface
-func (s *Switch) SetOff() error {
-	return s.WriteCommand(s.payloadOff)
-}
-
-// Set implements the Switch interface
-func (s *Switch) Set(state bool) error {
-	if state {
-		return s.SetOn()
-	}
-
-	return s.SetOff()
+// TurnOff implements the switch interface
+func (s *Switch) TurnOff() error {
+	return s.WriteCommand([]byte("OFF"))
 }
 
 // Toggle implements the Switch interface
 func (s *Switch) Toggle() error {
 	if s.IsOn() {
-		return s.SetOff()
+		return s.TurnOff()
 	}
 
-	return s.SetOn()
+	return s.TurnOn()
 }
 
 // Update implements the Component interface
 func (s *Switch) Update(value []byte) error {
-	switch {
-	case bytes.Equal(value, s.payloadOn):
+	switch string(value) {
+	case "ON":
 		s.On = true
-	case bytes.Equal(value, s.payloadOff):
+	case "OFF":
 		s.On = false
 	default:
 		return fmt.Errorf("switch: invalid payload: %s", value)
 	}
 
 	return nil
+}
+
+// Type implements the Component interface
+func (s *Switch) Type() components.Type {
+	return components.TypeSwitch
+}
+
+// Collectors implements the Component interface
+func (s *Switch) Collectors(labels prometheus.Labels) []prometheus.Collector {
+	return []prometheus.Collector{
+		components.GaugeCollector("switch", labels,
+			func() float64 {
+				if s.On {
+					return 1
+				}
+				return 0
+			},
+		),
+	}
 }

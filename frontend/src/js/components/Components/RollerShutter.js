@@ -15,7 +15,7 @@ import Icon from "@mdi/react";
 
 import { componentUpdate } from "../../actions/components";
 
-export const ESPCover = ({ id }) => {
+export const RollerShutter = ({ id }) => {
   const dispatch = useDispatch();
   const data = useSelector((state) => state.components.components.get(id));
   if (!data) {
@@ -85,6 +85,6 @@ export const ESPCover = ({ id }) => {
   );
 };
 
-ESPCover.propTypes = {
+RollerShutter.propTypes = {
   id: PropTypes.string.isRequired,
 };

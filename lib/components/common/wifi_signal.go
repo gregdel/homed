@@ -1,23 +1,21 @@
-package wifisignal
+package common
 
 import (
 	"github.com/gregdel/homed/lib/components"
-	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 func init() {
-	components.Register(components.TypeWifiSignal, New)
+	components.Register(components.TypeWifiSignal, NewWifiSignal)
 }
 
 // WifiSignal is a component that handles temperatures
 type WifiSignal struct {
-	common.Component
-	common.GenericSensor
+	GenericSensor
 }
 
-// New returns a new wifi signal component
-func New() components.Component {
+// NewWifiSignal returns a new wifi signal component
+func NewWifiSignal() components.Component {
 	return &WifiSignal{}
 }
 

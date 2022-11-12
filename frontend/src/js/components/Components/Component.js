@@ -2,20 +2,20 @@ import React from "react";
 import PropTypes from "prop-types";
 import moment from "moment";
 
+import { Switch } from "./Switch";
+import { PowerMeter } from "./PowerMeter";
+import { BinaryLight } from "./BinaryLight";
+
 import { Boiler } from "./Boiler";
 import { DeviceStatus } from "./DeviceStatus";
-import { ESPCover } from "./EspCover";
-import { ESPLight } from "./EspLight";
-import { ESPSwitch } from "./EspSwitch";
+import { RollerShutter } from "./RollerShutter";
 import { HomedTemperature } from "./HomedTemperature";
 import { Humidity } from "./Humidity";
-import { PowerMeter } from "./PowerMeter";
-import { RTL433 } from "./RTL433";
 import { SaswellTRV } from "./SaswellTRV";
 import { Temperature } from "./Temperature";
 import { TuyaTRV } from "./TuyaTRV";
 import { WifiSignal } from "./WifiSignal";
-import { XiaomiAqara } from "./XiaomiAqara";
+import { ZigbeeClimateSensor } from "./ZigbeeClimateSensor";
 
 import { Card } from "antd";
 
@@ -51,26 +51,23 @@ export const Component = ({
     case "wifi_signal":
       typedComponent = <WifiSignal id={id} />;
       break;
-    case "rtl_433":
-      typedComponent = <RTL433 id={id} />;
-      break;
     case "boiler":
       typedComponent = <Boiler id={id} />;
       break;
-    case "esphome_light":
-      typedComponent = <ESPLight id={id} />;
+    case "binary_light":
+      typedComponent = <BinaryLight id={id} />;
       break;
-    case "esphome_switch":
-      typedComponent = <ESPSwitch id={id} />;
+    case "switch":
+      typedComponent = <Switch id={id} />;
       break;
     case "roller_shutter":
-      typedComponent = <ESPCover id={id} />;
+      typedComponent = <RollerShutter id={id} />;
       break;
     case "homed_temperature":
       typedComponent = <HomedTemperature id={id} />;
       break;
-    case "xiaomi_aqara":
-      typedComponent = <XiaomiAqara id={id} />;
+    case "zigbee_climate_sensor":
+      typedComponent = <ZigbeeClimateSensor id={id} />;
       break;
     case "power_meter":
       typedComponent = <PowerMeter id={id} />;

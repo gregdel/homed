@@ -1,11 +1,10 @@
-package status
+package common
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/gregdel/homed/lib/components"
-	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -15,7 +14,7 @@ func init() {
 
 // DeviceStatus is a component that reports the status of a device
 type DeviceStatus struct {
-	common.Component
+	Component
 	Online bool `json:"online"`
 }
 

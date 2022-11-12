@@ -1,8 +1,32 @@
 package common
 
+import (
+	"github.com/gregdel/homed/lib/components"
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+func init() {
+	components.Register(components.TypeRollerShutter, NewRollerShutter)
+}
+
 // RollerShutter represents a generic roller shutter
 type RollerShutter struct {
 	GenericSensor
+}
+
+// NewRollerShutter returns a new cover component
+func NewRollerShutter() components.Component {
+	return &RollerShutter{}
+}
+
+// Type implements the Component interface
+func (rs *RollerShutter) Type() components.Type {
+	return components.TypeRollerShutter
+}
+
+// Collectors implements the Component interface
+func (rs *RollerShutter) Collectors(labels prometheus.Labels) []prometheus.Collector {
+	return nil
 }
 
 // OpenedAt implements the RollerShutter interface

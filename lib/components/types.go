@@ -4,9 +4,8 @@ package components
 type Switch interface {
 	IsOn() bool
 	Toggle() error
-	SetOn() error
-	SetOff() error
-	Set(state bool) error
+	TurnOn() error
+	TurnOff() error
 }
 
 // Publisher is an interface to publish the component state

@@ -47,7 +47,7 @@ export const AppMenu = () => {
     },
     {
       icon: mdiThermometer,
-      path: "/aqara",
+      path: "/climate_sensors",
       title: "Temperature sensors",
     },
     {
