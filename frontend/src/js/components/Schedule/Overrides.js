@@ -17,8 +17,8 @@ import { deleteScheduleOverride } from "../../actions/schedule";
 export const Overrides = () => {
   const { componentId } = useParams();
 
-  const { overrides } = useSelector((state) =>
-    state.schedules.schedules.get(componentId)
+  const { overrides } = useSelector(
+    (state) => state.schedules.schedules.get(componentId).schedule
   );
 
   return (

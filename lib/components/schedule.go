@@ -14,6 +14,7 @@ const defaultScheduleValue = 14
 // Scheduled is an interface to handle the schedule of a component
 type Scheduled interface {
 	Schedule() *schedule.Schedule
+	ScheduleName() string
 	SetSchedule(*schedule.Schedule, string, string)
 	SaveSchedule(*schedule.Schedule) error
 }

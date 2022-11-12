@@ -12,39 +12,42 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func (h *httpd) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) getScheduledComponent(ps httprouter.Params) (components.Scheduled, error) {
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
-		return
+		return nil, fmt.Errorf("failed to get the component: %s", err)
 	}
 
 	sc, ok := c.(components.Scheduled)
 	if !ok {
-		h.httpError(w, "this component can not be scheduled")
-		return
+		return nil, fmt.Errorf("this component can not be scheduled")
 	}
 
-	h.httpRenderJSON(w, sc.Schedule())
+	return sc, nil
 }
 
-func (h *httpd) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("id")
-	c, err := h.components.Get(componentID)
+func (h *httpd) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	sc, err := h.getScheduledComponent(ps)
 	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
-		return
-	}
-
-	sc, ok := c.(components.Scheduled)
-	if !ok {
 		h.httpError(w, err.Error())
 		return
 	}
 
+	data := struct {
+		Schedule     *schedule.Schedule `json:"schedule"`
+		ScheduleName string             `json:"schedule_name"`
+	}{
+		Schedule:     sc.Schedule(),
+		ScheduleName: sc.ScheduleName(),
+	}
+
+	h.httpRenderJSON(w, data)
+}
+
+func (h *httpd) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	ts := schedule.TimeSlot{}
-	err = json.NewDecoder(r.Body).Decode(&ts)
+	err := json.NewDecoder(r.Body).Decode(&ts)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to decode data: %s", err.Error()))
 		return
@@ -59,6 +62,12 @@ func (h *httpd) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 
 	if weekday < 0 || weekday > 6 {
 		h.httpError(w, "invalid weekday")
+		return
+	}
+
+	sc, err := h.getScheduledComponent(ps)
+	if err != nil {
+		h.httpError(w, err.Error())
 		return
 	}
 
@@ -77,26 +86,19 @@ func (h *httpd) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 }
 
 func (h *httpd) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("id")
-	c, err := h.components.Get(componentID)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
-		return
-	}
-
-	sc, ok := c.(components.Scheduled)
-	if !ok {
-		h.httpError(w, err.Error())
-		return
-	}
-
 	d := struct {
 		Value float64 `json:"value"`
 	}{}
 
-	err = json.NewDecoder(r.Body).Decode(&d)
+	err := json.NewDecoder(r.Body).Decode(&d)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to decode data: %s", err.Error()))
+		return
+	}
+
+	sc, err := h.getScheduledComponent(ps)
+	if err != nil {
+		h.httpError(w, err.Error())
 		return
 	}
 
@@ -110,23 +112,16 @@ func (h *httpd) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, 
 }
 
 func (h *httpd) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("id")
-	c, err := h.components.Get(componentID)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
-		return
-	}
-
-	sc, ok := c.(components.Scheduled)
-	if !ok {
-		h.httpError(w, err.Error())
-		return
-	}
-
 	override := &schedule.Override{}
-	err = json.NewDecoder(r.Body).Decode(override)
+	err := json.NewDecoder(r.Body).Decode(override)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to decode data: %s", err.Error()))
+		return
+	}
+
+	sc, err := h.getScheduledComponent(ps)
+	if err != nil {
+		h.httpError(w, err.Error())
 		return
 	}
 
@@ -145,19 +140,6 @@ func (h *httpd) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request
 }
 
 func (h *httpd) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("id")
-	c, err := h.components.Get(componentID)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err.Error()))
-		return
-	}
-
-	sc, ok := c.(components.Scheduled)
-	if !ok {
-		h.httpError(w, "this component can not be scheduled")
-		return
-	}
-
 	weekdayStr := ps.ByName("weekday")
 	weekday, err := strconv.Atoi(weekdayStr)
 	if err != nil {
@@ -171,6 +153,13 @@ func (h *httpd) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	uuid := ps.ByName("uuid")
+
+	sc, err := h.getScheduledComponent(ps)
+	if err != nil {
+		h.httpError(w, err.Error())
+		return
+	}
+
 	schedule := sc.Schedule()
 	err = schedule.Delete(time.Weekday(weekday), uuid)
 	if err != nil {
@@ -186,16 +175,9 @@ func (h *httpd) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 }
 
 func (h *httpd) httpDeleteScheduleOverride(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	componentID := ps.ByName("id")
-	c, err := h.components.Get(componentID)
+	sc, err := h.getScheduledComponent(ps)
 	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to get the component: %s", err))
-		return
-	}
-
-	sc, ok := c.(components.Scheduled)
-	if !ok {
-		h.httpError(w, "this component can not be scheduled")
+		h.httpError(w, err.Error())
 		return
 	}
 

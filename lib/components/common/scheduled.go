@@ -36,6 +36,11 @@ func (c *ScheduledComponent) Schedule() *schedule.Schedule {
 }
 
 // SetSchedule implements the Scheduled interface
+func (c *ScheduledComponent) ScheduleName() string {
+	return c.scheduleName
+}
+
+// SetSchedule implements the Scheduled interface
 func (c *ScheduledComponent) SetSchedule(s *schedule.Schedule, path, name string) {
 	c.schedule = s
 	c.scheduleName = name

@@ -172,6 +172,10 @@ func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Com
 	component.SetConfig(&cfg)
 
 	if sc, ok := component.(Scheduled); ok {
+		if cfg.ScheduleName == "" {
+			return nil, ErrMissingScheduleName
+		}
+
 		schedulePath := schedulePath(c.dataPath, cfg.ScheduleName)
 
 		schedule, ok := c.schedules[cfg.ScheduleName]

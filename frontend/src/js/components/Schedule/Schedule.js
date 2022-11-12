@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
+import { prettyName } from "../../utils";
 
 import { fetchSchedule, deleteSchedule } from "../../actions/schedule";
 
@@ -23,21 +24,21 @@ export const Schedule = () => {
     dispatch(fetchSchedule(id));
   }, [dispatch]);
 
-  const schedule = useSelector((state) => state.schedules.schedules.get(id));
-  if (!schedule || !schedule.days) {
+  const data = useSelector((state) => state.schedules.schedules.get(id));
+  if (data === undefined) {
     return null;
   }
 
   let items = [];
   for (let i = 0; i < 7; i = i + 1) {
-    items.push(<DailySchedule key={i} day={i} data={schedule.days[i]} />);
+    items.push(<DailySchedule key={i} day={i} data={data.schedule.days[i]} />);
   }
   items.push(items.shift());
 
   return (
     <>
-      <Title>Schedule</Title>
-      <DefaultValue defaultValue={schedule.default_value} />
+      <Title>Schedule: {prettyName(data.schedule_name)}</Title>
+      <DefaultValue defaultValue={data.schedule.default_value} />
       <Divider />
       <Overrides />
       <Divider />
