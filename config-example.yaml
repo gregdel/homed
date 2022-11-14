@@ -1,10 +1,10 @@
 debug: true
-dev: false
-temperature_control: false
-fake_home: false
+dev: true
+temperature_control: true
+fake_home: true
 data_path: ./data
 mqtt:
-  broker: tcp://192.168.100.50:1883
+  broker: tcp://127.0.0.1:1883
 http:
   addr: ":9091"
 
@@ -13,47 +13,94 @@ location:
   longitude: 3.055823770700181
 
 devices:
-- name: device_1
-  room: room_1
+#############################
+# Basement
+#############################
+- name: linky
+  room: basement
   components:
-  - type: temperature
-    mqtt_topic: home/devices/device_1/sensor/temperature/state
-  - type: humidity
-    mqtt_topic: home/devices/device_1/sensor/humidity/state
+  - type: linky
+    state_topic: zigbee2mqtt/linky
+  - type: power_meter
+    state_topic: zigbee2mqtt/linky/apparent_power
+    friendly_name: Linky
+  - type: device_status
+    state_topic: zigbee2mqtt/linky/availability
+
+- name: shelly_boiler
+  room: basement
+  components:
+  - type: boiler
+    state_topic: home/devices/shelly_boiler/switch/relay/state
+    command_topic: home/devices/shelly_boiler/switch/relay/command
   - type: wifi_signal
-    mqtt_topic: home/devices/device_1/sensor/wifi_signal/state
+    state_topic: home/devices/shelly_boiler/sensor/wifi_signal/state
+  - type: device_status
+    state_topic: home/devices/shelly_boiler/status
 
-- name: device_2
-  room: room_2
+- name: washing_machine_switch
+  room: basement
   components:
-  - type: tuya_trv
-    state_topic: zigbee2mqtt/device_2
-    command_topic: zigbee2mqtt/device_2/set/current_heating_setpoint
-    friendly_name: Tuya in room 2
+  - type: switch
+    state_topic: home/devices/washing_machine/switch/relay/state
+    command_topic: home/devices/washing_machine/switch/relay/command
+    friendly_name: Washing machine
+  - type: power_meter
+    state_topic: home/devices/washing_machine/sensor/power/state
+    friendly_name: Washing machine
+  - type: device_status
+    state_topic: home/devices/washing_machine/status
 
-- name: homed_temperature_kitchen
-  room: kitchen
-  components:
-  - type: homed_temperature
-    schedule_name: temperature_floor_0
-    internal: true
-    state_topic: home/homed/temperature/rooms/kitchen/state
-    command_topic: home/homed/temperature/rooms/kitchen/command
-
+#############################
+# Living room
+#############################
 - name: homed_temperature_living_room
   room: living_room
   components:
   - type: homed_temperature
     schedule_name: temperature_floor_0
     internal: true
-    state_topic: home/homed/temperature/rooms/living_romm/state
+    state_topic: home/homed/temperature/rooms/living_room/state
     command_topic: home/homed/temperature/rooms/living_room/command
 
-- name: homed_temperature_bedroom
-  room: bedroom
+- name: climate_sensor_living_room
+  room: living_room
   components:
-  - type: homed_temperature
-    schedule_name: temperature_bedroom
-    internal: true
-    state_topic: home/homed/temperature/rooms/bedroom/state
-    command_topic: home/homed/temperature/rooms/bedroom/command
+  - type: zigbee_climate_sensor
+    friendly_name: Temperature Living Room
+    state_topic: zigbee2mqtt/tmp_living_room
+  - type: device_status
+    state_topic: zigbee2mqtt/tmp_living_room/availability
+
+- name: trv_living_room
+  room: living_room
+  components:
+  - type: zigbee_trv
+    state_topic: zigbee2mqtt/trv_living_room
+    command_topic: zigbee2mqtt/trv_living_room/set
+    friendly_name: Living Room
+  - type: device_status
+    state_topic: zigbee2mqtt/trv_living_room/availability
+
+#############################
+# Stairs
+#############################
+- name: stairs_lights
+  room: stairs
+  components:
+  - type: binary_light
+    state_topic: home/devices/stairs_lights/switch/light_1/state
+    command_topic: home/devices/stairs_lights/switch/light_1/command
+    friendly_name: Floor 1
+  - type: binary_light
+    state_topic: home/devices/stairs_lights/switch/light_2/state
+    command_topic: home/devices/stairs_lights/switch/light_2/command
+    friendly_name: Floor 2
+  - type: power_meter
+    friendly_name: Lights floor 1
+    state_topic: home/devices/stairs_lights/sensor/power_1/state
+  - type: power_meter
+    friendly_name: Lights floor 2
+    state_topic: home/devices/stairs_lights/sensor/power_2/state
+  - type: device_status
+    state_topic: home/devices/stairs_lights/status
