@@ -10,7 +10,9 @@ import (
 	"github.com/gregdel/homed/lib/apps"
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/config"
+	"github.com/mattn/go-colorable"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // Homed needs to be used to load data efficiently
@@ -36,7 +38,13 @@ func New(configPath string, embedFS *embed.FS) (*Homed, error) {
 
 	var err error
 	if config.Debug {
-		homed.logger, err = zap.NewDevelopment()
+		zapEncoder := zap.NewDevelopmentEncoderConfig()
+		zapEncoder.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		homed.logger = zap.New(zapcore.NewCore(
+			zapcore.NewConsoleEncoder(zapEncoder),
+			zapcore.AddSync(colorable.NewColorableStdout()),
+			zapcore.DebugLevel,
+		))
 	} else {
 		homed.logger, err = zap.NewProduction()
 	}

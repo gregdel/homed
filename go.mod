@@ -1,33 +1,35 @@
 module github.com/gregdel/homed
 
-go 1.17
+go 1.19
 
 require (
-	github.com/eclipse/paho.mqtt.golang v1.3.5
+	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/google/uuid v1.3.0
-	github.com/gorilla/websocket v1.4.2
+	github.com/gorilla/websocket v1.5.0
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/kr/pretty v0.2.1 // indirect
-	github.com/prometheus/client_golang v1.12.1
-	github.com/unrolled/render v1.4.1
-	go.uber.org/multierr v1.7.0 // indirect
-	go.uber.org/zap v1.21.0
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	github.com/kelvins/sunrisesunset v0.0.0-20210220141756-39fa1bd816d5
+	github.com/mattn/go-colorable v0.1.13
+	github.com/prometheus/client_golang v1.14.0
+	github.com/unrolled/render v1.5.0
+	go.uber.org/zap v1.23.0
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-require github.com/kelvins/sunrisesunset v0.0.0-20210220141756-39fa1bd816d5
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/fsnotify/fsnotify v1.5.1 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/kr/pretty v0.2.1 // indirect
+	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.32.1 // indirect
-	github.com/prometheus/procfs v0.7.3 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	github.com/prometheus/client_model v0.3.0 // indirect
+	github.com/prometheus/common v0.37.0 // indirect
+	github.com/prometheus/procfs v0.8.0 // indirect
+	go.uber.org/atomic v1.10.0 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
+	golang.org/x/net v0.2.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 )
