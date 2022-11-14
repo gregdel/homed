@@ -36,7 +36,7 @@ const App = () => (
                 <Route path="/all" exact component={Components} />
                 <Route path="/temperature" exact component={Dashboard} />
                 <Route path="/trv" exact>
-                  <Components typesFilter={["tuya_trv", "saswell_trv"]} />
+                  <Components typesFilter={["zigbee_trv"]} />
                 </Route>
                 <Route path="/lights" exact>
                   <Components typesFilter={["binary_light"]} />

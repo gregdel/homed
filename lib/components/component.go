@@ -22,8 +22,7 @@ var (
 
 	// Other components
 	TypeHomedTemperature    Type = "homed_temperature"
-	TypeTuyaTRV             Type = "tuya_trv"
-	TypeSaswellTRV          Type = "saswell_trv"
+	TypeZigbeeTRV           Type = "zigbee_trv"
 	TypeBoiler              Type = "boiler"
 	TypeZigbeeClimateSensor Type = "zigbee_climate_sensor"
 	TypeLinky               Type = "linky"

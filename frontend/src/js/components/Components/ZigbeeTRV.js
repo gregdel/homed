@@ -2,18 +2,21 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
 
-import { Row, Col } from "antd";
+import { Row, Col, Progress } from "antd";
 
 import Icon from "@mdi/react";
-import { mdiBattery, mdiBattery10 } from "@mdi/js";
+import { mdiBattery, mdiSync, mdiBattery10 } from "@mdi/js";
 
-export const SaswellTRV = ({ id }) => {
+export const ZigbeeTRV = ({ id }) => {
   const {
     local_temperature: localTemperature,
     local_temperature_calibration: calibration,
     battery_low: batteryLow,
     current_heating_setpoint: currentHeatingSetpoint,
+    calibration_request_time: calibrationRequestTime,
     system_mode: mode,
+    force: force,
+    position,
   } = useSelector((state) => state.components.components.get(id).values);
 
   return (
@@ -26,11 +29,21 @@ export const SaswellTRV = ({ id }) => {
             rotate={90}
           />
         </Col>
+        {position >= 0 && <Progress percent={position} steps={5} />}
       </Row>
 
       <div>
         <span style={{ fontSize: "4em" }}>{localTemperature}°C</span>
-        <small style={{ marginLeft: "1em" }}>({calibration}°C)</small>
+        <small style={{ marginLeft: "1em" }}>
+          ({calibration}°C
+          {calibrationRequestTime !== null && (
+            <>
+              {" "}
+              <Icon path={mdiSync} size={0.4} />
+            </>
+          )}
+          )
+        </small>
       </div>
 
       <div style={{ fontSize: "1em" }}>
@@ -40,11 +53,16 @@ export const SaswellTRV = ({ id }) => {
           Mode: <strong>{mode}</strong>
         </span>
         <br />
+        {force !== "" && (
+          <span>
+            Force: <strong>{force}</strong>
+          </span>
+        )}
       </div>
     </>
   );
 };
 
-SaswellTRV.propTypes = {
+ZigbeeTRV.propTypes = {
   id: PropTypes.string.isRequired,
 };

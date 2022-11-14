@@ -2,6 +2,7 @@ package tempd
 
 import (
 	"context"
+	"errors"
 	"math"
 	"time"
 
@@ -75,9 +76,7 @@ func (t *tempd) init() {
 			t.boiler = component.(components.Switch)
 		case components.TypeHomedTemperature:
 			t.rooms[roomName] = component.(components.TemperatureControllerInternal)
-		case components.TypeSaswellTRV:
-			t.addTrv(roomName, component.(components.TemperatureController))
-		case components.TypeTuyaTRV:
+		case components.TypeZigbeeTRV:
 			t.addTrv(roomName, component.(components.TemperatureController))
 		}
 	}
@@ -124,7 +123,7 @@ func (t *tempd) roomTemperature(room string) float64 {
 			continue
 		}
 
-		if c.Type() == components.TypeTuyaTRV || c.Type() == components.TypeSaswellTRV {
+		if c.Type() == components.TypeZigbeeTRV {
 			// Don't use this for now
 			continue
 		}
@@ -342,8 +341,12 @@ func (t *tempd) recalibrateTRVs() {
 					)...)
 				err = trv.SetTemperatureCalibration(delta)
 				if err != nil {
-					t.logger.Warn("failed to calibrate trv",
-						append(zapFields, zap.Error(err))...)
+					if errors.Is(err, components.ErrOperatingInProgress) {
+						t.logger.Debug("operation already in progress", zapFields...)
+					} else {
+						t.logger.Warn("failed to calibrate trv",
+							append(zapFields, zap.Error(err))...)
+					}
 				}
 			}
 

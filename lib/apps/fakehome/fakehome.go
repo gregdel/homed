@@ -12,9 +12,8 @@ import (
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/boiler"
 	"github.com/gregdel/homed/lib/components/common"
-	saswell "github.com/gregdel/homed/lib/components/saswell_trv"
-	tuya "github.com/gregdel/homed/lib/components/tuya_trv"
 	zClimate "github.com/gregdel/homed/lib/components/zigbee2mqtt/climate_sensor"
+	"github.com/gregdel/homed/lib/components/zigbee2mqtt/trv"
 	"github.com/gregdel/homed/lib/config"
 	"go.uber.org/zap"
 )
@@ -140,10 +139,7 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	case *boiler.Boiler:
 		errUpdate = x.Update(payload)
 		errPublish = x.PublishToStateTopic(payload)
-	case *tuya.TuyaTRV:
-		errUpdate = x.Update(payload)
-		errPublish = fh.publishStateJSON(x)
-	case *saswell.SaswellTRV:
+	case *trv.TRV:
 		errUpdate = x.Update(payload)
 		errPublish = fh.publishStateJSON(x)
 	case *common.BinaryLight:
@@ -179,14 +175,18 @@ func (fh *FakeHome) updateStates() {
 				c.Pressure = 1000
 			}
 			err = fh.publishStateJSON(c)
-		case *tuya.TuyaTRV:
+		case *trv.TRV:
 			c.LocalTemperature = float64((i % 5) + 15)
-			err = fh.publishStateJSON(c)
-		case *saswell.SaswellTRV:
-			c.LocalTemperature = float64((i % 5) + 15)
+			c.HeatingSetpoint = c.LocalTemperature + 1
+			c.Mode = trv.SystemModeAuto
+			if (i % 2) == 0 {
+				c.LocalTemperatureCalibration = -1
+				c.Position = 60
+				c.Force = trv.ForceModeOpen
+			}
 			err = fh.publishStateJSON(c)
 		case *common.PowerMeter:
-			err = c.PublishToStateTopic([]byte(strconv.Itoa((i % 4 * 100))))
+			err = c.PublishToStateTopic([]byte(strconv.Itoa((i % 3 * 100))))
 		case *common.DeviceStatus:
 			err = c.PublishToStateTopic([]byte("online"))
 		}

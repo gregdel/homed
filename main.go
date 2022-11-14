@@ -12,9 +12,8 @@ import (
 	_ "github.com/gregdel/homed/lib/components/common"
 	_ "github.com/gregdel/homed/lib/components/homed_temperature"
 	_ "github.com/gregdel/homed/lib/components/linky"
-	_ "github.com/gregdel/homed/lib/components/saswell_trv"
-	_ "github.com/gregdel/homed/lib/components/tuya_trv"
 	_ "github.com/gregdel/homed/lib/components/zigbee2mqtt/climate_sensor"
+	_ "github.com/gregdel/homed/lib/components/zigbee2mqtt/trv"
 
 	_ "github.com/gregdel/homed/lib/apps/fakehome"
 	_ "github.com/gregdel/homed/lib/apps/httpd"

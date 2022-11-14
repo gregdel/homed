@@ -11,9 +11,8 @@ import { DeviceStatus } from "./DeviceStatus";
 import { RollerShutter } from "./RollerShutter";
 import { HomedTemperature } from "./HomedTemperature";
 import { Humidity } from "./Humidity";
-import { SaswellTRV } from "./SaswellTRV";
 import { Temperature } from "./Temperature";
-import { TuyaTRV } from "./TuyaTRV";
+import { ZigbeeTRV } from "./ZigbeeTRV";
 import { WifiSignal } from "./WifiSignal";
 import { ZigbeeClimateSensor } from "./ZigbeeClimateSensor";
 
@@ -42,12 +41,6 @@ export const Component = ({
     case "device_status":
       typedComponent = <DeviceStatus id={id} />;
       break;
-    case "tuya_trv":
-      typedComponent = <TuyaTRV id={id} />;
-      break;
-    case "saswell_trv":
-      typedComponent = <SaswellTRV id={id} />;
-      break;
     case "wifi_signal":
       typedComponent = <WifiSignal id={id} />;
       break;
@@ -71,6 +64,9 @@ export const Component = ({
       break;
     case "power_meter":
       typedComponent = <PowerMeter id={id} />;
+      break;
+    case "zigbee_trv":
+      typedComponent = <ZigbeeTRV id={id} />;
       break;
     default:
       typedComponent = <>Unhandled {type}</>;

@@ -29,9 +29,6 @@ type TemperatureController interface {
 	TemperatureTarget() (float64, error)
 	SetTemperatureTarget(float64) error
 
-	TemperatureMode() (TemperatureMode, error)
-	SetTemperatureMode(TemperatureMode) error
-
 	TemperatureCalibration() (float64, error)
 	SetTemperatureCalibration(float64) error
 }
@@ -44,6 +41,9 @@ type TemperatureControllerInternal interface {
 	TemperatureController
 
 	SetTemperature(float64) error
+
+	TemperatureMode() (TemperatureMode, error)
+	SetTemperatureMode(TemperatureMode) error
 
 	SetTemperatureManualTarget(float64) error
 	TemperatureManualTarget() (float64, error)
