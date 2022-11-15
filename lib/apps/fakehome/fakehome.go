@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -35,11 +36,14 @@ type FakeHome struct {
 
 	client    mqtt.Client
 	cmdTopics map[string]components.Component
+
+	cancelFuncs map[string]context.CancelFunc
 }
 
 func newApp() *FakeHome {
 	return &FakeHome{
-		cmdTopics: map[string]components.Component{},
+		cmdTopics:   map[string]components.Component{},
+		cancelFuncs: map[string]context.CancelFunc{},
 	}
 }
 
@@ -139,6 +143,47 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	case *boiler.Boiler:
 		errUpdate = x.Update(payload)
 		errPublish = x.PublishToStateTopic(payload)
+	case *common.RollerShutter:
+		cancel, ok := fh.cancelFuncs[x.ID()]
+		if ok {
+			cancel()
+		}
+
+		var ctx context.Context
+		ctx, cancel = context.WithCancel(context.Background())
+		go func(ctx context.Context, payload []byte) {
+			factor := 1.0
+			switch string(payload) {
+			case "stop":
+				return
+			case "open":
+				break
+			case "close":
+				factor = -1.0
+				break
+			}
+
+			ticker := time.NewTicker(500 * time.Millisecond)
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+					x.Value += 5 * factor
+
+					valueStr := fmt.Sprintf("%.02f", x.Value)
+					if err := x.PublishToStateTopic([]byte(valueStr)); err != nil {
+						return
+					}
+
+					if x.Value == 0 || x.Value == 100 {
+						return
+					}
+				}
+			}
+		}(ctx, payload)
+
+		fh.cancelFuncs[x.ID()] = cancel
 	case *trv.TRV:
 		errUpdate = x.Update(payload)
 		errPublish = fh.publishStateJSON(x)

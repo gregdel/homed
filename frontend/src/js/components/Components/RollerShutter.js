@@ -4,8 +4,6 @@ import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
 
 import {
-  mdiWindowShutter,
-  mdiWindowShutterOpen,
   mdiArrowUpBoldCircleOutline,
   mdiStopCircleOutline,
   mdiArrowDownBoldCircleOutline,
@@ -24,8 +22,6 @@ export const RollerShutter = ({ id }) => {
 
   const percentOpen = data.values.value;
 
-  const icon = percentOpen === 100 ? mdiWindowShutterOpen : mdiWindowShutter;
-
   const handleClick = (action) => {
     dispatch(componentUpdate(id, action));
   };
@@ -42,10 +38,36 @@ export const RollerShutter = ({ id }) => {
     return `Opened at ${percentOpen}%`;
   };
 
+  // The SVG contains a main frame and 4 panels. Display the main frame in any
+  // case and add the panels according to the percentOpen value.
+  var svgContent = "M3 4H21V8H19V20H17V8H7V20H5V8H3V4M8";
+  if (percentOpen < 100) {
+    svgContent += " 9H16V11H8V9M8";
+  }
+  if (percentOpen <= 66) {
+    svgContent += " 12H16V14H8V12M8";
+  }
+  if (percentOpen <= 33) {
+    svgContent += " 15H16V17H8V15M8";
+  }
+  if (percentOpen == 0) {
+    svgContent += " 18H16V20H8V18Z";
+  }
+
   return (
     <>
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <Icon path={icon} size={8} />
+        <svg
+          viewBox="0 0 24 24"
+          role="presentation"
+          style={{
+            width: "12rem",
+            height: "12rem",
+          }}
+        >
+          <path d={svgContent} style={{ fill: "currentcolor" }}></path>
+        </svg>
+
         <div
           style={{
             display: "flex",
