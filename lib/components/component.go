@@ -35,7 +35,6 @@ type Component interface {
 
 	// FriendlyName
 	FriendlyName() string
-	SetFriendlyName(string)
 
 	// Device
 	Device() *Device
@@ -67,8 +66,6 @@ type Component interface {
 	// PublishToStateTopic publishes raw data to the state topic
 	PublishToStateTopic(data []byte) error
 
-	SetStateTopic(string)
-	SetCommandTopic(string)
 	SetMQTTClient(mqtt.Client)
 	MQTTClient() mqtt.Client
 

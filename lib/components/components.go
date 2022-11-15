@@ -161,11 +161,6 @@ func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Com
 
 	}
 
-	// TODO: remove and use the config
-	component.SetCommandTopic(cfg.CommandTopic)
-	component.SetStateTopic(cfg.StateTopic)
-	component.SetFriendlyName(cfg.FriendlyName)
-
 	// TODO: find a better solution
 	component.SetDevice(device)
 	component.SetConfig(&cfg)

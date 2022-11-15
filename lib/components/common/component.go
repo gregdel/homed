@@ -67,6 +67,9 @@ func (c *Component) SetConfig(config *config.Component) {
 	c.config = config
 	c.Hide = config.Hide
 	c.IsInternal = config.Internal
+	c.CommandTopic = config.CommandTopic
+	c.StateTopic = config.StateTopic
+	c.Name = config.FriendlyName
 }
 
 // SetID implements the Component interface
