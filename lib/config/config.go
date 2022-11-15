@@ -35,5 +35,6 @@ type Component struct {
 	StateTopic   string `yaml:"state_topic"`
 	CommandTopic string `yaml:"command_topic"`
 	Internal     bool   `yaml:"internal"`
+	Hide         bool   `yaml:"hide"`
 	ScheduleName string `yaml:"schedule_name"`
 }

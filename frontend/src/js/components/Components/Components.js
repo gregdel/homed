@@ -18,6 +18,10 @@ export const Components = ({ typesFilter, noCard }) => {
           return true;
         }
 
+        if (component.values.hide) {
+          return false;
+        }
+
         return typesFilter.includes(component.type);
       })
       .map(([, value]) => ({

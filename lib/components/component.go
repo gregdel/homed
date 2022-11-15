@@ -69,7 +69,6 @@ type Component interface {
 
 	SetStateTopic(string)
 	SetCommandTopic(string)
-	SetInternal(bool)
 	SetMQTTClient(mqtt.Client)
 	MQTTClient() mqtt.Client
 

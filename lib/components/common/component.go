@@ -13,6 +13,7 @@ type Component struct {
 	CommandTopic string `json:"-"`
 	StateTopic   string `json:"-"`
 	IsInternal   bool   `json:"-"`
+	Hide         bool   `json:"hide"`
 	config       *config.Component
 
 	Dev *components.Device `json:"device"`
@@ -64,11 +65,8 @@ func (c *Component) Config() *config.Component {
 // SetConfig implements the Component interface
 func (c *Component) SetConfig(config *config.Component) {
 	c.config = config
-}
-
-// SetInternal implements the Component interface
-func (c *Component) SetInternal(internal bool) {
-	c.IsInternal = internal
+	c.Hide = config.Hide
+	c.IsInternal = config.Internal
 }
 
 // SetID implements the Component interface

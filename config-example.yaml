@@ -38,6 +38,16 @@ devices:
   - type: device_status
     state_topic: home/devices/shelly_boiler/status
 
+- name: water_heater
+  room: basement
+  components:
+  - type: switch
+    hide: true
+    state_topic: home/devices/water_heater/binary_sensor/provider_signal/state
+    friendly_name: Signal of the provider
+  - type: device_status
+    state_topic: home/devices/water_heater/status
+
 - name: washing_machine_switch
   room: basement
   components:
