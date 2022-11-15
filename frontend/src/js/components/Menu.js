@@ -5,11 +5,12 @@ import { Link, useLocation } from "react-router-dom";
 import Icon from "@mdi/react";
 import {
   mdiHomeThermometer,
-  mdiThermometer,
-  mdiLightningBolt,
-  mdiThermometerLines,
   mdiLightbulb,
+  mdiLightningBolt,
   mdiPower,
+  mdiRadiator,
+  mdiRuler,
+  mdiThermometer,
   mdiWindowShutter,
 } from "@mdi/js";
 
@@ -41,7 +42,7 @@ export const AppMenu = () => {
       icon: mdiHomeThermometer,
     },
     {
-      icon: mdiThermometerLines,
+      icon: mdiRadiator,
       path: "/trv",
       title: "Thermostatic valves",
     },
@@ -69,6 +70,11 @@ export const AppMenu = () => {
       icon: mdiWindowShutter,
       path: "/shutters",
       title: "Roller shutters",
+    },
+    {
+      icon: mdiRuler,
+      path: "/sensors",
+      title: "Sensors",
     },
   ];
 

@@ -19,8 +19,14 @@ devices:
 - name: linky
   room: basement
   components:
-  - type: linky
-    state_topic: zigbee2mqtt/linky
+  - type: generic_sensor
+    state_topic: zigbee2mqtt/linky/current_tier1_summ_delivered
+    friendly_name: Linky HC
+    hide: true
+  - type: generic_sensor
+    state_topic: zigbee2mqtt/linky/current_tier2_summ_delivered
+    friendly_name: Linky HP
+    hide: true
   - type: power_meter
     state_topic: zigbee2mqtt/linky/apparent_power
     friendly_name: Linky
@@ -41,8 +47,7 @@ devices:
 - name: water_heater
   room: basement
   components:
-  - type: switch
-    hide: true
+  - type: binary_sensor
     state_topic: home/devices/water_heater/binary_sensor/provider_signal/state
     friendly_name: Signal of the provider
   - type: device_status

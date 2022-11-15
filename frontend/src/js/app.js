@@ -50,6 +50,11 @@ const App = () => (
                 <Route path="/shutters" exact>
                   <Components typesFilter={["roller_shutter"]} />
                 </Route>
+                <Route path="/sensors" exact>
+                  <Components
+                    typesFilter={["generic_sensor", "binary_sensor"]}
+                  />
+                </Route>
                 <Route path="/climate_sensors" exact>
                   <Components typesFilter={["zigbee_climate_sensor"]} />
                 </Route>

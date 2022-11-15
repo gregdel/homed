@@ -12,6 +12,8 @@ type Type string
 // Types
 var (
 	// Common components
+	TypeGenericSensor Type = "generic_sensor"
+	TypeBinarySensor  Type = "binary_sensor"
 	TypePowerMeter    Type = "power_meter"
 	TypeCounter       Type = "counter"
 	TypeSwitch        Type = "switch"
@@ -25,7 +27,6 @@ var (
 	TypeZigbeeTRV           Type = "zigbee_trv"
 	TypeBoiler              Type = "boiler"
 	TypeZigbeeClimateSensor Type = "zigbee_climate_sensor"
-	TypeLinky               Type = "linky"
 )
 
 // Component represents a component

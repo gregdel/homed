@@ -1,8 +1,6 @@
 package common
 
 import (
-	"fmt"
-
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -38,20 +36,6 @@ func (s *Switch) Toggle() error {
 	}
 
 	return s.TurnOn()
-}
-
-// Update implements the Component interface
-func (s *Switch) Update(value []byte) error {
-	switch string(value) {
-	case "ON":
-		s.On = true
-	case "OFF":
-		s.On = false
-	default:
-		return fmt.Errorf("switch: invalid payload: %s", value)
-	}
-
-	return nil
 }
 
 // Type implements the Component interface

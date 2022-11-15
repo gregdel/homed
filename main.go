@@ -11,7 +11,6 @@ import (
 	_ "github.com/gregdel/homed/lib/components/boiler"
 	_ "github.com/gregdel/homed/lib/components/common"
 	_ "github.com/gregdel/homed/lib/components/homed_temperature"
-	_ "github.com/gregdel/homed/lib/components/linky"
 	_ "github.com/gregdel/homed/lib/components/zigbee2mqtt/climate_sensor"
 	_ "github.com/gregdel/homed/lib/components/zigbee2mqtt/trv"
 

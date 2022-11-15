@@ -9,9 +9,9 @@ import { BinaryLight } from "./BinaryLight";
 import { Boiler } from "./Boiler";
 import { DeviceStatus } from "./DeviceStatus";
 import { RollerShutter } from "./RollerShutter";
+import { GenericSensor } from "./GenericSensor";
+import { BinarySensor } from "./BinarySensor";
 import { HomedTemperature } from "./HomedTemperature";
-import { Humidity } from "./Humidity";
-import { Temperature } from "./Temperature";
 import { ZigbeeTRV } from "./ZigbeeTRV";
 import { WifiSignal } from "./WifiSignal";
 import { ZigbeeClimateSensor } from "./ZigbeeClimateSensor";
@@ -32,11 +32,11 @@ export const Component = ({
 }) => {
   var typedComponent;
   switch (type) {
-    case "temperature":
-      typedComponent = <Temperature id={id} />;
+    case "generic_sensor":
+      typedComponent = <GenericSensor id={id} />;
       break;
-    case "humidity":
-      typedComponent = <Humidity id={id} />;
+    case "binary_sensor":
+      typedComponent = <BinarySensor id={id} />;
       break;
     case "device_status":
       typedComponent = <DeviceStatus id={id} />;
