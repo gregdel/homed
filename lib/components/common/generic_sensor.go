@@ -53,7 +53,7 @@ func (g *GenericSensor) SensorValue() float64 {
 // Collectors implements the Component interface
 func (g *GenericSensor) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
-		components.GaugeCollector("sensor", labels,
+		components.GaugeCollector("generic_sensor", labels,
 			func() float64 { return g.Value },
 		),
 	}

@@ -147,20 +147,6 @@ func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Com
 		return nil, err
 	}
 
-	labels := prometheus.Labels{
-		"device": deviceName,
-		"room":   roomName,
-		"id":     id,
-	}
-
-	collectors := component.Collectors(labels)
-	for _, c := range collectors {
-		if err := prometheus.Register(c); err != nil {
-			return nil, err
-		}
-
-	}
-
 	// TODO: find a better solution
 	component.SetDevice(device)
 	component.SetConfig(&cfg)
@@ -195,6 +181,20 @@ func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Com
 	c.byRoom[roomName] = append(c.byRoom[roomName], id)
 
 	c.mu.Unlock()
+
+	labels := prometheus.Labels{
+		"friendly_name": component.FriendlyName(),
+		"device":        deviceName,
+		"room":          roomName,
+		"id":            id,
+	}
+
+	collectors := component.Collectors(labels)
+	for _, c := range collectors {
+		if err := prometheus.Register(c); err != nil {
+			return nil, err
+		}
+	}
 
 	return component, nil
 }
