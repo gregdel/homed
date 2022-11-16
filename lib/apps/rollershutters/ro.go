@@ -13,16 +13,14 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	name        = "roller_shutters"
-	randomDelay = 20
-)
+const name = "roller_shutters"
 
 func init() {
 	apps.Register(app())
 }
 
 type rollerShutters struct {
+	// TODO: handle multiple roller shutters for @PouuleT
 	rs components.RollerShutter
 
 	config *config.Config
@@ -73,7 +71,12 @@ func (r *rollerShutters) nextEvent(config *apps.Config) (time.Time, bool) {
 	// Random minutes between 0 and random delay
 	s := rand.NewSource(now.Unix())
 	rd := rand.New(s)
-	minutes := time.Duration(rd.Intn(randomDelay)) * time.Minute
+
+	var minutes time.Duration = 0
+	if r.config.RollerShutter.RandomDelay != 0 {
+		minutes = time.Duration(
+			rd.Intn(r.config.RollerShutter.RandomDelay)) * time.Minute
+	}
 
 	sunrise, sunset := r.getSunriseSunset(config, now)
 
@@ -124,6 +127,10 @@ func (r *rollerShutters) update(config *apps.Config) error {
 }
 
 func (r *rollerShutters) Run(ctx context.Context, config *apps.Config) error {
+	if !r.config.RollerShutter.Enabled {
+		return nil
+	}
+
 	if r.rs == nil {
 		if err := r.update(config); err != nil {
 			return err

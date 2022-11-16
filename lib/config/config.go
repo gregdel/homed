@@ -9,6 +9,7 @@ type Config struct {
 	FakeHome           bool               `yaml:"fake_home"`
 	Dev                bool               `yaml:"dev"`
 	TemperatureControl TemperatureControl `yaml:"temperature_control"`
+	RollerShutter      RollerShutter      `yaml:"roller_shutter"`
 	Location           struct {
 		Latitude  float64 `yaml:"latitude"`
 		Longitude float64 `yaml:"longitude"`
@@ -47,4 +48,11 @@ type TemperatureControl struct {
 	CalibrateTRV         bool    `yaml:"calibrate_trv"`
 	CalibrationThreshold float64 `yaml:"calibration_threshold"`
 	CalibrationMaxOffset float64 `yaml:"calibration_max_offset"`
+}
+
+// RollerShutter represents the configuration for the automatic roller shutter
+// daemon.
+type RollerShutter struct {
+	Enabled     bool `yaml:"enabled"`
+	RandomDelay int  `yaml:"random_delay"`
 }

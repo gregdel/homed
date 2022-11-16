@@ -20,6 +20,11 @@ temperature_control:
   # over this value, the calibration will be reseted to 0.
   calibration_max_offset: 15
 
+roller_shutter:
+  enabled: true
+  # Random delay to be added to the sunrise / sunset times
+  random_delay: 20
+
 location:
   latitude: 50.62955091282183
   longitude: 3.055823770700181
