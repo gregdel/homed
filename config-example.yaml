@@ -1,12 +1,24 @@
 debug: true
 dev: true
-temperature_control: true
 fake_home: true
 data_path: ./data
 mqtt:
   broker: tcp://127.0.0.1:1883
 http:
   addr: ":9091"
+
+temperature_control:
+  enabled: true
+  # Hysteresis is used to trigger the boiler based on the current temperature.
+  hysteresis: 0.3
+  # Should we recalibrate the TRV based on external temperature sensors
+  calibrate_trv: true
+  # How much the difference of temperature should be to recalibrate a new
+  # calibration
+  calibration_threshold: 1
+  # Max offset of temperature to recalibrate the TRV. If the calibration is
+  # over this value, the calibration will be reseted to 0.
+  calibration_max_offset: 15
 
 location:
   latitude: 50.62955091282183

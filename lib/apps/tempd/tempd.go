@@ -14,20 +14,12 @@ import (
 
 const name = "tempd"
 
-const (
-	defaultHysteresis = 0.3
-	// Max calibration offset
-	trvCalibrationMaxOffset = 15
-	// Allowed calibration threshold before scheduling a new calibration
-	trvCalibrationThreshold = 1
-)
-
 func init() {
 	apps.Register(app())
 }
 
 type tempd struct {
-	enabled bool
+	config config.TemperatureControl
 
 	logger     *zap.Logger
 	components *components.Components
@@ -35,8 +27,7 @@ type tempd struct {
 	boiler components.Switch
 
 	// Wether we're in a rising or falling phase of the hysteresis algorithm
-	rising     map[string]bool
-	hysteresis float64
+	rising map[string]bool
 
 	rooms map[string]components.TemperatureControllerInternal
 	trvs  map[string][]components.TemperatureController
@@ -55,8 +46,7 @@ func (t *tempd) Name() string {
 }
 
 func (t *tempd) Init(config *config.Config) error {
-	t.enabled = config.TemperatureControl
-	t.hysteresis = defaultHysteresis
+	t.config = config.TemperatureControl
 	return nil
 }
 
@@ -85,12 +75,12 @@ func (t *tempd) init() {
 func (t *tempd) run() {
 	t.updateTemperatureValues()
 	t.updateTemperatureMode()
-	t.recalibrateTRVs()
+	t.setTRVTarget()
 	t.setBoilerState()
 }
 
 func (t *tempd) Run(ctx context.Context, config *apps.Config) error {
-	if !t.enabled {
+	if !t.config.Enabled {
 		config.Logger.Info("app is disabled", zap.String("app_name", name))
 		return nil
 	}
@@ -223,8 +213,8 @@ func (t *tempd) setBoilerState() {
 			continue
 		}
 
-		min := target - t.hysteresis
-		max := target + t.hysteresis
+		min := target - t.config.Hysteresis
+		max := target + t.config.Hysteresis
 
 		zapFields := []zap.Field{
 			zap.String("room", room),
@@ -272,7 +262,51 @@ func (t *tempd) setBoilerState() {
 	}
 }
 
-func (t *tempd) recalibrateTRVs() {
+func (t *tempd) recalibrateTRV(trv components.TemperatureController,
+	roomTemperature, trvTemperature float64, zapFields []zap.Field) error {
+	calibration, err := trv.TemperatureCalibration()
+	if err != nil {
+		return err
+	}
+
+	trvMesuredTemperature := trvTemperature - calibration
+
+	delta := roomTemperature - trvMesuredTemperature
+
+	// Only keep on decimal of precision
+	delta = math.Round(delta*10) / 10
+
+	if math.Abs(delta) > t.config.CalibrationMaxOffset {
+		t.logger.Info(
+			"invalid calibration, resetting calibration to 0",
+			append(zapFields, zap.Float64("calibration", delta))...)
+		delta = 0
+	}
+
+	if math.Abs(calibration-delta) > t.config.CalibrationThreshold {
+		t.logger.Info("recalibrating the trv",
+			append(zapFields,
+				zap.Float64("old_calibration", calibration),
+				zap.Float64("new_calibraton", delta),
+				zap.Float64("calibraton_diff", math.Abs(calibration-delta)),
+				zap.Float64("calibration_threshold",
+					t.config.CalibrationThreshold),
+			)...)
+		err = trv.SetTemperatureCalibration(delta)
+		if err != nil {
+			if errors.Is(err, components.ErrOperatingInProgress) {
+				t.logger.Debug("operation already in progress", zapFields...)
+			} else {
+				t.logger.Warn("failed to calibrate trv",
+					append(zapFields, zap.Error(err))...)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (t *tempd) setTRVTarget() {
 	for room, controller := range t.rooms {
 		target, err := controller.TemperatureTarget()
 		if err != nil {
@@ -303,50 +337,18 @@ func (t *tempd) recalibrateTRVs() {
 			}
 
 			// Compute the new calibration
-			TRVTemperature, err := trv.Temperature()
+			trvTemperature, err := trv.Temperature()
 			if err != nil {
 				t.logger.Warn("failed to get trv temperature",
 					append(zapFields, zap.Error(err))...)
 				continue
 			}
 
-			calibration, err := trv.TemperatureCalibration()
-			if err != nil {
-				t.logger.Warn("failed to get trv temperature calibration",
-					append(zapFields, zap.Error(err))...)
-				continue
-			}
-
-			trvMesuredTemperature := TRVTemperature - calibration
-
-			delta := roomTemperature - trvMesuredTemperature
-
-			// Only keep on decimal of precision
-			delta = math.Round(delta*10) / 10
-
-			if math.Abs(delta) > trvCalibrationMaxOffset {
-				t.logger.Info(
-					"invalid calibration, resetting calibration to 0",
-					append(zapFields, zap.Float64("calibration", delta))...)
-				delta = 0
-			}
-
-			if math.Abs(calibration-delta) > trvCalibrationThreshold {
-				t.logger.Info("recalibrating the trv",
-					append(zapFields,
-						zap.Float64("old_calibration", calibration),
-						zap.Float64("new_calibraton", delta),
-						zap.Float64("calibraton_diff", math.Abs(calibration-delta)),
-						zap.Float64("calibration_threshold", trvCalibrationThreshold),
-					)...)
-				err = trv.SetTemperatureCalibration(delta)
-				if err != nil {
-					if errors.Is(err, components.ErrOperatingInProgress) {
-						t.logger.Debug("operation already in progress", zapFields...)
-					} else {
-						t.logger.Warn("failed to calibrate trv",
-							append(zapFields, zap.Error(err))...)
-					}
+			if t.config.CalibrateTRV {
+				if err := t.recalibrateTRV(trv, roomTemperature, trvTemperature, zapFields); err != nil {
+					t.logger.Warn("failed to calibrate the trv",
+						append(zapFields, zap.Error(err))...)
+					continue
 				}
 			}
 

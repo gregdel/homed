@@ -4,11 +4,11 @@ import "embed"
 
 // Config reprensents the configuration
 type Config struct {
-	Debug              bool   `yaml:"debug"`
-	DataPath           string `yaml:"data_path"`
-	TemperatureControl bool   `yaml:"temperature_control"`
-	FakeHome           bool   `yaml:"fake_home"`
-	Dev                bool   `yaml:"dev"`
+	Debug              bool               `yaml:"debug"`
+	DataPath           string             `yaml:"data_path"`
+	FakeHome           bool               `yaml:"fake_home"`
+	Dev                bool               `yaml:"dev"`
+	TemperatureControl TemperatureControl `yaml:"temperature_control"`
 	Location           struct {
 		Latitude  float64 `yaml:"latitude"`
 		Longitude float64 `yaml:"longitude"`
@@ -28,7 +28,7 @@ type Config struct {
 	EmbedFS *embed.FS `yaml:"-"`
 }
 
-// Component represents the configuration of a component
+// Component represents the configuration of a component.
 type Component struct {
 	Type         string `yaml:"type"`
 	FriendlyName string `yaml:"friendly_name"`
@@ -37,4 +37,14 @@ type Component struct {
 	Internal     bool   `yaml:"internal"`
 	Hide         bool   `yaml:"hide"`
 	ScheduleName string `yaml:"schedule_name"`
+}
+
+// TemperatureControl represents the configuration of the temperature control
+// daemon.
+type TemperatureControl struct {
+	Enabled              bool    `yaml:"enabled"`
+	Hysteresis           float64 `yaml:"hysteresis"`
+	CalibrateTRV         bool    `yaml:"calibrate_trv"`
+	CalibrationThreshold float64 `yaml:"calibration_threshold"`
+	CalibrationMaxOffset float64 `yaml:"calibration_max_offset"`
 }
