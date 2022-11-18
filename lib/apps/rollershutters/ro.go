@@ -13,8 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const name = "roller_shutters"
-
 func init() {
 	apps.Register(app())
 }
@@ -23,6 +21,7 @@ type rollerShutters struct {
 	// TODO: handle multiple roller shutters for @PouuleT
 	rs components.RollerShutter
 
+	logger *zap.Logger
 	config *config.Config
 }
 
@@ -31,7 +30,7 @@ func app() *rollerShutters {
 }
 
 func (r *rollerShutters) Name() string {
-	return name
+	return "roller_shutters"
 }
 
 func (r *rollerShutters) Init(config *config.Config) error {
@@ -50,7 +49,7 @@ func (r *rollerShutters) getSunriseSunset(config *apps.Config, t time.Time) (tim
 
 	sunrise, sunset, err := p.GetSunriseSunset()
 	if err != nil {
-		config.Logger.Error(
+		r.logger.Error(
 			"failed to get sunrise / sunset times, falling back",
 			zap.Error(err),
 		)
@@ -83,7 +82,7 @@ func (r *rollerShutters) nextEvent(config *apps.Config) (time.Time, bool) {
 	// Open the roller shutter 0 to X minutes after the sunrise
 	openTime := sunrise.Add(-1 * minutes)
 	if now.Before(openTime) {
-		config.Logger.Info(
+		r.logger.Info(
 			"settting roller shutter open time",
 			zap.Time("sunrise", sunrise),
 			zap.Duration("offset", -1*minutes),
@@ -94,7 +93,7 @@ func (r *rollerShutters) nextEvent(config *apps.Config) (time.Time, bool) {
 	// Close the roller shutter X minutes after the sunset
 	closeTime := sunset.Add(minutes)
 	if now.Before(closeTime) {
-		config.Logger.Info(
+		r.logger.Info(
 			"settting roller close time",
 			zap.Time("sunset", sunset),
 			zap.Duration("offset", minutes),
@@ -104,7 +103,7 @@ func (r *rollerShutters) nextEvent(config *apps.Config) (time.Time, bool) {
 
 	// We're after the sunset, get the sunrise of the next morning
 	sunrise, _ = r.getSunriseSunset(config, now.Add(24*time.Hour))
-	config.Logger.Info(
+	r.logger.Info(
 		"settting roller shutter open time to the next day",
 		zap.Time("sunrise", sunrise),
 		zap.Duration("offset", -1*minutes),
@@ -127,9 +126,14 @@ func (r *rollerShutters) update(config *apps.Config) error {
 }
 
 func (r *rollerShutters) Run(ctx context.Context, config *apps.Config) error {
+	logger := config.Logger.With(zap.String("app", r.Name()))
+
 	if !r.config.RollerShutter.Enabled {
+		logger.Info("app is disabled")
 		return nil
 	}
+
+	r.logger = logger
 
 	if r.rs == nil {
 		if err := r.update(config); err != nil {
@@ -141,7 +145,7 @@ func (r *rollerShutters) Run(ctx context.Context, config *apps.Config) error {
 		event, open := r.nextEvent(config)
 		duration := event.Sub(time.Now())
 
-		config.Logger.Info("setting next event",
+		logger.Info("setting next event",
 			zap.Time("next_event", event),
 			zap.Duration("sleep_duration", duration),
 		)
@@ -151,21 +155,21 @@ func (r *rollerShutters) Run(ctx context.Context, config *apps.Config) error {
 			return nil
 		case <-time.After(duration):
 			if r.rs.IsOpen() == open {
-				config.Logger.Info("roller shutter already in good state")
+				logger.Info("roller shutter already in good state")
 				continue
 			}
 
 			var err error
 			if open {
-				config.Logger.Info("openning the roller shutters")
+				logger.Info("openning the roller shutters")
 				err = r.rs.Open()
 			} else {
-				config.Logger.Info("closing the roller shutter")
+				logger.Info("closing the roller shutter")
 				err = r.rs.Close()
 			}
 
 			if err != nil {
-				config.Logger.Info("failed to change the roller shutter state", zap.Error(err))
+				logger.Info("failed to change the roller shutter state", zap.Error(err))
 			}
 		}
 	}

@@ -54,7 +54,7 @@ func New(configPath string, embedFS *embed.FS) (*Homed, error) {
 
 	for _, d := range config.Devices {
 		for _, cfg := range d.Components {
-			_, err := homed.components.Add(cfg, d.Room, d.Name)
+			_, err := homed.components.Add(cfg, homed.logger, d.Room, d.Name)
 			if err != nil {
 				return nil, err
 			}

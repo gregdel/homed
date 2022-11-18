@@ -16,8 +16,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const name = "httpd"
-
 func init() {
 	apps.Register(app())
 }
@@ -73,11 +71,11 @@ func (h *httpd) Init(config *config.Config) error {
 }
 
 func (h *httpd) Name() string {
-	return name
+	return "httpd"
 }
 
 func (h *httpd) Run(ctx context.Context, config *apps.Config) error {
-	h.logger = config.Logger
+	h.logger = config.Logger.With(zap.String("app", h.Name()))
 	h.components = config.Components
 
 	go func() {

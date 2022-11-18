@@ -6,6 +6,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/config"
+	"go.uber.org/zap"
 )
 
 // Component represents a base component
@@ -35,6 +36,16 @@ func (c *Component) PostUpdate() error {
 // ReadOnly implements the Component interface
 func (c *Component) ReadOnly() bool {
 	return c.CommandTopic == ""
+}
+
+// LoggerWithFields implements the Component interface
+func (c *Component) LoggerWithFields(logger *zap.Logger) *zap.Logger {
+	return logger.With(
+		zap.String("id", c.Cid),
+		zap.String("friendly_name", c.Name),
+		zap.String("room", c.Dev.Room),
+		zap.String("device", c.Dev.Name),
+	)
 }
 
 // SetCommandTopic implements the Component interface

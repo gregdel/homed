@@ -4,6 +4,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
 )
 
 // Type reprensents a component type
@@ -44,6 +45,9 @@ type Component interface {
 	// Config
 	Config() *config.Component
 	SetConfig(*config.Component)
+
+	// Logger
+	LoggerWithFields(*zap.Logger) *zap.Logger
 
 	// Update is called every time a new mqtt payload is received on the state
 	// topic

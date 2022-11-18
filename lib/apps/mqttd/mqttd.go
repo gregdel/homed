@@ -10,8 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const name = "mqttd"
-
 func init() {
 	apps.Register(app())
 }
@@ -35,7 +33,7 @@ func app() *mqttd {
 }
 
 func (m *mqttd) Name() string {
-	return name
+	return "mqttd"
 }
 
 func (m *mqttd) Init(config *config.Config) error {
@@ -87,7 +85,7 @@ func (m *mqttd) connectionLostHandler(mqtt.Client, error) {
 }
 
 func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
-	m.logger = config.Logger
+	m.logger = config.Logger.With(zap.String("app", m.Name()))
 	m.components = config.Components
 	m.updateChan = config.ComponentUpdated
 
@@ -123,23 +121,15 @@ func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	fields := []zap.Field{
-		zap.String("friendly_name", string(component.FriendlyName())),
-		zap.String("room", component.Device().Room),
-		zap.String("device", component.Device().Name),
-	}
+	logger := component.LoggerWithFields(m.logger)
 
 	if err := component.Update(msg.Payload()); err != nil {
-		m.logger.Warn(
-			"failed to update component",
-			append(fields, zap.Error(err))...)
+		logger.Warn("failed to update component", zap.Error(err))
 		return
 	}
 
 	if err := component.PostUpdate(); err != nil {
-		m.logger.Warn(
-			"failed to run the component post update",
-			append(fields, zap.Error(err))...)
+		logger.Warn("failed to run the component post update", zap.Error(err))
 		return
 	}
 
@@ -149,18 +139,18 @@ func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {
 func (m *mqttd) handleCommand(c mqtt.Client, msg mqtt.Message) {
 	component, ok := m.cmdTopics[msg.Topic()]
 	if !ok {
-		m.logger.Warn("Topic not found", zap.String("topic", msg.Topic()))
+		m.logger.Warn("topic not found", zap.String("topic", msg.Topic()))
 		return
 	}
+
+	logger := component.LoggerWithFields(m.logger)
 
 	if err := component.ExecCommand(msg.Payload()); err != nil {
-		m.logger.Warn(
-			"failed to write component command",
-			zap.String("error", err.Error()))
+		logger.Warn("failed to write component command", zap.Error(err))
 		return
 	}
 
-	m.logger.Debug(
+	logger.Debug(
 		"Writing component command",
 		zap.String("topic", msg.Topic()),
 		zap.String("value", string(msg.Payload())),

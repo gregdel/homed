@@ -19,8 +19,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const appName = "fakehome"
-
 func init() {
 	apps.Register(newApp())
 }
@@ -49,7 +47,7 @@ func newApp() *FakeHome {
 
 // Name implements the App interface
 func (fh *FakeHome) Name() string {
-	return appName
+	return "fakehome"
 }
 
 // Init implements the App interface
@@ -61,12 +59,14 @@ func (fh *FakeHome) Init(c *config.Config) error {
 
 // Run implements the App interface
 func (fh *FakeHome) Run(ctx context.Context, config *apps.Config) error {
+	logger := config.Logger.With(zap.String("app", fh.Name()))
+
 	if !fh.enabled {
-		config.Logger.Info("app is disabled", zap.String("app_name", appName))
+		logger.Info("app is disabled")
 		return nil
 	}
 
-	fh.logger = config.Logger
+	fh.logger = logger
 	fh.components = config.Components
 
 	opts := mqtt.NewClientOptions().
@@ -83,7 +83,7 @@ func (fh *FakeHome) Run(ctx context.Context, config *apps.Config) error {
 		}
 	}
 
-	fh.logger.Info("connecting to MQTT")
+	logger.Info("connecting to MQTT")
 	token := fh.client.Connect()
 	if token.Wait() && token.Error() != nil {
 		return token.Error()
