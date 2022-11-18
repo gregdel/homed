@@ -15,7 +15,7 @@ type ForceMode string
 
 // Force modes
 var (
-	ForceModeUnavailable ForceMode = ""
+	ForceModeUnavailable ForceMode
 	ForceModeNormal      ForceMode = "normal"
 	ForceModeOpen        ForceMode = "open"
 	ForceModeClose       ForceMode = "close"

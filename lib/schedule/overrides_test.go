@@ -287,7 +287,6 @@ func TestOverridesCleanup(t *testing.T) {
 }
 
 func TestOverridesNextTime(t *testing.T) {
-
 	n := now()
 	o1 := &Override{
 		Start: n.Add(1 * time.Hour),

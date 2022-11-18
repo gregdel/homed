@@ -15,9 +15,7 @@ func init() {
 // Helper to set the current time to a fake time
 func setNow(t *Time) {
 	if t == nil {
-		now = func() time.Time {
-			return time.Now()
-		}
+		now = time.Now
 	} else {
 		n := time.Now()
 		ft := time.Date(

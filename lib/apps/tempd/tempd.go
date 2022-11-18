@@ -103,8 +103,8 @@ func (t *tempd) Run(ctx context.Context, config *apps.Config) error {
 
 // Temperature returns the temperature in the room
 func (t *tempd) roomTemperature(room string) float64 {
-	var temperature float64 = 0
-	var found float64 = 0
+	var temperature float64
+	var found float64
 
 	cs := t.components.ListByRoom(room)
 	for _, c := range cs {
@@ -291,8 +291,8 @@ func (t *tempd) recalibrateTRV(trv components.TemperatureController,
 	if math.Abs(calibration-delta) > t.config.CalibrationThreshold {
 		logger.Info("recalibrating the trv",
 			zap.Float64("old_calibration", calibration),
-			zap.Float64("new_calibraton", delta),
-			zap.Float64("calibraton_diff", math.Abs(calibration-delta)),
+			zap.Float64("new_calibration", delta),
+			zap.Float64("calibration_diff", math.Abs(calibration-delta)),
 			zap.Float64("calibration_threshold",
 				t.config.CalibrationThreshold),
 		)
@@ -423,7 +423,10 @@ func (t *tempd) updateTemperatureMode() {
 			}
 
 			previousTarget, err := component.TemperatureTarget()
-			logger.Warn("failed to get the temperature target", zap.Error(err))
+			if err != nil {
+				logger.Warn("failed to get the temperature target", zap.Error(err))
+				continue
+			}
 
 			if err := component.SetTemperatureTarget(previousTarget); err != nil {
 				logger.Warn("failed to set temperature target", zap.Error(err))

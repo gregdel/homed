@@ -78,7 +78,7 @@ func TestTimeBefore(t *testing.T) {
 
 			after := tc.first.After(tc.second)
 			if got == after {
-				t.Errorf("after should be the oposite of before")
+				t.Errorf("after should be the opposite of before")
 			}
 		})
 	}

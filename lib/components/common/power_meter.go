@@ -28,7 +28,7 @@ func (p *PowerMeter) Type() components.Type {
 func (p *PowerMeter) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		components.GaugeCollector("power", labels,
-			func() float64 { return float64(p.Value) },
+			func() float64 { return p.Value },
 		),
 	}
 }

@@ -90,23 +90,15 @@ func (fh *FakeHome) Run(ctx context.Context, config *apps.Config) error {
 	}
 
 	ticker := time.NewTicker(30 * time.Second)
-	var exit bool
 	fh.updateStates()
 	for {
 		select {
 		case <-ctx.Done():
-			exit = true
 			return nil
 		case <-ticker.C:
 			fh.updateStates()
 		}
-
-		if exit {
-			break
-		}
 	}
-
-	return nil
 }
 
 func (fh *FakeHome) mqttOnConnectHandler(c mqtt.Client) {

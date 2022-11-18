@@ -29,7 +29,7 @@ func loadSchedule(path string) (*schedule.Schedule, error) {
 	if err != nil {
 		pathError := &os.PathError{}
 		if errors.As(err, &pathError) {
-			// TODO: should we do this here ? Probabily not :)
+			// TODO: should we do this here ? Probably not :)
 			return s, nil
 		}
 

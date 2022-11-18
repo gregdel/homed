@@ -44,15 +44,6 @@ func New() components.Component {
 	}
 }
 
-// CurrentTarget returns the current target according to the mode
-func (h *HomedTemperature) CurrentTarget() float64 {
-	if h.Mode == components.TemperatureModeAuto {
-		return h.Target
-	}
-
-	return h.ManualTarget
-}
-
 // Type implements the Component interface
 func (h *HomedTemperature) Type() components.Type {
 	return components.TypeHomedTemperature
@@ -121,7 +112,6 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 	h.Mode = data.Mode
 
 	return h.PublishState()
-
 }
 
 // PublishState publishes the mqtt state of the component

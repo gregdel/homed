@@ -2,7 +2,7 @@ package httpd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -45,7 +45,7 @@ func (h *httpd) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to read body: %s", err))
 		return

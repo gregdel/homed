@@ -71,7 +71,7 @@ func (r *rollerShutters) nextEvent(config *apps.Config) (time.Time, bool) {
 	s := rand.NewSource(now.Unix())
 	rd := rand.New(s)
 
-	var minutes time.Duration = 0
+	var minutes time.Duration
 	if r.config.RollerShutter.RandomDelay != 0 {
 		minutes = time.Duration(
 			rd.Intn(r.config.RollerShutter.RandomDelay)) * time.Minute
@@ -83,7 +83,7 @@ func (r *rollerShutters) nextEvent(config *apps.Config) (time.Time, bool) {
 	openTime := sunrise.Add(-1 * minutes)
 	if now.Before(openTime) {
 		r.logger.Info(
-			"settting roller shutter open time",
+			"setting roller shutter open time",
 			zap.Time("sunrise", sunrise),
 			zap.Duration("offset", -1*minutes),
 		)
@@ -94,7 +94,7 @@ func (r *rollerShutters) nextEvent(config *apps.Config) (time.Time, bool) {
 	closeTime := sunset.Add(minutes)
 	if now.Before(closeTime) {
 		r.logger.Info(
-			"settting roller close time",
+			"setting roller close time",
 			zap.Time("sunset", sunset),
 			zap.Duration("offset", minutes),
 		)
@@ -104,7 +104,7 @@ func (r *rollerShutters) nextEvent(config *apps.Config) (time.Time, bool) {
 	// We're after the sunset, get the sunrise of the next morning
 	sunrise, _ = r.getSunriseSunset(config, now.Add(24*time.Hour))
 	r.logger.Info(
-		"settting roller shutter open time to the next day",
+		"setting roller shutter open time to the next day",
 		zap.Time("sunrise", sunrise),
 		zap.Duration("offset", -1*minutes),
 	)
@@ -143,9 +143,9 @@ func (r *rollerShutters) Run(ctx context.Context, config *apps.Config) error {
 
 	for {
 		event, open := r.nextEvent(config)
-		duration := event.Sub(time.Now())
+		duration := time.Until(event)
 
-		logger.Info("setting next event",
+		logger.Info("seting next event",
 			zap.Time("next_event", event),
 			zap.Duration("sleep_duration", duration),
 		)

@@ -111,11 +111,9 @@ func (ds DailySchedule) At(t Time) *TimeSlot {
 				// index
 				return ts
 			}
-		} else {
-			if t.After(ts.Start) {
-				// After the beginning of a time range with no stop
-				ret = ts
-			}
+		} else if t.After(ts.Start) {
+			// After the beginning of a time range with no stop
+			ret = ts
 		}
 	}
 

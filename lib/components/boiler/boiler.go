@@ -51,10 +51,8 @@ func (b *Boiler) WriteCommand(data []byte) error {
 	now := time.Now()
 	if b.LastStateChange == nil {
 		b.LastStateChange = &now
-	} else {
-		if b.LastStateChange.Add(cooldownDuration).Before(now) {
-			return fmt.Errorf("components: boiler: last change is to recent")
-		}
+	} else if b.LastStateChange.Add(cooldownDuration).Before(now) {
+		return fmt.Errorf("components: boiler: last change is to recent")
 	}
 
 	return b.Switch.WriteCommand(data)
