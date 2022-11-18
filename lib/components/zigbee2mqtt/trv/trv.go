@@ -149,6 +149,10 @@ func (t *TRV) TemperatureCalibration() (float64, error) {
 		return 0, components.ErrDeviceOffline
 	}
 
+	if t.CalibrationRequestTime != nil {
+		return 0, components.ErrOperatingInProgress
+	}
+
 	return t.LocalTemperatureCalibration, nil
 }
 

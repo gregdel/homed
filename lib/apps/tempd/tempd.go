@@ -266,6 +266,11 @@ func (t *tempd) recalibrateTRV(trv components.TemperatureController,
 	roomTemperature, trvTemperature float64, zapFields []zap.Field) error {
 	calibration, err := trv.TemperatureCalibration()
 	if err != nil {
+		if errors.Is(err, components.ErrOperatingInProgress) {
+			logger.Debug("calibration already in progress")
+			return nil
+		}
+
 		return err
 	}
 
@@ -280,7 +285,7 @@ func (t *tempd) recalibrateTRV(trv components.TemperatureController,
 		t.logger.Info(
 			"invalid calibration, resetting calibration to 0",
 			append(zapFields, zap.Float64("calibration", delta))...)
-		delta = 0
+		return nil
 	}
 
 	if math.Abs(calibration-delta) > t.config.CalibrationThreshold {
