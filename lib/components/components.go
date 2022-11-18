@@ -183,10 +183,11 @@ func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Com
 	c.mu.Unlock()
 
 	labels := prometheus.Labels{
-		"friendly_name": component.FriendlyName(),
-		"device":        deviceName,
-		"room":          roomName,
-		"id":            id,
+		"friendly_name":  component.FriendlyName(),
+		"component_type": string(component.Type()),
+		"device":         deviceName,
+		"room":           roomName,
+		"id":             id,
 	}
 
 	collectors := component.Collectors(labels)
