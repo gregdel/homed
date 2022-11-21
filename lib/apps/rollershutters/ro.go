@@ -38,7 +38,17 @@ func (r *rollerShutters) Init(config *config.Config) error {
 	return nil
 }
 
-func (r *rollerShutters) getSunriseSunset(config *apps.Config, t time.Time) (time.Time, time.Time) {
+func (r *rollerShutters) getDawnDusk(t time.Time) (time.Time, time.Time) {
+	sunrise, sunset := r.getSunriseSunset(t)
+
+	// Let's say the difference between dawn -> sunrise and sunset -> dusk is
+	// around 40 minutes.
+	d := 40 * time.Minute
+
+	return sunrise.Add(-1 * d), sunset.Add(d)
+}
+
+func (r *rollerShutters) getSunriseSunset(t time.Time) (time.Time, time.Time) {
 	_, utcOffset := t.Zone()
 	p := sunrisesunset.Parameters{
 		Latitude:  r.config.Location.Latitude,
@@ -62,53 +72,63 @@ func (r *rollerShutters) getSunriseSunset(config *apps.Config, t time.Time) (tim
 	return sunrise, sunset
 }
 
+func (r *rollerShutters) isNextEventOpen() bool {
+	now := time.Now()
+	dawn, dusk := r.getDawnDusk(now)
+	maxDelay := time.Duration(r.config.RollerShutter.RandomDelay) * time.Minute
+	return (now.Before(dawn) || now.After(dusk.Add(maxDelay)))
+}
+
 // nextEvent returns the time of the next event and the next state (open/close)
 // as a bool.
-func (r *rollerShutters) nextEvent(config *apps.Config) (time.Time, bool) {
+func (r *rollerShutters) nextEvent(shouldOpen bool) time.Time {
 	now := time.Now()
 
 	// Random minutes between 0 and random delay
 	s := rand.NewSource(now.Unix())
 	rd := rand.New(s)
 
-	var minutes time.Duration
+	var randomDelay time.Duration
 	if r.config.RollerShutter.RandomDelay != 0 {
-		minutes = time.Duration(
+		randomDelay = time.Duration(
 			rd.Intn(r.config.RollerShutter.RandomDelay)) * time.Minute
 	}
+	maxDelay := time.Duration(r.config.RollerShutter.RandomDelay) * time.Minute
 
-	sunrise, sunset := r.getSunriseSunset(config, now)
+	dawn, dusk := r.getDawnDusk(now)
+	if !shouldOpen {
+		// Should close between dusk and dusk + random delay
+		if now.Before(dusk) {
+			return dusk.Add(randomDelay)
+		}
 
-	// Open the roller shutter 0 to X minutes after the sunrise
-	openTime := sunrise.Add(-1 * minutes)
-	if now.Before(openTime) {
-		r.logger.Info(
-			"setting roller shutter open time",
-			zap.Time("sunrise", sunrise),
-			zap.Duration("offset", -1*minutes),
-		)
-		return openTime, true
+		// In the gray area between dusk and dusk + max delay, return dusk + max delay
+		if now.Before(dusk.Add(maxDelay)) {
+			return dusk.Add(maxDelay)
+		}
+
+		// We should never reach this point
+		r.logger.Error("should never reach this code")
 	}
 
-	// Close the roller shutter X minutes after the sunset
-	closeTime := sunset.Add(minutes)
-	if now.Before(closeTime) {
-		r.logger.Info(
-			"setting roller close time",
-			zap.Time("sunset", sunset),
-			zap.Duration("offset", minutes),
-		)
-		return closeTime, false
+	openStart := dawn.Add(-1 * maxDelay)
+	openEnd := dawn
+
+	// Before the dawn + random delay
+	if now.Before(openStart) {
+		return dawn.Add(-1 * randomDelay)
 	}
 
-	// We're after the sunset, get the sunrise of the next morning
-	sunrise, _ = r.getSunriseSunset(config, now.Add(24*time.Hour))
-	r.logger.Info(
-		"setting roller shutter open time to the next day",
-		zap.Time("sunrise", sunrise),
-		zap.Duration("offset", -1*minutes),
-	)
-	return sunrise.Add(-1 * minutes), true
+	// In the gray area between the dawn - random delay and dawn, make sure
+	// we always return the dawn time
+	if now.After(openStart) && now.Before(openEnd) {
+		// Make sure we don't add a random delay in this range
+		return dawn
+	}
+
+	// We're after dusk, get the dawn of the next morning
+	nextDawn, _ := r.getDawnDusk(now.Add(24 * time.Hour))
+	return nextDawn.Add(-1 * randomDelay)
 }
 
 // update finds the roller shutter in the component list
@@ -141,12 +161,15 @@ func (r *rollerShutters) Run(ctx context.Context, config *apps.Config) error {
 		}
 	}
 
+	shouldOpen := r.isNextEventOpen()
+
 	for {
-		event, open := r.nextEvent(config)
+		event := r.nextEvent(shouldOpen)
 		duration := time.Until(event)
 
-		logger.Info("seting next event",
+		logger.Info("setting next event",
 			zap.Time("next_event", event),
+			zap.Bool("should_open", shouldOpen),
 			zap.Duration("sleep_duration", duration),
 		)
 
@@ -154,19 +177,16 @@ func (r *rollerShutters) Run(ctx context.Context, config *apps.Config) error {
 		case <-ctx.Done():
 			return nil
 		case <-time.After(duration):
-			if r.rs.IsOpen() == open {
-				logger.Info("roller shutter already in good state")
-				continue
-			}
-
 			var err error
-			if open {
+			if shouldOpen {
 				logger.Info("openning the roller shutters")
 				err = r.rs.Open()
 			} else {
 				logger.Info("closing the roller shutter")
 				err = r.rs.Close()
 			}
+
+			shouldOpen = !shouldOpen
 
 			if err != nil {
 				logger.Info("failed to change the roller shutter state", zap.Error(err))
