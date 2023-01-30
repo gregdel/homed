@@ -34,6 +34,7 @@ func main() {
 func run() error {
 	var config string
 	flag.StringVar(&config, "config", "./config.yaml", "homed configuration file")
+	flag.Parse()
 
 	homed, err := homed.New(config, &embedFS)
 	if err != nil {
