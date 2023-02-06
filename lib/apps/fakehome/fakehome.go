@@ -162,6 +162,12 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 					return
 				case <-ticker.C:
 					x.Value += 5 * factor
+					if x.Value < 0 {
+						x.Value = 0
+					}
+					if x.Value > 100 {
+						x.Value = 100
+					}
 
 					valueStr := fmt.Sprintf("%.02f", x.Value)
 					if err := x.PublishToStateTopic([]byte(valueStr)); err != nil {
