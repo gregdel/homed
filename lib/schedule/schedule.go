@@ -77,12 +77,7 @@ func (s *Schedule) nextTimeslot() (*TimeSlot, time.Weekday) {
 	return nil, 0
 }
 
-func (s *Schedule) nextTimeFromTimeSlot() *time.Time {
-	ts, wd := s.nextTimeslot()
-	if ts == nil {
-		return nil
-	}
-
+func (s *Schedule) newTime(t Time, wd time.Weekday) *time.Time {
 	now := now()
 	day := wd - now.Weekday()
 	if day < 0 {
@@ -90,35 +85,33 @@ func (s *Schedule) nextTimeFromTimeSlot() *time.Time {
 	}
 
 	days := time.Duration(int(day)*24) * time.Hour
-	hours := time.Duration(ts.Start.Hour-now.Hour()) * time.Hour
-	minutes := time.Duration(ts.Start.Minute-now.Minute()) * time.Minute
-	seconds := time.Duration(ts.Start.Second-now.Second()) * time.Second
+	hours := time.Duration(t.Hour-now.Hour()) * time.Hour
+	minutes := time.Duration(t.Minute-now.Minute()) * time.Minute
+	seconds := time.Duration(t.Second-now.Second()) * time.Second
 	scheduledTime := now.Add(days + hours + minutes + seconds)
 	return &scheduledTime
+
 }
 
-// NextTime returns the timeslot and time of the next timeslot
-func (s *Schedule) NextTime() *time.Time {
-	scheduled := s.nextTimeFromTimeSlot()
-	override := s.Overrides.NextTime()
-
-	if scheduled == nil && override == nil {
+func (s *Schedule) nextTimeFromTimeSlot() *time.Time {
+	ts, wd := s.nextTimeslot()
+	if ts == nil {
 		return nil
 	}
 
-	if scheduled != nil && override != nil {
-		if scheduled.Before(*override) {
-			return scheduled
-		}
+	return s.newTime(ts.Start, wd)
+}
 
-		return override
+// NextChange returns the next time of schedule change
+func (s *Schedule) NextChange() *time.Time {
+	currentSchedule := s.Now()
+	if currentSchedule != nil && currentSchedule.Stop != nil {
+		n := now()
+		weekday := n.Weekday()
+		return s.newTime(*currentSchedule.Stop, weekday)
 	}
 
-	if scheduled == nil {
-		return override
-	}
-
-	return scheduled
+	return s.nextTimeFromTimeSlot()
 }
 
 // Add adds a timeslot to a schedule

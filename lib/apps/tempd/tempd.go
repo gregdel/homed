@@ -395,10 +395,10 @@ func (t *tempd) updateTemperatureMode() {
 			continue
 		}
 
-		if mode == components.TemperatureModeNextTimeBlock {
-			nextTime := schedule.NextTime()
-			if nextTime != nil {
-				if err := component.SetTemperatureModeManualUntil(nextTime); err != nil {
+		if mode == components.TemperatureModeUntilNextChange {
+			nextChange := schedule.NextChange()
+			if nextChange != nil {
+				if err := component.SetTemperatureModeManualUntil(nextChange); err != nil {
 					logger.Warn("failed to set the temperature manual mode until", zap.Error(err))
 					continue
 				}

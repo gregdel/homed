@@ -7,11 +7,11 @@ type TemperatureMode string
 
 // Available modes
 var (
-	TemperatureModeAuto          TemperatureMode = "auto"
-	TemperatureModeFixed         TemperatureMode = "fixed"
-	TemperatureModeDuration      TemperatureMode = "duration"
-	TemperatureModeUntilDate     TemperatureMode = "until_date"
-	TemperatureModeNextTimeBlock TemperatureMode = "next_time_block"
+	TemperatureModeAuto            TemperatureMode = "auto"
+	TemperatureModeFixed           TemperatureMode = "fixed"
+	TemperatureModeDuration        TemperatureMode = "duration"
+	TemperatureModeUntilDate       TemperatureMode = "until_date"
+	TemperatureModeUntilNextChange TemperatureMode = "until_next_change"
 )
 
 // TemperatureGetter is an interface to reprensents something that holds a

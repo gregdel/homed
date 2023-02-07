@@ -97,7 +97,7 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 		if data.ManualUntil == nil {
 			return fmt.Errorf("components: homed_temperature: missing date")
 		}
-	case components.TemperatureModeNextTimeBlock:
+	case components.TemperatureModeUntilNextChange:
 		data.ManualUntil = nil
 	default:
 		return nil

@@ -124,7 +124,7 @@ export const HomedTemperature = ({ id }) => {
       path={mdiAutorenew}
       size={1}
       onClick={() => {
-        sendChange({ mode: "next_time_block", target: newTarget });
+        sendChange({ mode: "until_next_change", target: newTarget });
       }}
     />
   );
@@ -185,11 +185,11 @@ const HeatingMode = ({ mode, date }) => {
     case "until_date":
     case "duration":
       return <>Back to auto {prettyDate}</>;
-    case "next_time_block":
+    case "until_next_change":
       if (date) {
         return <>Back to auto {prettyDate}</>;
       } else {
-        return <>Manual until next time block</>;
+        return <>Manual until next programmed change</>;
       }
     default:
       return null;
