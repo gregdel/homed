@@ -212,11 +212,32 @@ func (fh *FakeHome) updateStates() {
 	for i, component := range fh.components.List() {
 		switch c := component.(type) {
 		case *zClimate.Sensor:
-			c.Humidity = 60
-			c.Temp = float64((i % 3) + 15)
-			if i%2 == 0 {
-				c.Pressure = 1000
+			var isHeating = false
+			if c.Dev != nil {
+				tempController := fh.components.TemperatureController(c.Dev.Room)
+				if tempController != nil {
+					isHeating = tempController.IsHeating()
+				}
 			}
+
+			var factor = -1.0
+			if isHeating {
+				factor = 1
+			}
+
+			c.Humidity = 60
+
+			if c.Temp == 0 {
+				c.Temp = 15
+			} else if c.Temp < 10 {
+				c.Temp = 10
+			} else if c.Temp > 22 {
+				c.Temp = 22
+			} else {
+				c.Temp = c.Temp + (factor * 0.1)
+			}
+
+			c.Pressure = 1000
 			err = fh.publishStateJSON(c)
 		case *trv.TRV:
 			c.LocalTemperature = float64((i % 5) + 15)

@@ -24,18 +24,14 @@ type tempd struct {
 
 	boiler components.Switch
 
-	// Wether we're in a rising or falling phase of the hysteresis algorithm
-	rising map[string]bool
-
 	rooms map[string]components.TemperatureControllerInternal
 	trvs  map[string][]components.TemperatureController
 }
 
 func app() *tempd {
 	return &tempd{
-		rising: map[string]bool{},
-		rooms:  map[string]components.TemperatureControllerInternal{},
-		trvs:   map[string][]components.TemperatureController{},
+		rooms: map[string]components.TemperatureControllerInternal{},
+		trvs:  map[string][]components.TemperatureController{},
 	}
 }
 
@@ -63,7 +59,9 @@ func (t *tempd) init() {
 		case components.TypeBoiler:
 			t.boiler = component.(components.Switch)
 		case components.TypeHomedTemperature:
-			t.rooms[roomName] = component.(components.TemperatureControllerInternal)
+			tempInternal := component.(components.TemperatureControllerInternal)
+			t.rooms[roomName] = tempInternal
+			tempInternal.SetHeating(false)
 		case components.TypeZigbeeTRV:
 			t.addTrv(roomName, component.(components.TemperatureController))
 		}
@@ -182,13 +180,8 @@ func (t *tempd) setBoilerState() {
 
 	shouldTurnOn := false
 
-	for room, controller := range t.rooms {
+	for _, controller := range t.rooms {
 		logger := controller.LoggerWithFields(t.logger)
-
-		_, ok := t.rising[room]
-		if !ok {
-			t.rising[room] = false
-		}
 
 		current, err := controller.Temperature()
 		if err != nil {
@@ -220,25 +213,22 @@ func (t *tempd) setBoilerState() {
 			zap.Float64("target", target),
 		)
 
-		if current > max {
-			if t.rising[room] {
+		if controller.IsHeating() {
+			if current > max {
 				logger.Info("boiler entering the falling phase")
+				err = controller.SetHeating(false)
 			}
-			t.rising[room] = false
-		}
-
-		if current < min {
-			if !t.rising[room] {
+		} else {
+			if current < min {
 				logger.Info("boiler entering the rising phase")
+				err = controller.SetHeating(true)
 			}
-			t.rising[room] = true
+		}
+		if err != nil {
+			logger.Warn("failed to set the component to heating", zap.Error(err))
 		}
 
-		if t.rising[room] && (current < max) {
-			logger.Debug("boiler should be on")
-			shouldTurnOn = true
-			break
-		}
+		shouldTurnOn = shouldTurnOn || controller.IsHeating()
 	}
 
 	logger := t.logger.With(zap.Bool("state", shouldTurnOn))

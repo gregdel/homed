@@ -42,6 +42,9 @@ type TemperatureControllerInternal interface {
 
 	SetTemperature(float64) error
 
+	IsHeating() bool
+	SetHeating(bool) error
+
 	TemperatureMode() (TemperatureMode, error)
 	SetTemperatureMode(TemperatureMode) error
 

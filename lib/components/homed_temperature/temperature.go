@@ -24,6 +24,7 @@ type Data struct {
 	Mode         components.TemperatureMode `json:"mode"`
 	ManualTarget float64                    `json:"manual_target"`
 	ManualUntil  *time.Time                 `json:"manual_until,omitempty"`
+	Heating      bool                       `json:"heating"`
 }
 
 // HomedTemperature is a component that handles temperatures
@@ -39,7 +40,8 @@ func New() components.Component {
 	return &HomedTemperature{
 		ScheduledComponent: *sc,
 		Data: Data{
-			Mode: components.TemperatureModeAuto,
+			Mode:    components.TemperatureModeAuto,
+			Heating: false,
 		},
 	}
 }
@@ -196,4 +198,15 @@ func (h *HomedTemperature) TemperatureCalibration() (float64, error) {
 // SetTemperatureCalibration implements the TemperatureController interface
 func (h *HomedTemperature) SetTemperatureCalibration(c float64) error {
 	return components.ErrNotImplemented
+}
+
+// IsHeating implements the TemperatureController interface
+func (h *HomedTemperature) IsHeating() bool {
+	return h.Heating
+}
+
+// SetHeating implements the TemperatureController interface
+func (h *HomedTemperature) SetHeating(b bool) error {
+	h.Heating = b
+	return h.PublishState()
 }

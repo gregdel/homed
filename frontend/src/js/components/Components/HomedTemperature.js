@@ -13,6 +13,7 @@ import {
   mdiTimerOutline,
   mdiAutorenew,
   mdiAvTimer,
+  mdiRadiator,
 } from "@mdi/js";
 
 import { Card, Slider, Popover, DatePicker, Input } from "antd";
@@ -26,6 +27,7 @@ export const HomedTemperature = ({ id }) => {
       target,
       mode,
       device,
+      heating,
       manual_target: manualTarget,
       manual_until: manualUntil,
     },
@@ -129,7 +131,7 @@ export const HomedTemperature = ({ id }) => {
     />
   );
 
-  let actions = showTimePicker
+  const actions = showTimePicker
     ? [ActionTimer, ActionCalendar, ActionAuto, ActionInfinity]
     : [];
 
@@ -147,8 +149,21 @@ export const HomedTemperature = ({ id }) => {
         <span>{current.toFixed(1)}°C</span>
       </div>
 
-      <div style={{ fontSize: "1em" }}>
-        <span>Heating to {mode === "auto" ? target : manualTarget}°C</span>
+      <div
+        style={{
+          fontSize: "1em",
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <span>Target set to {mode === "auto" ? target : manualTarget}°C</span>
+        <Icon
+          path={mdiRadiator}
+          size={1}
+          style={{
+            color: heating ? "#ff00005e" : "#00000040",
+          }}
+        />
       </div>
 
       <div style={{ fontSize: "1em" }}>

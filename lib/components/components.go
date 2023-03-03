@@ -200,3 +200,34 @@ func (c *Components) Add(cfg config.Component, logger *zap.Logger, roomName, dev
 
 	return component, nil
 }
+
+// TemperatureController returns the temperature controller of the room
+func (c *Components) TemperatureController(room string) TemperatureControllerInternal {
+	c.mu.Lock()
+	ids, ok := c.byRoom[room]
+	c.mu.Unlock()
+	if !ok {
+		return nil
+	}
+
+	for _, id := range ids {
+		component, err := c.Get(id)
+		if err != nil {
+			// TODO: handle this
+			continue
+		}
+
+		if component.Type() != TypeHomedTemperature {
+			continue
+		}
+
+		controller, ok := component.(TemperatureControllerInternal)
+		if !ok {
+			return nil
+		}
+
+		return controller
+	}
+
+	return nil
+}
