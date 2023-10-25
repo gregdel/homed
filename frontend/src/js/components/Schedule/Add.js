@@ -90,7 +90,7 @@ export const Add = ({ day }) => {
               setTarget(e.target.value);
             }}
           >
-            <Input type="number" />
+            <Input type="number" step=".5" />
           </Form.Item>
         </Form>
       </Modal>
