@@ -81,6 +81,7 @@ export const HomedTemperature = ({ id }) => {
   const ActionCalendar = (
     <Popover
       title="Pick a date"
+      trigger={["hover", "click"]}
       content={
         <DatePicker
           showTime
@@ -109,6 +110,7 @@ export const HomedTemperature = ({ id }) => {
   const ActionTimer = (
     <Popover
       title="Select a duration (in hours)"
+      trigger={["hover", "click"]}
       content={
         <Input
           type="number"
