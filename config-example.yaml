@@ -20,14 +20,15 @@ temperature_control:
   # over this value, the calibration will be reseted to 0.
   calibration_max_offset: 15
 
-roller_shutter:
+location: &location
+  latitude: 50.62955091282183
+  longitude: 3.055823770700181
+
+roller_shutter: &roller_shutter
+  location: *location
   enabled: true
   # Random delay to be added to the sunrise / sunset times
   random_delay: 20
-
-location:
-  latitude: 50.62955091282183
-  longitude: 3.055823770700181
 
 devices:
 #############################
@@ -113,6 +114,20 @@ devices:
     friendly_name: Living Room
   - type: device_status
     state_topic: zigbee2mqtt/trv_living_room/availability
+
+#############################
+# Living room
+#############################
+- name: living_room_rs
+  room: living_room
+  components:
+  - type: roller_shutter
+    state_topic: home/devices/living_room_rs/cover/cover/position/state
+    command_topic: home/devices/living_room_rs/cover/cover/command
+    friendly_name: Volet salon
+    params: *roller_shutter
+  - type: device_status
+    state_topic: home/devices/living_room_rs/status
 
 #############################
 # Stairs

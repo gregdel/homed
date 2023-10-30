@@ -1,17 +1,29 @@
-package common
+package rollershutter
 
 import (
 	"github.com/gregdel/homed/lib/components"
+	"github.com/gregdel/homed/lib/components/common"
+	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
 )
 
 func init() {
 	components.Register(components.TypeRollerShutter, NewRollerShutter)
 }
 
+// Params represents the roller shutter params
+type Params struct {
+	Enabled     bool            `yaml:"enabled"`
+	RandomDelay int             `yaml:"random_delay"`
+	Location    config.Location `yaml:"location"`
+}
+
 // RollerShutter represents a generic roller shutter
 type RollerShutter struct {
-	GenericSensor
+	common.GenericSensor
+	Params Params
+	logger *zap.Logger
 }
 
 // NewRollerShutter returns a new cover component

@@ -13,6 +13,7 @@ import (
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/boiler"
 	"github.com/gregdel/homed/lib/components/common"
+	rollershutter "github.com/gregdel/homed/lib/components/roller_shutter"
 	zClimate "github.com/gregdel/homed/lib/components/zigbee2mqtt/climate_sensor"
 	"github.com/gregdel/homed/lib/components/zigbee2mqtt/trv"
 	"github.com/gregdel/homed/lib/config"
@@ -135,7 +136,7 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	case *boiler.Boiler:
 		errUpdate = x.Update(payload)
 		errPublish = x.PublishToStateTopic(payload)
-	case *common.RollerShutter:
+	case *rollershutter.RollerShutter:
 		cancel, ok := fh.cancelFuncs[x.ID()]
 		if ok {
 			cancel()
