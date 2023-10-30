@@ -3,7 +3,7 @@ package homed
 import (
 	"os"
 
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 func readFile(path string, data interface{}) error {

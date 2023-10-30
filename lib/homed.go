@@ -5,6 +5,7 @@ import (
 	"embed"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/gregdel/homed/lib/apps"
@@ -82,13 +83,26 @@ func (h *Homed) Run() error {
 		close(componentChan)
 	}()
 
+	var wg sync.WaitGroup
+	for _, component := range h.components.List() {
+		wg.Add(1)
+		go func(c components.Component) {
+			defer wg.Done()
+			c.Run(ctx, h.logger)
+		}(component)
+	}
+
 	runConfig := &apps.Config{
 		Logger:           h.logger,
 		Components:       h.components,
 		ComponentUpdated: componentChan,
 	}
 
+	// Wait for the apps
 	a.Run(ctx, runConfig)
+
+	// Wait for the components
+	wg.Wait()
 
 	return nil
 }

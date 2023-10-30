@@ -1,6 +1,17 @@
 package config
 
-import "embed"
+import (
+	"embed"
+
+	"gopkg.in/yaml.v3"
+)
+
+// Location represents a location
+type Location struct {
+	Latitude  float64 `yaml:"latitude"`
+	Longitude float64 `yaml:"longitude"`
+	UTCOffset float64 `yaml:"utc_offset"`
+}
 
 // Config reprensents the configuration
 type Config struct {
@@ -10,12 +21,8 @@ type Config struct {
 	Dev                bool               `yaml:"dev"`
 	TemperatureControl TemperatureControl `yaml:"temperature_control"`
 	RollerShutter      RollerShutter      `yaml:"roller_shutter"`
-	Location           struct {
-		Latitude  float64 `yaml:"latitude"`
-		Longitude float64 `yaml:"longitude"`
-		UTCOffset float64 `yaml:"utc_offset"`
-	} `yaml:"location"`
-	MQTT struct {
+	Location           Location           `yaml:"location"`
+	MQTT               struct {
 		Broker string `yaml:"broker"`
 	} `yaml:"mqtt"`
 	HTTP struct {
@@ -31,13 +38,14 @@ type Config struct {
 
 // Component represents the configuration of a component.
 type Component struct {
-	Type         string `yaml:"type"`
-	FriendlyName string `yaml:"friendly_name"`
-	StateTopic   string `yaml:"state_topic"`
-	CommandTopic string `yaml:"command_topic"`
-	Internal     bool   `yaml:"internal"`
-	Hide         bool   `yaml:"hide"`
-	ScheduleName string `yaml:"schedule_name"`
+	Type         string    `yaml:"type"`
+	FriendlyName string    `yaml:"friendly_name"`
+	StateTopic   string    `yaml:"state_topic"`
+	CommandTopic string    `yaml:"command_topic"`
+	Internal     bool      `yaml:"internal"`
+	Hide         bool      `yaml:"hide"`
+	ScheduleName string    `yaml:"schedule_name"`
+	Params       yaml.Node `yaml:"params"`
 }
 
 // TemperatureControl represents the configuration of the temperature control

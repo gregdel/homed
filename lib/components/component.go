@@ -1,6 +1,8 @@
 package components
 
 import (
+	"context"
+
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
@@ -73,6 +75,9 @@ type Component interface {
 
 	SetMQTTClient(mqtt.Client)
 	MQTTClient() mqtt.Client
+
+	// Run runs a goroutine for a component
+	Run(context.Context, *zap.Logger) error
 
 	// ID
 	ID() string

@@ -1,12 +1,14 @@
 package common
 
 import (
+	"context"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/config"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 // Component represents a base component
@@ -21,9 +23,10 @@ type Component struct {
 
 	mqttClient mqtt.Client
 
-	Cid       string     `json:"id"`
-	UpdatedAt *time.Time `json:"updated_at"`
-	Name      string     `json:"friendly_name"`
+	Cid        string     `json:"id"`
+	UpdatedAt  *time.Time `json:"updated_at"`
+	Name       string     `json:"friendly_name"`
+	YAMLParams yaml.Node  `json:"-"`
 }
 
 // PostUpdate implements the Component interface
@@ -81,6 +84,7 @@ func (c *Component) SetConfig(config *config.Component) {
 	c.CommandTopic = config.CommandTopic
 	c.StateTopic = config.StateTopic
 	c.Name = config.FriendlyName
+	c.YAMLParams = config.Params
 }
 
 // SetID implements the Component interface
@@ -169,5 +173,10 @@ func (c *Component) PublishToStateTopic(data []byte) error {
 		return token.Error()
 	}
 
+	return nil
+}
+
+// Run runs a goroutine for a component
+func (c *Component) Run(context.Context, *zap.Logger) error {
 	return nil
 }
