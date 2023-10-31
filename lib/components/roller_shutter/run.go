@@ -59,59 +59,61 @@ func (rs *RollerShutter) Run(ctx context.Context, logger *zap.Logger) error {
 
 func (rs *RollerShutter) isNextEventOpen() bool {
 	now := time.Now()
-	dawn, dusk := rs.getDawnDusk(now)
+	sunrise, sunset := rs.getSunriseSunset(now)
 	maxDelay := time.Duration(rs.Params.RandomDelay) * time.Minute
-	return (now.Before(dawn) || now.After(dusk.Add(maxDelay)))
+	return (now.Before(sunrise) || now.After(sunset.Add(maxDelay)))
 }
 
 // nextEvent returns the time of the next event and the next state (open/close)
 // as a bool.
 func (rs *RollerShutter) nextEvent(shouldOpen bool) time.Time {
 	now := time.Now()
+	sunrise, sunset := rs.getSunriseSunset(now)
 
 	// Random minutes between 0 and random delay
 	s := rand.NewSource(now.Unix())
 	rd := rand.New(s)
 
-	var randomDelay time.Duration
+	var randomDelay, maxDelay time.Duration
 	if rs.Params.RandomDelay != 0 {
 		randomDelay = time.Duration(
-			rd.Intn(rs.Params.RandomDelay)) * time.Minute
+			rd.Intn(rs.Params.RandomDelay),
+		) * time.Minute
+		maxDelay = time.Duration(
+			rs.Params.RandomDelay,
+		) * time.Minute
 	}
-	maxDelay := time.Duration(rs.Params.RandomDelay) * time.Minute
 
-	dawn, dusk := rs.getDawnDusk(now)
 	if !shouldOpen {
-		// Should close between dusk and dusk + random delay
-		if now.Before(dusk) {
-			return dusk.Add(randomDelay)
+		if now.Before(sunset) {
+			return sunset.Add(randomDelay)
 		}
 
-		// In the gray area between dusk and dusk + max delay, return dusk + max delay
-		if now.Before(dusk.Add(maxDelay)) {
-			return dusk.Add(maxDelay)
+		// In the gray area between sunset and (sunset + max delay), return
+		// (sunset + max delay)
+		if now.Before(sunset.Add(maxDelay)) {
+			return sunset.Add(maxDelay)
 		}
 
 		// We should never reach this point
 		rs.logger.Error("should never reach this code")
 	}
 
-	openStart := dawn.Add(-1 * maxDelay)
-	openEnd := dawn
+	openStart := sunrise.Add(-1 * maxDelay)
+	openEnd := sunrise
 
-	// Before the dawn + random delay
+	// Before the (sunrise + max delay)
 	if now.Before(openStart) {
-		return dawn.Add(-1 * randomDelay)
+		return sunrise.Add(-1 * randomDelay)
 	}
 
-	// In the gray area between the dawn - random delay and dawn, make sure
-	// we always return the dawn time
+	// In the gray area between the (sunrise - max delay) and sunrise, make
+	// sure we always return the sunrise time
 	if now.After(openStart) && now.Before(openEnd) {
-		// Make sure we don't add a random delay in this range
-		return dawn
+		return sunrise
 	}
 
-	// We're after dusk, get the dawn of the next morning
-	nextDawn, _ := rs.getDawnDusk(now.Add(24 * time.Hour))
-	return nextDawn.Add(-1 * randomDelay)
+	// We're after sunset, get the sunrise of the next morning
+	sunriseNextDay, _ := rs.getSunriseSunset(now.Add(24 * time.Hour))
+	return sunriseNextDay.Add(-1 * randomDelay)
 }

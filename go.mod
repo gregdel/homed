@@ -7,8 +7,8 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/kelvins/sunrisesunset v0.0.0-20210220141756-39fa1bd816d5
 	github.com/mattn/go-colorable v0.1.13
+	github.com/nathan-osman/go-sunrise v1.1.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/unrolled/render v1.5.0
 	go.uber.org/zap v1.23.0
