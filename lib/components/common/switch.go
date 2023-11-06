@@ -48,7 +48,7 @@ func (s *Switch) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		components.GaugeCollector("switch", labels,
 			func() float64 {
-				if s.On {
+				if s.IsOn() {
 					return 1
 				}
 				return 0

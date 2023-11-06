@@ -3,12 +3,16 @@ package trv
 import (
 	"encoding/json"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/atomic"
 )
+
+var zeroTime time.Time
 
 // Make sure that the module is a temperature controller
 var _ components.TemperatureController = (*TRV)(nil)
@@ -23,27 +27,33 @@ var (
 	calibrationRequestTimeout = 30 * time.Minute
 )
 
+// Data represents the data received from the TRV
+type Data struct {
+	HeatingSetpoint             atomic.Float64 `json:"current_heating_setpoint"`
+	LocalTemperatureCalibration atomic.Float64 `json:"local_temperature_calibration"`
+	LocalTemperature            atomic.Float64 `json:"local_temperature"`
+	BatteryLow                  atomic.Bool    `json:"battery_low"`
+	Mode                        atomic.String  `json:"system_mode"`
+	Force                       atomic.String  `json:"force"`
+	Position                    atomic.Float64 `json:"position"`
+}
+
 // TRV represents a zigbee2mqtt TRV
 type TRV struct {
+	mu sync.RWMutex
+
 	common.Component
+	Data
 
 	// Track when the calibration was requested
-	CalibrationRequestTime *time.Time `json:"calibration_request_time"`
-
-	HeatingSetpoint             float64    `json:"current_heating_setpoint"`
-	LocalTemperatureCalibration float64    `json:"local_temperature_calibration"`
-	LocalTemperature            float64    `json:"local_temperature"`
-	BatteryLow                  bool       `json:"battery_low"`
-	Mode                        SystemMode `json:"system_mode"`
-	Force                       ForceMode  `json:"force"`
-	Position                    float64    `json:"position"`
+	CalibrationRequestTime atomic.Time `json:"calibration_request_time"`
 }
 
 // New returns a new component for Tuya TRVs
 func New() components.Component {
-	return &TRV{
-		Position: -1,
-	}
+	trv := &TRV{}
+	trv.Position.Store(-1)
+	return trv
 }
 
 // Type implements the Component interface
@@ -55,43 +65,44 @@ func (t *TRV) Type() components.Type {
 func (t *TRV) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		components.GaugeCollector("temperature", labels,
-			func() float64 { return t.LocalTemperature },
+			func() float64 { return t.LocalTemperature.Load() },
 		),
 		components.GaugeCollector("temperature_calibration", labels,
-			func() float64 { return t.LocalTemperatureCalibration },
+			func() float64 { return t.LocalTemperatureCalibration.Load() },
 		),
 		components.GaugeCollector("heating_set_point", labels,
-			func() float64 { return t.HeatingSetpoint },
+			func() float64 { return t.HeatingSetpoint.Load() },
 		),
 		components.GaugeCollector("trv_position", labels,
-			func() float64 { return t.Position },
+			func() float64 { return t.Position.Load() },
 		),
 	}
 }
 
 // This is where the ugly shit begins
 func (t *TRV) isSaswell() bool {
-	return t.Force == ForceModeUnavailable
+	return t.Force.Load() == ForceModeUnavailable
 }
 
 // Update implements the Component interface
 func (t *TRV) Update(value []byte) error {
-	oldTemperature := t.LocalTemperature
+	oldTemperature := t.LocalTemperature.Load()
 
-	if err := json.Unmarshal(value, t); err != nil {
+	if err := json.Unmarshal(value, &t.Data); err != nil {
 		return err
 	}
 
 	// The temperature was updated, let's assume it take the calibration into
 	// account
-	if t.LocalTemperature != oldTemperature {
-		t.CalibrationRequestTime = nil
+	if t.LocalTemperature.Load() != oldTemperature {
+		t.CalibrationRequestTime.Store(zeroTime)
 	}
 
 	// After some time, the calibration might not be relevant anymore
-	if (t.CalibrationRequestTime != nil) &&
-		time.Since(*t.CalibrationRequestTime) > calibrationRequestTimeout {
-		t.CalibrationRequestTime = nil
+	requestTime := t.CalibrationRequestTime.Load()
+	if !requestTime.IsZero() &&
+		time.Since(requestTime) > calibrationRequestTimeout {
+		t.CalibrationRequestTime.Store(zeroTime)
 	}
 
 	return nil
@@ -109,20 +120,21 @@ func (t *TRV) PostUpdate() error {
 
 // Temperature implements the TemperatureGetter interface
 func (t *TRV) Temperature() (float64, error) {
-	if !t.Device().Online {
+	if !t.Device().IsOnline() {
 		return 0, components.ErrDeviceOffline
 	}
 
-	return t.LocalTemperature, nil
+	return t.LocalTemperature.Load(), nil
 }
 
 // TemperatureTarget implements the TemperatureController interface
 func (t *TRV) TemperatureTarget() (float64, error) {
+	heatingSetpoint := t.HeatingSetpoint.Load()
 	if t.isSaswell() {
-		return t.HeatingSetpoint - sasswellOffset, nil
+		return heatingSetpoint - sasswellOffset, nil
 	}
 
-	return t.HeatingSetpoint, nil
+	return heatingSetpoint, nil
 }
 
 // SetTemperatureTarget implements the TemperatureController interface
@@ -145,20 +157,20 @@ func (t *TRV) SetTemperatureTarget(temperature float64) error {
 
 // TemperatureCalibration implements the TemperatureController interface
 func (t *TRV) TemperatureCalibration() (float64, error) {
-	if !t.Device().Online {
+	if !t.Device().IsOnline() {
 		return 0, components.ErrDeviceOffline
 	}
 
-	if t.CalibrationRequestTime != nil {
+	if !t.CalibrationRequestTime.Load().IsZero() {
 		return 0, components.ErrOperatingInProgress
 	}
 
-	return t.LocalTemperatureCalibration, nil
+	return t.LocalTemperatureCalibration.Load(), nil
 }
 
 // SetTemperatureCalibration implements the TemperatureController interface
 func (t *TRV) SetTemperatureCalibration(c float64) error {
-	if t.CalibrationRequestTime != nil {
+	if !t.CalibrationRequestTime.Load().IsZero() {
 		return components.ErrOperatingInProgress
 	}
 
@@ -171,8 +183,7 @@ func (t *TRV) SetTemperatureCalibration(c float64) error {
 		return err
 	}
 
-	now := time.Now()
-	t.CalibrationRequestTime = &now
+	t.CalibrationRequestTime.Store(time.Now())
 	return nil
 }
 
@@ -191,21 +202,22 @@ func (t *TRV) write(data interface{}) error {
 }
 
 func (t *TRV) updateMode() error {
-	if t.Force == ForceModeUnavailable {
+	forceMode := t.Force.Load()
+	if forceMode == ForceModeUnavailable {
 		return nil
 	}
 
 	newMode := ForceModeNormal
-	if (t.HeatingSetpoint - t.LocalTemperature) >= forceModeDiff {
+	if (t.HeatingSetpoint.Load() - t.LocalTemperature.Load()) >= forceModeDiff {
 		newMode = ForceModeOpen
 	}
 
-	if t.Force == newMode {
+	if forceMode == newMode {
 		return nil
 	}
 
 	s := struct {
-		Force ForceMode `json:"force"`
+		Force string `json:"force"`
 	}{Force: newMode}
 
 	return t.write(s)

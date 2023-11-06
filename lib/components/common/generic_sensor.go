@@ -6,6 +6,7 @@ import (
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/atomic"
 )
 
 func init() {
@@ -21,7 +22,7 @@ func NewGenericSensor() components.Component {
 type GenericSensor struct {
 	Component
 
-	Value float64 `json:"value"`
+	Value atomic.Float64 `json:"value"`
 }
 
 // Type implements the Component interface
@@ -41,20 +42,20 @@ func (g *GenericSensor) Update(value []byte) error {
 		v = -99999
 	}
 
-	g.Value = v
+	g.Value.Store(v)
 	return nil
 }
 
 // SensorValue implements the Sensor interface
 func (g *GenericSensor) SensorValue() float64 {
-	return g.Value
+	return g.Value.Load()
 }
 
 // Collectors implements the Component interface
 func (g *GenericSensor) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		components.GaugeCollector("generic_sensor", labels,
-			func() float64 { return g.Value },
+			func() float64 { return g.SensorValue() },
 		),
 	}
 }

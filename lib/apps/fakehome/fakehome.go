@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -33,9 +34,9 @@ type FakeHome struct {
 	components *components.Components
 	config     *config.Config
 
-	client    mqtt.Client
-	cmdTopics map[string]components.Component
-
+	client      mqtt.Client
+	mu          sync.RWMutex
+	cmdTopics   map[string]components.Component
 	cancelFuncs map[string]context.CancelFunc
 }
 
@@ -105,7 +106,14 @@ func (fh *FakeHome) Run(ctx context.Context, config *apps.Config) error {
 func (fh *FakeHome) mqttOnConnectHandler(c mqtt.Client) {
 	fh.logger.Info("connected to mqtt")
 
+	fh.mu.RLock()
+	topics := []string{}
 	for topic := range fh.cmdTopics {
+		topics = append(topics, topic)
+	}
+	fh.mu.RUnlock()
+
+	for _, topic := range topics {
 		fh.logger.Info("subscribing to command topic", zap.String("topic", topic))
 		token := fh.client.Subscribe(topic, 0, nil)
 		if token.Wait() && token.Error() != nil {
@@ -122,7 +130,9 @@ func (fh *FakeHome) mqttOnConnectionLostHandler(mqtt.Client, error) {
 }
 
 func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
+	fh.mu.RLock()
 	component, ok := fh.cmdTopics[msg.Topic()]
+	fh.mu.RUnlock()
 	if !ok {
 		fh.logger.Warn("topic not found", zap.String("topic", msg.Topic()))
 		return
@@ -137,10 +147,12 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 		errUpdate = x.Update(payload)
 		errPublish = x.PublishToStateTopic(payload)
 	case *rollershutter.RollerShutter:
+		fh.mu.RLock()
 		cancel, ok := fh.cancelFuncs[x.ID()]
 		if ok {
 			cancel()
 		}
+		fh.mu.RUnlock()
 
 		var ctx context.Context
 		ctx, cancel = context.WithCancel(context.Background())
@@ -162,27 +174,31 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 				case <-ctx.Done():
 					return
 				case <-ticker.C:
-					x.Value += 5 * factor
-					if x.Value < 0 {
-						x.Value = 0
+					value := x.SensorValue()
+					value += 5 * factor
+					if value < 0 {
+						value = 0
 					}
-					if x.Value > 100 {
-						x.Value = 100
+					if value > 100 {
+						value = 100
 					}
+					x.Value.Store(value)
 
-					valueStr := fmt.Sprintf("%.02f", x.Value)
+					valueStr := fmt.Sprintf("%.02f", value)
 					if err := x.PublishToStateTopic([]byte(valueStr)); err != nil {
 						return
 					}
 
-					if x.Value == 0 || x.Value == 100 {
+					if value == 0 || value == 100 {
 						return
 					}
 				}
 			}
 		}(ctx, payload)
 
+		fh.mu.Lock()
 		fh.cancelFuncs[x.ID()] = cancel
+		fh.mu.Unlock()
 	case *trv.TRV:
 		errUpdate = x.Update(payload)
 		errPublish = fh.publishStateJSON(x)
@@ -211,6 +227,11 @@ func (fh *FakeHome) updateStates() {
 
 	var err error
 	for i, component := range fh.components.List() {
+		if component.MQTTClient() == nil || !component.MQTTClient().IsConnected() {
+			fh.logger.Info("mqtt client is not connected, not updating states")
+			return
+		}
+
 		switch c := component.(type) {
 		case *zClimate.Sensor:
 			var isHeating = false
@@ -226,28 +247,30 @@ func (fh *FakeHome) updateStates() {
 				factor = 1
 			}
 
-			c.Humidity = 60
+			c.Humidity.Store(60)
 
-			if c.Temp == 0 {
-				c.Temp = 15
-			} else if c.Temp < 10 {
-				c.Temp = 10
-			} else if c.Temp > 22 {
-				c.Temp = 22
+			temp := c.Temp.Load()
+			if temp == 0 {
+				temp = 15
+			} else if temp < 10 {
+				temp = 10
+			} else if temp > 22 {
+				temp = 22
 			} else {
-				c.Temp = c.Temp + (factor * 0.1)
+				temp = temp + (factor * 0.1)
 			}
+			c.Temp.Store(temp)
 
-			c.Pressure = 1000
+			c.Pressure.Store(1000)
 			err = fh.publishStateJSON(c)
 		case *trv.TRV:
-			c.LocalTemperature = float64((i % 5) + 15)
-			c.HeatingSetpoint = c.LocalTemperature + 1
-			c.Mode = trv.SystemModeAuto
+			c.LocalTemperature.Store(float64((i % 5) + 15))
+			c.HeatingSetpoint.Store(c.LocalTemperature.Load() + 1)
+			c.Mode.Store(trv.SystemModeAuto)
 			if (i % 2) == 0 {
-				c.LocalTemperatureCalibration = -1
-				c.Position = 60
-				c.Force = trv.ForceModeOpen
+				c.LocalTemperatureCalibration.Store(-1)
+				c.Position.Store(60)
+				c.Force.Store(trv.ForceModeOpen)
 			}
 			err = fh.publishStateJSON(c)
 		case *common.PowerMeter:

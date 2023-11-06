@@ -3,11 +3,13 @@ package homedtemperature
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/atomic"
 )
 
 // Make sure that the module is a temperature controller
@@ -19,31 +21,28 @@ func init() {
 
 // Data represents the data of HomedTemperature
 type Data struct {
-	Current      float64                    `json:"current"`
-	Target       float64                    `json:"target"`
-	Mode         components.TemperatureMode `json:"mode"`
-	ManualTarget float64                    `json:"manual_target"`
-	ManualUntil  *time.Time                 `json:"manual_until,omitempty"`
-	Heating      bool                       `json:"heating"`
+	Current      atomic.Float64 `json:"current"`
+	Target       atomic.Float64 `json:"target"`
+	Mode         atomic.String  `json:"mode"`
+	ManualTarget atomic.Float64 `json:"manual_target"`
+	ManualUntil  *time.Time     `json:"manual_until,omitempty"`
+	Heating      atomic.Bool    `json:"heating"`
 }
 
 // HomedTemperature is a component that handles temperatures
 type HomedTemperature struct {
 	common.ScheduledComponent
 
+	mu sync.RWMutex
 	Data
 }
 
 // New returns a new temperature component
 func New() components.Component {
-	sc := common.NewScheduledComponent()
-	return &HomedTemperature{
-		ScheduledComponent: *sc,
-		Data: Data{
-			Mode:    components.TemperatureModeAuto,
-			Heating: false,
-		},
-	}
+	h := &HomedTemperature{}
+	h.Mode.Store(string(components.TemperatureModeAuto))
+	h.Heating.Store(false)
+	return h
 }
 
 // Type implements the Component interface
@@ -55,7 +54,7 @@ func (h *HomedTemperature) Type() components.Type {
 func (h *HomedTemperature) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		components.GaugeCollector("temperature_control_current", labels,
-			func() float64 { return h.Current },
+			func() float64 { return h.Current.Load() },
 		),
 		components.GaugeCollector("temperature_control_target", labels,
 			func() float64 {
@@ -84,7 +83,7 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 
 	switch data.Mode {
 	case components.TemperatureModeAuto:
-		data.ManualTarget = h.Target
+		data.ManualTarget = h.Target.Load()
 		data.ManualUntil = nil
 	case components.TemperatureModeFixed:
 		data.ManualUntil = nil
@@ -109,16 +108,21 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 		return fmt.Errorf("components: homed_temperature: date is in the past")
 	}
 
+	h.mu.Lock()
 	h.ManualUntil = data.ManualUntil
-	h.ManualTarget = data.ManualTarget
-	h.Mode = data.Mode
+	h.mu.Unlock()
+
+	h.ManualTarget.Store(data.ManualTarget)
+	h.Mode.Store(string(data.Mode))
 
 	return h.PublishState()
 }
 
 // PublishState publishes the mqtt state of the component
 func (h *HomedTemperature) PublishState() error {
-	data, err := json.Marshal(h.Data)
+	h.mu.RLock()
+	data, err := json.Marshal(&h.Data)
+	h.mu.RUnlock()
 	if err != nil {
 		return err
 	}
@@ -128,65 +132,71 @@ func (h *HomedTemperature) PublishState() error {
 
 // Update implements the Component interface
 func (h *HomedTemperature) Update(value []byte) error {
-	return json.Unmarshal(value, h)
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return json.Unmarshal(value, &h.Data)
 }
 
 // Temperature implements the TemperatureController interface
 func (h *HomedTemperature) Temperature() (float64, error) {
-	return h.Current, nil
+	return h.Current.Load(), nil
 }
 
 // SetTemperature implements the TemperatureSetter interface
 func (h *HomedTemperature) SetTemperature(temperature float64) error {
-	h.Current = temperature
+	h.Current.Store(temperature)
 	return h.PublishState()
 }
 
 // TemperatureTarget implements the TemperatureController interface
 func (h *HomedTemperature) TemperatureTarget() (float64, error) {
-	if h.Mode == components.TemperatureModeAuto {
-		return h.Target, nil
+	if h.Mode.Load() == string(components.TemperatureModeAuto) {
+		return h.Target.Load(), nil
 	}
 
-	return h.ManualTarget, nil
+	return h.ManualTarget.Load(), nil
 }
 
 // SetTemperatureTarget implements the TemperatureController interface
 func (h *HomedTemperature) SetTemperatureTarget(target float64) error {
-	h.Target = target
+	h.Target.Store(target)
 	return h.PublishState()
 }
 
 // TemperatureMode implements the TemperatureController interface
 func (h *HomedTemperature) TemperatureMode() (components.TemperatureMode, error) {
-	return h.Mode, nil
+	return components.TemperatureMode(h.Mode.Load()), nil
 }
 
 // SetTemperatureMode implements the TemperatureController interface
 func (h *HomedTemperature) SetTemperatureMode(mode components.TemperatureMode) error {
-	h.Mode = mode
+	h.Mode.Store(string(mode))
 	return h.PublishState()
 }
 
 // TemperatureManualTarget implements the TemperatureController interface
 func (h *HomedTemperature) TemperatureManualTarget() (float64, error) {
-	return h.ManualTarget, nil
+	return h.ManualTarget.Load(), nil
 }
 
 // SetTemperatureManualTarget implements the TemperatureController interface
 func (h *HomedTemperature) SetTemperatureManualTarget(target float64) error {
-	h.ManualTarget = target
+	h.ManualTarget.Store(target)
 	return h.PublishState()
 }
 
 // SetTemperatureModeManualUntil implements the TemperatureControllerInternal interface
 func (h *HomedTemperature) SetTemperatureModeManualUntil(until *time.Time) error {
+	h.mu.Lock()
 	h.ManualUntil = until
+	h.mu.Unlock()
 	return h.PublishState()
 }
 
 // TemperatureModeManualUntil implements the TemperatureControllerInternal interface
 func (h *HomedTemperature) TemperatureModeManualUntil() (*time.Time, error) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
 	return h.ManualUntil, nil
 }
 
@@ -202,11 +212,11 @@ func (h *HomedTemperature) SetTemperatureCalibration(c float64) error {
 
 // IsHeating implements the TemperatureController interface
 func (h *HomedTemperature) IsHeating() bool {
-	return h.Heating
+	return h.Heating.Load()
 }
 
 // SetHeating implements the TemperatureController interface
 func (h *HomedTemperature) SetHeating(b bool) error {
-	h.Heating = b
+	h.Heating.Store(b)
 	return h.PublishState()
 }

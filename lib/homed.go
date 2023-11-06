@@ -80,7 +80,6 @@ func (h *Homed) Run() error {
 	go func() {
 		<-sigs
 		cancel()
-		close(componentChan)
 	}()
 
 	var wg sync.WaitGroup

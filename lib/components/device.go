@@ -3,6 +3,8 @@ package components
 import (
 	"fmt"
 	"sync"
+
+	"go.uber.org/atomic"
 )
 
 // Device represents a device
@@ -11,7 +13,7 @@ type Device struct {
 
 	Name       string               `json:"name"`
 	Room       string               `json:"room"`
-	Online     bool                 `json:"online"`
+	Online     atomic.Bool          `json:"online"`
 	Components map[string]Component `json:"-"`
 }
 
@@ -37,15 +39,7 @@ func (d *Device) AddComponent(c Component) error {
 	return nil
 }
 
-// String implements the Stringer interface
-func (d *Device) String() string {
-	var out string
-	out += fmt.Sprintf("Device: %s\n", d.Name)
-	out += fmt.Sprintf("Room:   %s\n", d.Room)
-	out += fmt.Sprintf("Online: %t\n", d.Online)
-	out += fmt.Sprintf("Components:\n")
-	for n := range d.Components {
-		out += fmt.Sprintf("  - %s\n", n)
-	}
-	return out
+// IsOnline tells if the device is online or not
+func (d *Device) IsOnline() bool {
+	return d.Online.Load()
 }

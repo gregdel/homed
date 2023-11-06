@@ -2,6 +2,7 @@ package mqttd
 
 import (
 	"context"
+	"sync"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/apps"
@@ -20,6 +21,7 @@ type mqttd struct {
 	config     *config.Config
 	updateChan chan components.Component
 
+	mu          sync.Mutex
 	client      mqtt.Client
 	stateTopics map[string]components.Component
 	cmdTopics   map[string]components.Component
@@ -85,6 +87,7 @@ func (m *mqttd) connectionLostHandler(mqtt.Client, error) {
 }
 
 func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
+	m.mu.Lock()
 	m.logger = config.Logger.With(zap.String("app", m.Name()))
 	m.components = config.Components
 	m.updateChan = config.ComponentUpdated
@@ -99,6 +102,7 @@ func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
 
 		m.stateTopics[cfg.StateTopic] = c
 	}
+	m.mu.Unlock()
 
 	m.logger.Info("connecting to MQTT")
 	token := m.client.Connect()
@@ -115,7 +119,9 @@ func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
 }
 
 func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {
+	m.mu.Lock()
 	component, ok := m.stateTopics[msg.Topic()]
+	m.mu.Unlock()
 	if !ok {
 		m.logger.Warn("topic not found", zap.String("topic", msg.Topic()))
 		return
@@ -137,7 +143,9 @@ func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {
 }
 
 func (m *mqttd) handleCommand(c mqtt.Client, msg mqtt.Message) {
+	m.mu.Lock()
 	component, ok := m.cmdTopics[msg.Topic()]
+	m.mu.Unlock()
 	if !ok {
 		m.logger.Warn("topic not found", zap.String("topic", msg.Topic()))
 		return

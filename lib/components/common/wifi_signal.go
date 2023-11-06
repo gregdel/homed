@@ -28,7 +28,7 @@ func (s *WifiSignal) Type() components.Type {
 func (s *WifiSignal) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		components.GaugeCollector("wifi_signal", labels,
-			func() float64 { return s.Value },
+			func() float64 { return s.SensorValue() },
 		),
 	}
 }

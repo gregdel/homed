@@ -29,7 +29,7 @@ func (b *BinaryLight) Collectors(labels prometheus.Labels) []prometheus.Collecto
 	return []prometheus.Collector{
 		components.GaugeCollector("binary_light", labels,
 			func() float64 {
-				if b.On {
+				if b.IsOn() {
 					return 1
 				}
 				return 0

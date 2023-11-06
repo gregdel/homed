@@ -16,11 +16,6 @@ type ScheduledComponent struct {
 	schedule     *schedule.Schedule
 }
 
-// NewScheduledComponent returns a new scheduled component
-func NewScheduledComponent() *ScheduledComponent {
-	return &ScheduledComponent{}
-}
-
 // CurrentSchedule implements the Scheduled interface
 func (c *ScheduledComponent) CurrentSchedule() float64 {
 	if c.schedule == nil {
@@ -35,7 +30,7 @@ func (c *ScheduledComponent) Schedule() *schedule.Schedule {
 	return c.schedule
 }
 
-// SetSchedule implements the Scheduled interface
+// ScheduleName implements the Scheduled interface
 func (c *ScheduledComponent) ScheduleName() string {
 	return c.scheduleName
 }

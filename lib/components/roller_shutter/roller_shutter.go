@@ -43,12 +43,12 @@ func (rs *RollerShutter) Collectors(labels prometheus.Labels) []prometheus.Colle
 
 // OpenedAt implements the RollerShutter interface
 func (rs *RollerShutter) OpenedAt() float64 {
-	return rs.Value
+	return rs.SensorValue()
 }
 
 // IsOpen implements the RollerShutter interface
 func (rs *RollerShutter) IsOpen() bool {
-	return rs.Value == 100
+	return rs.SensorValue() == 100
 }
 
 // IsClosed implements the RollerShutter interface

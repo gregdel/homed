@@ -36,7 +36,7 @@ func New(dataPath string) *Components {
 	}
 }
 
-// ComponentJSON represents the JSONn structure of a Component
+// ComponentJSON represents the JSON structure of a Component
 type ComponentJSON struct {
 	Component `json:"values"`
 	Type      string `json:"type"`

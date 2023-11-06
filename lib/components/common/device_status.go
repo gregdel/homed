@@ -6,6 +6,7 @@ import (
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/atomic"
 )
 
 func init() {
@@ -15,7 +16,7 @@ func init() {
 // DeviceStatus is a component that reports the status of a device
 type DeviceStatus struct {
 	Component
-	Online bool `json:"online"`
+	Online atomic.Bool `json:"online"`
 }
 
 // NewDeviceStatus returns a new status component
@@ -33,7 +34,7 @@ func (ds *DeviceStatus) Collectors(labels prometheus.Labels) []prometheus.Collec
 	return []prometheus.Collector{
 		components.GaugeCollector("device_status", labels,
 			func() float64 {
-				if ds.Online {
+				if ds.Online.Load() {
 					return 1
 				}
 				return 0
@@ -46,9 +47,9 @@ func (ds *DeviceStatus) Update(value []byte) error {
 	v := strings.ToLower(string(value))
 	switch v {
 	case "online":
-		ds.Online = true
+		ds.Online.Store(true)
 	case "offline":
-		ds.Online = false
+		ds.Online.Store(false)
 	default:
 		return fmt.Errorf("device status: invalid component status: %s", v)
 	}
@@ -58,7 +59,7 @@ func (ds *DeviceStatus) Update(value []byte) error {
 	}
 
 	// Update the device state
-	ds.Device().Online = ds.Online
+	ds.Device().Online.Store(ds.Online.Load())
 
 	return nil
 }

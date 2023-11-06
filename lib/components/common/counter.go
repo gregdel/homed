@@ -33,7 +33,7 @@ func (c *Counter) Collectors(labels prometheus.Labels) []prometheus.Collector {
 				Name:        "homed_counter",
 				ConstLabels: labels,
 			},
-			func() float64 { return c.Value },
+			func() float64 { return c.SensorValue() },
 		),
 	}
 }

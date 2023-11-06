@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/fs"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -25,6 +26,8 @@ type httpd struct {
 	httpServer *http.Server
 	components *components.Components
 	render     *render.Render
+
+	mu         sync.RWMutex
 	websockets map[string]*websocket.Conn
 }
 
