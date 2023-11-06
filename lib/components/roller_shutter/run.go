@@ -5,11 +5,12 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/gregdel/homed/lib/components"
 	"go.uber.org/zap"
 )
 
 // Run implements the component interface
-func (rs *RollerShutter) Run(ctx context.Context, logger *zap.Logger) error {
+func (rs *RollerShutter) Run(ctx context.Context, logger *zap.Logger, _ *components.Components) error {
 	if err := rs.YAMLParams.Decode(&rs.Params); err != nil {
 		return err
 	}

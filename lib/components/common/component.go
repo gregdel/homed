@@ -22,6 +22,7 @@ type Component struct {
 	IsInternal   bool   `json:"-"`
 	Hide         bool   `json:"hide"`
 	config       *config.Component
+	Events       components.EventHandler `json:"-"`
 
 	Dev *components.Device `json:"device"`
 
@@ -36,6 +37,7 @@ type Component struct {
 // PostUpdate implements the Component interface
 func (c *Component) PostUpdate() error {
 	c.UpdatedAt.Store(time.Now())
+	c.Events.Notify(components.Event{ID: c.ID()})
 	return nil
 }
 
@@ -180,7 +182,18 @@ func (c *Component) PublishToStateTopic(data []byte) error {
 	return nil
 }
 
+// Subscribe implements the Component interface
+func (c *Component) Subscribe(id string, ch chan components.Event) {
+	c.Events.Subscribe(id, ch)
+}
+
+// Notify implements the Component interface
+func (c *Component) Notify() {
+	event := components.Event{ID: c.ID()}
+	c.Events.Notify(event)
+}
+
 // Run runs a goroutine for a component
-func (c *Component) Run(context.Context, *zap.Logger) error {
+func (c *Component) Run(context.Context, *zap.Logger, *components.Components) error {
 	return nil
 }

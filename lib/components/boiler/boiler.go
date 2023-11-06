@@ -6,6 +6,7 @@ import (
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
+	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/atomic"
 )
@@ -20,12 +21,17 @@ func init() {
 type Boiler struct {
 	common.Switch
 
+	Params      config.TemperatureControl
+	controllers []components.TemperatureControllerInternal
+
 	LastStateChange atomic.Time `json:"last_state_change"`
 }
 
 // NewBoiler returns a new status component
 func NewBoiler() components.Component {
-	return &Boiler{}
+	return &Boiler{
+		controllers: []components.TemperatureControllerInternal{},
+	}
 }
 
 // Type implements the Component interface

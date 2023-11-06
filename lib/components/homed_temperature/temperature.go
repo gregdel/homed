@@ -8,6 +8,7 @@ import (
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
+	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/atomic"
 )
@@ -32,6 +33,10 @@ type Data struct {
 // HomedTemperature is a component that handles temperatures
 type HomedTemperature struct {
 	common.ScheduledComponent
+	Params config.TemperatureControl
+
+	sensors map[string]components.TemperatureGetter
+	trvs    map[string]components.TemperatureController
 
 	mu sync.RWMutex
 	Data
@@ -39,7 +44,10 @@ type HomedTemperature struct {
 
 // New returns a new temperature component
 func New() components.Component {
-	h := &HomedTemperature{}
+	h := &HomedTemperature{
+		sensors: map[string]components.TemperatureGetter{},
+		trvs:    map[string]components.TemperatureController{},
+	}
 	h.Mode.Store(string(components.TemperatureModeAuto))
 	h.Heating.Store(false)
 	return h

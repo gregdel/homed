@@ -7,7 +7,7 @@ mqtt:
 http:
   addr: ":9091"
 
-temperature_control:
+temperature_control: &temperature_control
   enabled: true
   # Hysteresis is used to trigger the boiler based on the current temperature.
   hysteresis: 0.3
@@ -57,6 +57,7 @@ devices:
   - type: boiler
     state_topic: home/devices/shelly_boiler/switch/relay/state
     command_topic: home/devices/shelly_boiler/switch/relay/command
+    params: *temperature_control
   - type: wifi_signal
     state_topic: home/devices/shelly_boiler/sensor/wifi_signal/state
   - type: device_status
@@ -95,6 +96,7 @@ devices:
     internal: true
     state_topic: home/homed/temperature/rooms/living_room/state
     command_topic: home/homed/temperature/rooms/living_room/command
+    params: *temperature_control
 
 - name: climate_sensor_living_room
   room: living_room

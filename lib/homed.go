@@ -87,7 +87,7 @@ func (h *Homed) Run() error {
 		wg.Add(1)
 		go func(c components.Component) {
 			defer wg.Done()
-			c.Run(ctx, h.logger)
+			c.Run(ctx, h.logger, h.components)
 		}(component)
 	}
 

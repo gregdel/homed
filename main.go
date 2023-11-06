@@ -18,7 +18,6 @@ import (
 	_ "github.com/gregdel/homed/lib/apps/fakehome"
 	_ "github.com/gregdel/homed/lib/apps/httpd"
 	_ "github.com/gregdel/homed/lib/apps/mqttd"
-	_ "github.com/gregdel/homed/lib/apps/tempd"
 )
 
 //go:embed build

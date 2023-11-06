@@ -77,9 +77,13 @@ type Component interface {
 	MQTTClient() mqtt.Client
 
 	// Run runs a goroutine for a component
-	Run(context.Context, *zap.Logger) error
+	Run(context.Context, *zap.Logger, *Components) error
 
 	// ID
 	ID() string
 	SetID(id string)
+
+	// Subscribe
+	Subscribe(string, chan Event)
+	Notify()
 }
