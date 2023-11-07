@@ -14,6 +14,7 @@ import {
   mdiAutorenew,
   mdiAvTimer,
   mdiRadiator,
+  mdiLeaf,
 } from "@mdi/js";
 
 import { Card, Slider, Popover, DatePicker, Input } from "antd";
@@ -28,6 +29,7 @@ export const HomedTemperature = ({ id }) => {
       mode,
       device,
       heating,
+      opportunistic,
       manual_target: manualTarget,
       manual_until: manualUntil,
     },
@@ -69,13 +71,13 @@ export const HomedTemperature = ({ id }) => {
   }
 
   const ActionInfinity = (
-    <Icon
-      path={mdiInfinity}
-      size={1}
+    <div
       onClick={() => {
         sendChange({ mode: "fixed", target: newTarget });
       }}
-    />
+    >
+      <Icon path={mdiInfinity} size={1} />
+    </div>
   );
 
   const ActionCalendar = (
@@ -95,7 +97,9 @@ export const HomedTemperature = ({ id }) => {
         />
       }
     >
-      <Icon path={mdiCalendar} size={1} />
+      <div>
+        <Icon path={mdiCalendar} size={1} />
+      </div>
     </Popover>
   );
 
@@ -119,23 +123,27 @@ export const HomedTemperature = ({ id }) => {
         />
       }
     >
-      <Icon path={mdiTimerOutline} size={1} />
+      <div>
+        <Icon path={mdiTimerOutline} size={1} />
+      </div>
     </Popover>
   );
 
-  const ActionAuto = (
-    <Icon
-      path={mdiAutorenew}
-      size={1}
+  const ActionUntilNext = (
+    <div
       onClick={() => {
         sendChange({ mode: "until_next_change", target: newTarget });
       }}
-    />
+    >
+      <Icon path={mdiAutorenew} size={1} />
+    </div>
   );
 
   const actions = showTimePicker
-    ? [ActionTimer, ActionCalendar, ActionAuto, ActionInfinity]
+    ? [ActionTimer, ActionCalendar, ActionUntilNext, ActionInfinity]
     : [];
+
+  const icon = opportunistic ? mdiLeaf : mdiRadiator;
 
   return (
     <Card
@@ -160,7 +168,7 @@ export const HomedTemperature = ({ id }) => {
       >
         <span>Target set to {mode === "auto" ? target : manualTarget}°C</span>
         <Icon
-          path={mdiRadiator}
+          path={icon}
           size={1}
           style={{
             color: heating ? "#ff00005e" : "#00000040",

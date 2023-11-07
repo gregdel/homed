@@ -7,7 +7,7 @@ import { prettyName } from "../../utils";
 import { fetchSchedule, deleteSchedule } from "../../actions/schedule";
 
 import Icon from "@mdi/react";
-import { mdiTrashCanOutline } from "@mdi/js";
+import { mdiTrashCanOutline, mdiLeaf } from "@mdi/js";
 
 import { Typography, Divider } from "antd";
 const { Title } = Typography;
@@ -91,7 +91,7 @@ export const Timeline = ({ day, data = [] }) => {
         width: "100%",
         height: "8em",
         overflow: "auto",
-        backgroundColor: "#91d5ff",
+        backgroundColor: "#69c0ff",
         borderRadius: "0.3em",
       }}
     >
@@ -118,7 +118,7 @@ Timeline.propTypes = {
 // Remove the seconds from the displayed time
 const formatTime = (time) => time.slice(0, -3);
 
-export const TimeSlot = ({ start, stop, value, id, day }) => {
+export const TimeSlot = ({ start, stop, value, on, id, day }) => {
   const dispatch = useDispatch();
   const { componentId } = useParams();
 
@@ -126,11 +126,13 @@ export const TimeSlot = ({ start, stop, value, id, day }) => {
     dispatch(deleteSchedule(componentId, day, id));
   };
 
+  const color = on ? "#b7eb8f" : "#ffd666";
+
   return (
     <div
       style={{
         minWidth: "8em",
-        backgroundColor: "#ffd666",
+        backgroundColor: color,
         padding: "0.3em",
         display: "flex",
         flexDirection: "column",
@@ -146,7 +148,10 @@ export const TimeSlot = ({ start, stop, value, id, day }) => {
       >
         <Icon path={mdiTrashCanOutline} size={1} />
       </div>
-      <div style={{ fontSize: "2.4em" }}>{value}°C</div>
+      <div style={{ fontSize: "2.3em" }}>
+        {value}°C
+        {on && <Icon style={{ marginLeft: "0.2em" }} path={mdiLeaf} size={1} />}
+      </div>
       <div>
         <span>{formatTime(start)}</span>
         {stop && <span> - {formatTime(stop)}</span>}
@@ -156,6 +161,7 @@ export const TimeSlot = ({ start, stop, value, id, day }) => {
 };
 TimeSlot.propTypes = {
   id: PropTypes.string.isRequired,
+  on: PropTypes.bool.isRequired,
   start: PropTypes.string.isRequired,
   stop: PropTypes.string,
   value: PropTypes.number.isRequired,

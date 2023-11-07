@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 
-import { Modal, Button, Form, Input } from "antd";
+import { Modal, Button, Form, Input, Switch } from "antd";
 
 import Icon from "@mdi/react";
 import { mdiCalendarPlus } from "@mdi/js";
@@ -18,6 +18,7 @@ export const Add = ({ day }) => {
   const [from, setFrom] = useState();
   const [to, setTo] = useState();
   const [target, setTarget] = useState(16);
+  const [on, setOn] = useState(false);
 
   const showModal = () => {
     setShow(true);
@@ -29,6 +30,7 @@ export const Add = ({ day }) => {
       start: from,
       stop: to ? to : null,
       value: new Number(target),
+      on: on,
     };
     dispatch(addSchedule(componentId, day, data));
   };
@@ -54,7 +56,7 @@ export const Add = ({ day }) => {
         onCancel={handleCancel}
       >
         <Form
-          labelCol={{ span: 3 }}
+          labelCol={{ span: 5 }}
           name="basic"
           onFinish={handleOk}
           onFinishFailed={handleOk}
@@ -91,6 +93,14 @@ export const Add = ({ day }) => {
             }}
           >
             <Input type="number" step=".5" />
+          </Form.Item>
+          <Form.Item label="Opportunistic" name="opportunistic" value={on}>
+            <Switch
+              defaultChecked={on}
+              onChange={() => {
+                setOn(!on);
+              }}
+            />
           </Form.Item>
         </Form>
       </Modal>

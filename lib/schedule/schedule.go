@@ -14,14 +14,16 @@ type Schedule struct {
 
 	Days         map[time.Weekday]*DailySchedule `json:"days" yaml:"days"`
 	DefaultValue float64                         `json:"default_value" yaml:"default_value"`
+	DefaultOn    bool                            `json:"default_on" yaml:"default_on"`
 	Overrides    Overrides                       `json:"overrides" yaml:"overrides"`
 }
 
 // New returns a new schedule
-func New(dv float64) *Schedule {
+func New(dv float64, do bool) *Schedule {
 	schedule := &Schedule{
 		Days:         map[time.Weekday]*DailySchedule{},
 		DefaultValue: dv,
+		DefaultOn:    do,
 		Overrides:    NewOverrides(),
 	}
 
@@ -142,15 +144,15 @@ func (s *Schedule) DeleteOverride(id string) error {
 	return s.Overrides.Delete(id)
 }
 
-// Value returns the scheduled value at the current time
-func (s *Schedule) Value() float64 {
+// Values returns the scheduled values at the current time
+func (s *Schedule) Values() (float64, bool) {
 	if o := s.Overrides.Now(); o != nil {
-		return o.Value
+		return o.Value, o.On
 	}
 
 	if ts := s.Now(); ts != nil {
-		return ts.Value
+		return ts.Value, ts.On
 	}
 
-	return s.DefaultValue
+	return s.DefaultValue, s.DefaultOn
 }

@@ -10,6 +10,7 @@ type TimeSlot struct {
 	// Optional
 	Stop  *Time   `json:"stop"`
 	Value float64 `json:"value"`
+	On    bool    `json:"on"`
 }
 
 // String implements the stringer interface

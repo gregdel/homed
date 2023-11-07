@@ -17,12 +17,12 @@ type ScheduledComponent struct {
 }
 
 // CurrentSchedule implements the Scheduled interface
-func (c *ScheduledComponent) CurrentSchedule() float64 {
+func (c *ScheduledComponent) CurrentSchedule() (float64, bool) {
 	if c.schedule == nil {
-		return -1
+		return -1, false
 	}
 
-	return c.schedule.Value()
+	return c.schedule.Values()
 }
 
 // Schedule implements the Scheduled interface

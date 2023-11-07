@@ -24,7 +24,7 @@ func schedulePath(path, name string) string {
 }
 
 func loadSchedule(path string) (*schedule.Schedule, error) {
-	s := schedule.New(defaultScheduleValue)
+	s := schedule.New(defaultScheduleValue, false)
 	file, err := os.Open(path)
 	if err != nil {
 		pathError := &os.PathError{}

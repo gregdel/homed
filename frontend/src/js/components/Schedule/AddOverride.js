@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 
-import { Modal, Button, Form, Input } from "antd";
+import { Modal, Button, Form, Input, Switch } from "antd";
 
 import Icon from "@mdi/react";
 import { mdiCalendarPlus } from "@mdi/js";
@@ -17,6 +17,7 @@ export const AddOverride = () => {
   const [from, setFrom] = useState();
   const [to, setTo] = useState();
   const [target, setTarget] = useState(16);
+  const [on, setOn] = useState(false);
 
   const showModal = () => {
     setShow(true);
@@ -28,6 +29,7 @@ export const AddOverride = () => {
       start: from,
       stop: to ? to : null,
       value: new Number(target),
+      on: on,
     };
     dispatch(addScheduleOverride(componentId, data));
   };
@@ -52,7 +54,7 @@ export const AddOverride = () => {
         onCancel={handleCancel}
       >
         <Form
-          labelCol={{ span: 3 }}
+          labelCol={{ span: 5 }}
           name="basic"
           onFinish={handleOk}
           onFinishFailed={handleOk}
@@ -91,6 +93,14 @@ export const AddOverride = () => {
             }}
           >
             <Input type="number" step=".5" />
+          </Form.Item>
+          <Form.Item label="Opportunistic" name="opportunistic" value={on}>
+            <Switch
+              defaultChecked={on}
+              onChange={() => {
+                setOn(!on);
+              }}
+            />
           </Form.Item>
         </Form>
       </Modal>

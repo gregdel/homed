@@ -8,7 +8,7 @@ import { Typography, List } from "antd";
 const { Title } = Typography;
 
 import Icon from "@mdi/react";
-import { mdiTrashCanOutline } from "@mdi/js";
+import { mdiTrashCanOutline, mdiLeaf } from "@mdi/js";
 
 import { AddOverride } from "./AddOverride";
 
@@ -46,7 +46,7 @@ export const Overrides = () => {
 };
 Overrides.propTypes = {};
 
-const Override = ({ id, start, stop, value }) => {
+const Override = ({ id, start, stop, value, on }) => {
   const dispatch = useDispatch();
   const { componentId } = useParams();
 
@@ -63,6 +63,7 @@ const Override = ({ id, start, stop, value }) => {
     <List.Item style={{ flexWrap: "nowrap" }}>
       <div>
         <Typography.Text>
+          {on && <Icon path={mdiLeaf} size={0.5} />}
           <strong>{value}°C</strong> from <strong>{formatDate(start)}</strong>{" "}
           to <strong>{formatDate(stop)}</strong>
         </Typography.Text>
@@ -81,4 +82,5 @@ Override.propTypes = {
   start: PropTypes.string.isRequired,
   stop: PropTypes.string.isRequired,
   value: PropTypes.number.isRequired,
+  on: PropTypes.bool.isRequired,
 };

@@ -11,6 +11,7 @@ import (
 	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/atomic"
+	"go.uber.org/zap"
 )
 
 // Make sure that the module is a temperature controller
@@ -22,18 +23,20 @@ func init() {
 
 // Data represents the data of HomedTemperature
 type Data struct {
-	Current      atomic.Float64 `json:"current"`
-	Target       atomic.Float64 `json:"target"`
-	Mode         atomic.String  `json:"mode"`
-	ManualTarget atomic.Float64 `json:"manual_target"`
-	ManualUntil  *time.Time     `json:"manual_until,omitempty"`
-	Heating      atomic.Bool    `json:"heating"`
+	Current       atomic.Float64 `json:"current"`
+	Target        atomic.Float64 `json:"target"`
+	Mode          atomic.String  `json:"mode"`
+	ManualTarget  atomic.Float64 `json:"manual_target"`
+	ManualUntil   *time.Time     `json:"manual_until,omitempty"`
+	Heating       atomic.Bool    `json:"heating"`
+	Opportunistic atomic.Bool    `json:"opportunistic"`
 }
 
 // HomedTemperature is a component that handles temperatures
 type HomedTemperature struct {
 	common.ScheduledComponent
 	Params config.TemperatureControl
+	log    *zap.Logger
 
 	sensors map[string]components.TemperatureGetter
 	trvs    map[string]components.TemperatureController
@@ -123,7 +126,8 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 	h.ManualTarget.Store(data.ManualTarget)
 	h.Mode.Store(string(data.Mode))
 
-	return h.PublishState()
+	h.updateTemperatureMode()
+	return nil
 }
 
 // PublishState publishes the mqtt state of the component
