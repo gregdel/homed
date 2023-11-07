@@ -97,6 +97,7 @@ devices:
     state_topic: home/homed/temperature/rooms/living_room/state
     command_topic: home/homed/temperature/rooms/living_room/command
     params: *temperature_control
+    friendly_name: Living Room
 
 - name: climate_sensor_living_room
   room: living_room

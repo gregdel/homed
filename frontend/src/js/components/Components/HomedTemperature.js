@@ -25,6 +25,7 @@ export const HomedTemperature = ({ id }) => {
   const {
     values: {
       current,
+      friendly_name: friendlyName,
       target,
       mode,
       device,
@@ -145,9 +146,11 @@ export const HomedTemperature = ({ id }) => {
 
   const icon = opportunistic ? mdiLeaf : mdiRadiator;
 
+  const title = friendlyName !== "" ? friendlyName : prettyName(device.room);
+
   return (
     <Card
-      title={prettyName(device.room)}
+      title={title}
       extra={
         <Link to={`/components/${id}/schedule`} style={{ color: "#000000d9" }}>
           <Icon path={mdiAvTimer} size={1} />
