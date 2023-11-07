@@ -10,7 +10,7 @@ func TestSchedule(t *testing.T) {
 	setNow(NewTimePointer(11, 00, 00))
 	defer setNow(nil)
 
-	schedule := New(10)
+	schedule := New(10, false)
 
 	day := now().Weekday()
 	slot1 := &TimeSlot{Start: NewTime(0, 0, 0)}
@@ -39,11 +39,15 @@ func TestScheduleValue(t *testing.T) {
 	defer setNow(nil)
 
 	var expected float64 = 10
-	schedule := New(expected)
+	schedule := New(expected, false)
 
-	got := schedule.Value()
-	if got != expected {
-		t.Errorf("expected %f, got %f", expected, got)
+	v, b := schedule.Values()
+	if v != expected {
+		t.Errorf("expected %f, got %f", expected, v)
+	}
+
+	if b {
+		t.Errorf("expected false, got true")
 	}
 
 	expected = 20
@@ -52,15 +56,20 @@ func TestScheduleValue(t *testing.T) {
 		Start: NewTime(0, 0, 0),
 		Stop:  NewTimePointer(12, 0, 0),
 		Value: expected,
+		On:    true,
 	}
 
 	if err := schedule.Add(day, ts); err != nil {
 		t.Fatal(err)
 	}
 
-	got = schedule.Value()
-	if got != expected {
-		t.Errorf("expected %f, got %f", expected, got)
+	v, b = schedule.Values()
+	if v != expected {
+		t.Errorf("expected %f, got %f", expected, v)
+	}
+
+	if !b {
+		t.Errorf("expected false, got false")
 	}
 
 	expected = 18
@@ -68,14 +77,15 @@ func TestScheduleValue(t *testing.T) {
 		now().Add(-1*time.Hour),
 		now().Add(1*time.Hour),
 		expected,
+		false,
 	)
 	if err := schedule.AddOverride(o); err != nil {
 		t.Fatal(err)
 	}
 
-	got = schedule.Value()
-	if got != expected {
-		t.Errorf("expected %f, got %f", expected, got)
+	v, _ = schedule.Values()
+	if v != expected {
+		t.Errorf("expected %f, got %f", expected, v)
 	}
 
 	if err := schedule.DeleteOverride(o.ID); err != nil {
@@ -83,9 +93,9 @@ func TestScheduleValue(t *testing.T) {
 	}
 
 	expected = 20
-	got = schedule.Value()
-	if got != expected {
-		t.Errorf("expected %f, got %f", expected, got)
+	v, _ = schedule.Values()
+	if v != expected {
+		t.Errorf("expected %f, got %f", expected, v)
 	}
 }
 
@@ -106,7 +116,7 @@ func TestScheduleNextChange(t *testing.T) {
 	t3 := now().Add(7 * time.Hour)
 	t4 := now().Add(22 * time.Hour)
 
-	schedule := New(10)
+	schedule := New(10, false)
 	emptyChange := schedule.NextChange()
 	if emptyChange != nil {
 		t.Errorf("next change should be nil")
