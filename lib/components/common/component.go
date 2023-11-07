@@ -8,7 +8,6 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/config"
-	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
@@ -28,10 +27,10 @@ type Component struct {
 
 	mqttClient mqtt.Client
 
-	Cid        string      `json:"id"`
-	UpdatedAt  atomic.Time `json:"updated_at"`
-	Name       string      `json:"friendly_name"`
-	YAMLParams yaml.Node   `json:"-"`
+	Cid        string    `json:"id"`
+	UpdatedAt  Time      `json:"updated_at"`
+	Name       string    `json:"friendly_name"`
+	YAMLParams yaml.Node `json:"-"`
 }
 
 // PostUpdate implements the Component interface
