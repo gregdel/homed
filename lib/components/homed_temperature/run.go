@@ -27,6 +27,7 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventor
 			return nil
 		case <-ticker.C:
 			h.updateTemperatureMode()
+			h.setTRVTarget()
 		case event := <-h.Events.Incoming:
 			h.mu.Lock()
 			_, ok := h.sensors[event.ID]
@@ -151,7 +152,9 @@ func (h *HomedTemperature) updateTemperatureMode() {
 	}
 }
 
-func (h *HomedTemperature) setTRVTarget(log *zap.Logger) {
+func (h *HomedTemperature) setTRVTarget() {
+	log := h.log
+
 	target, err := h.TemperatureTarget()
 	if err != nil {
 		log.Warn("failed to get temperature target", zap.Error(err))
