@@ -27,7 +27,7 @@ type Data struct {
 	Target        atomic.Float64 `json:"target"`
 	Mode          atomic.String  `json:"mode"`
 	ManualTarget  atomic.Float64 `json:"manual_target"`
-	ManualUntil   *time.Time     `json:"manual_until,omitempty"`
+	ManualUntil   common.Time    `json:"manual_until,omitempty"`
 	Heating       atomic.Bool    `json:"heating"`
 	Opportunistic atomic.Bool    `json:"opportunistic"`
 }
@@ -119,10 +119,7 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 		return fmt.Errorf("components: homed_temperature: date is in the past")
 	}
 
-	h.mu.Lock()
-	h.ManualUntil = data.ManualUntil
-	h.mu.Unlock()
-
+	h.ManualUntil.Store(data.ManualUntil)
 	h.ManualTarget.Store(data.ManualTarget)
 	h.Mode.Store(string(data.Mode))
 
@@ -132,9 +129,7 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 
 // PublishState publishes the mqtt state of the component
 func (h *HomedTemperature) PublishState() error {
-	h.mu.RLock()
 	data, err := json.Marshal(&h.Data)
-	h.mu.RUnlock()
 	if err != nil {
 		return err
 	}
@@ -144,20 +139,7 @@ func (h *HomedTemperature) PublishState() error {
 
 // Update implements the Component interface
 func (h *HomedTemperature) Update(value []byte) error {
-	h.mu.Lock()
-	defer h.mu.Unlock()
 	return json.Unmarshal(value, &h.Data)
-}
-
-// Temperature implements the TemperatureController interface
-func (h *HomedTemperature) Temperature() (float64, error) {
-	return h.Current.Load(), nil
-}
-
-// SetTemperature implements the TemperatureSetter interface
-func (h *HomedTemperature) SetTemperature(temperature float64) error {
-	h.Current.Store(temperature)
-	return h.PublishState()
 }
 
 // TemperatureTarget implements the TemperatureController interface
@@ -169,66 +151,7 @@ func (h *HomedTemperature) TemperatureTarget() (float64, error) {
 	return h.ManualTarget.Load(), nil
 }
 
-// SetTemperatureTarget implements the TemperatureController interface
-func (h *HomedTemperature) SetTemperatureTarget(target float64) error {
-	h.Target.Store(target)
-	return h.PublishState()
-}
-
-// TemperatureMode implements the TemperatureController interface
-func (h *HomedTemperature) TemperatureMode() (components.TemperatureMode, error) {
-	return components.TemperatureMode(h.Mode.Load()), nil
-}
-
-// SetTemperatureMode implements the TemperatureController interface
-func (h *HomedTemperature) SetTemperatureMode(mode components.TemperatureMode) error {
-	h.Mode.Store(string(mode))
-	return h.PublishState()
-}
-
-// TemperatureManualTarget implements the TemperatureController interface
-func (h *HomedTemperature) TemperatureManualTarget() (float64, error) {
-	return h.ManualTarget.Load(), nil
-}
-
-// SetTemperatureManualTarget implements the TemperatureController interface
-func (h *HomedTemperature) SetTemperatureManualTarget(target float64) error {
-	h.ManualTarget.Store(target)
-	return h.PublishState()
-}
-
-// SetTemperatureModeManualUntil implements the TemperatureControllerInternal interface
-func (h *HomedTemperature) SetTemperatureModeManualUntil(until *time.Time) error {
-	h.mu.Lock()
-	h.ManualUntil = until
-	h.mu.Unlock()
-	return h.PublishState()
-}
-
-// TemperatureModeManualUntil implements the TemperatureControllerInternal interface
-func (h *HomedTemperature) TemperatureModeManualUntil() (*time.Time, error) {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-	return h.ManualUntil, nil
-}
-
-// TemperatureCalibration implements the TemperatureController interface
-func (h *HomedTemperature) TemperatureCalibration() (float64, error) {
-	return 0, components.ErrNotImplemented
-}
-
-// SetTemperatureCalibration implements the TemperatureController interface
-func (h *HomedTemperature) SetTemperatureCalibration(c float64) error {
-	return components.ErrNotImplemented
-}
-
 // IsHeating implements the TemperatureController interface
 func (h *HomedTemperature) IsHeating() bool {
 	return h.Heating.Load()
-}
-
-// SetHeating implements the TemperatureController interface
-func (h *HomedTemperature) SetHeating(b bool) error {
-	h.Heating.Store(b)
-	return h.PublishState()
 }

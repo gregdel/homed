@@ -8,11 +8,6 @@ type Switch interface {
 	TurnOff() error
 }
 
-// Publisher is an interface to publish the component state
-type Publisher interface {
-	PublishState() error
-}
-
 // Sensor reprensents a sensor that holds a value
 type Sensor interface {
 	SensorValue() float64

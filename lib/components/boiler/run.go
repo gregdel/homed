@@ -11,7 +11,7 @@ import (
 func (b *Boiler) Run(ctx context.Context, logger *zap.Logger, inventory *components.Components) error {
 	b.Events.Incoming = make(chan components.Event)
 
-	log := b.LoggerWithFields(logger)
+	log := logger.With(zap.String("device", "boiler"))
 
 	if err := b.YAMLParams.Decode(&b.Params); err != nil {
 		return err
@@ -24,7 +24,6 @@ func (b *Boiler) Run(ctx context.Context, logger *zap.Logger, inventory *compone
 
 		tempInternal := component.(components.TemperatureControllerInternal)
 		b.controllers = append(b.controllers, tempInternal)
-		tempInternal.SetHeating(false)
 
 		tempInternal.Subscribe(b.ID(), b.Events.Incoming)
 	}
@@ -51,7 +50,7 @@ func (b *Boiler) checkState(log *zap.Logger) {
 		return
 	}
 
-	logger.Info("changing boiler state")
+	logger.Info("changing state")
 
 	var err error
 	if shouldTurnOn {
@@ -60,6 +59,6 @@ func (b *Boiler) checkState(log *zap.Logger) {
 		err = b.TurnOff()
 	}
 	if err != nil {
-		logger.Warn("failed to set boiler state", zap.Error(err))
+		logger.Warn("failed to set state", zap.Error(err))
 	}
 }

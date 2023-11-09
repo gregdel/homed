@@ -35,7 +35,8 @@ type Component struct {
 
 // PostUpdate implements the Component interface
 func (c *Component) PostUpdate() error {
-	c.UpdatedAt.Store(time.Now())
+	now := time.Now()
+	c.UpdatedAt.Store(&now)
 	c.Events.Notify(components.Event{ID: c.ID()})
 	return nil
 }

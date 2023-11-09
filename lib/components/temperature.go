@@ -1,7 +1,5 @@
 package components
 
-import "time"
-
 // TemperatureMode represents a temperature control mode
 type TemperatureMode string
 
@@ -14,7 +12,7 @@ var (
 	TemperatureModeUntilNextChange TemperatureMode = "until_next_change"
 )
 
-// TemperatureGetter is an interface to reprensents something that holds a
+// TemperatureGetter is the interface implemented by anything that can return a
 // temperature
 type TemperatureGetter interface {
 	Component
@@ -36,21 +34,8 @@ type TemperatureController interface {
 // TemperatureControllerInternal is an interface to reprensents something that be get
 // or set
 type TemperatureControllerInternal interface {
-	Publisher
+	Component
 	Scheduled
-	TemperatureController
-
-	SetTemperature(float64) error
 
 	IsHeating() bool
-	SetHeating(bool) error
-
-	TemperatureMode() (TemperatureMode, error)
-	SetTemperatureMode(TemperatureMode) error
-
-	SetTemperatureManualTarget(float64) error
-	TemperatureManualTarget() (float64, error)
-
-	TemperatureModeManualUntil() (*time.Time, error)
-	SetTemperatureModeManualUntil(*time.Time) error
 }

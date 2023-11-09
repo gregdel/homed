@@ -16,8 +16,7 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventor
 		return err
 	}
 
-	log := h.LoggerWithFields(logger)
-	h.log = log
+	h.log = logger.With(zap.String("friendly_name", h.Name))
 
 	ticker := time.NewTicker(30 * time.Second)
 
@@ -28,14 +27,13 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventor
 		case <-ticker.C:
 			h.updateTemperatureMode()
 			h.setTRVTarget()
-		case event := <-h.Events.Incoming:
-			h.mu.Lock()
-			_, ok := h.sensors[event.ID]
-			h.mu.Unlock()
-			if ok {
-				h.updateTemperature()
-				log.Debug("updating temperature")
-			}
+		case <-h.Events.Incoming:
+			// We're only subcribed to sensors, let's not check the event ID
+			h.updateTemperature()
+		}
+
+		if err := h.PublishState(); err != nil {
+			h.log.Warn("failed to publish state", zap.Error(err))
 		}
 	}
 }
@@ -75,34 +73,40 @@ func (h *HomedTemperature) setup(inventory *components.Components) error {
 	return nil
 }
 
-func (h *HomedTemperature) updateTemperature() error {
+func (h *HomedTemperature) updateTemperature() {
 	var temperature float64
 	var found float64
 
 	for _, sensor := range h.sensors {
 		t, err := sensor.Temperature()
 		if err != nil {
-			return err
+			h.log.Error("failed to get temperature", zap.Error(err))
+			continue
 		}
 		temperature += t
 		found++
 	}
 
-	h.SetTemperature(temperature / found)
-	return nil
+	var value float64
+	if found > 0 {
+		value = (temperature / found)
+	}
+
+	if math.IsNaN(value) {
+		value = 0
+	}
+
+	h.Current.Store(value)
 }
 
 func (h *HomedTemperature) updateTemperatureMode() {
 	log := h.log
 
 	// Unset manual until
-	manualUntil, _ := h.TemperatureModeManualUntil()
+	manualUntil := h.ManualUntil.Load()
 	if manualUntil != nil && time.Now().After(*manualUntil) {
 		h.Mode.Store(string(components.TemperatureModeAuto))
-
-		h.mu.Lock()
-		h.ManualUntil = nil
-		h.mu.Unlock()
+		h.ManualUntil.Store(nil)
 	}
 
 	// Get the current schedule value
@@ -110,7 +114,7 @@ func (h *HomedTemperature) updateTemperatureMode() {
 	scheduledTarget, opportunistic := schedule.Values()
 	h.Target.Store(scheduledTarget)
 
-	mode, _ := h.TemperatureMode()
+	mode := components.TemperatureMode(h.Mode.Load())
 
 	// Only the mode auto can be opportunistic
 	if mode != components.TemperatureModeAuto {
@@ -122,16 +126,13 @@ func (h *HomedTemperature) updateTemperatureMode() {
 	if mode == components.TemperatureModeUntilNextChange {
 		nextChange := schedule.NextChange()
 		if nextChange != nil {
-			if err := h.SetTemperatureModeManualUntil(nextChange); err != nil {
-				log.Warn("failed to set the temperature manual mode until", zap.Error(err))
-				return
-			}
+			h.ManualUntil.Store(nextChange)
 		}
 	}
 
 	// Set the isHeating property
 	isHeating := false
-	current, _ := h.Temperature()
+	current := h.Current.Load()
 	currentTarget, _ := h.TemperatureTarget()
 	if (current < currentTarget) && !opportunistic {
 		isHeating = true
@@ -139,17 +140,15 @@ func (h *HomedTemperature) updateTemperatureMode() {
 	if current == 0 {
 		log.Warn("the temperature is reported to be 0, this is unlikely, let's ignore this for now")
 		isHeating = false
+		return
 	}
 	if currentTarget == 0 {
 		log.Warn("the temperature target is 0, this is unlikely, let's ignore this for now")
 		isHeating = false
-	}
-	h.Heating.Store(isHeating)
-
-	if err := h.PublishState(); err != nil {
-		log.Warn("failed to publish state", zap.Error(err))
 		return
 	}
+
+	h.Heating.Store(isHeating)
 }
 
 func (h *HomedTemperature) setTRVTarget() {
@@ -161,7 +160,7 @@ func (h *HomedTemperature) setTRVTarget() {
 		return
 	}
 
-	roomTemperature, _ := h.Temperature()
+	roomTemperature := h.Current.Load()
 
 	for _, trv := range h.trvs {
 		trvLogger := trv.LoggerWithFields(log)
