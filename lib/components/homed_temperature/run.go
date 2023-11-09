@@ -93,6 +93,8 @@ func (h *HomedTemperature) updateTemperature() {
 
 	if math.IsNaN(value) {
 		value = 0
+	} else {
+		value = math.Round(value*10) / 10
 	}
 
 	h.Current.Store(value)

@@ -17,22 +17,12 @@ func (h *HomedTemperature) setTRVTarget() {
 		return
 	}
 
-	roomTemperature := h.Current.Load()
-
 	for _, trv := range h.trvs {
-		trvLogger := trv.LoggerWithFields(log)
-
-		// Compute the new calibration
-		trvTemperature, err := trv.Temperature()
-		if err != nil {
-			trvLogger.Warn("failed to get trv temperature", zap.Error(err))
-			continue
-		}
+		trvLogger := h.log.With(zap.String("trv", trv.FriendlyName()))
 
 		if h.Params.CalibrateTRV {
-			if err := h.recalibrateTRV(log, trv, roomTemperature, trvTemperature); err != nil {
+			if err := h.recalibrateTRV(trv); err != nil {
 				trvLogger.Warn("failed to calibrate the trv", zap.Error(err))
-				continue
 			}
 		}
 
@@ -57,8 +47,8 @@ func (h *HomedTemperature) setTRVTarget() {
 	}
 }
 
-func (h *HomedTemperature) recalibrateTRV(logger *zap.Logger, trv components.TemperatureController, roomTemperature, trvTemperature float64) error {
-	log := trv.LoggerWithFields(logger)
+func (h *HomedTemperature) recalibrateTRV(trv components.TemperatureController) error {
+	log := h.log.With(zap.String("trv", trv.FriendlyName()))
 
 	calibration, err := trv.TemperatureCalibration()
 	if err != nil {
@@ -70,11 +60,16 @@ func (h *HomedTemperature) recalibrateTRV(logger *zap.Logger, trv components.Tem
 		return err
 	}
 
+	trvTemperature, err := trv.Temperature()
+	if err != nil {
+		return err
+	}
+
 	trvMesuredTemperature := trvTemperature - calibration
 
-	delta := roomTemperature - trvMesuredTemperature
+	delta := h.Current.Load() - trvMesuredTemperature
 
-	// Only keep on decimal of precision
+	// Only keep one decimal of precision
 	delta = math.Round(delta*10) / 10
 
 	if math.Abs(delta) > h.Params.CalibrationMaxOffset {
@@ -82,11 +77,13 @@ func (h *HomedTemperature) recalibrateTRV(logger *zap.Logger, trv components.Tem
 		return nil
 	}
 
-	if math.Abs(calibration-delta) > h.Params.CalibrationThreshold {
+	diff := math.Abs(calibration - delta)
+	diff = math.Round(diff*10) / 10
+	if diff > h.Params.CalibrationThreshold {
 		log.Info("recalibrating the trv",
 			zap.Float64("old_calibration", calibration),
 			zap.Float64("new_calibration", delta),
-			zap.Float64("calibration_diff", math.Abs(calibration-delta)),
+			zap.Float64("calibration_diff", diff),
 			zap.Float64("calibration_threshold",
 				h.Params.CalibrationThreshold),
 		)
