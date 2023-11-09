@@ -19,6 +19,9 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventor
 
 	ticker := time.NewTicker(30 * time.Second)
 
+	h.updateTemperatureMode()
+	h.updateTemperature()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -28,9 +31,9 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventor
 			h.setTRVTarget()
 		case <-h.Events.Incoming:
 			// We're only subcribed to sensors, let's not check the event ID
-			h.updateTemperature()
 		}
 
+		h.updateTemperature()
 		if err := h.PublishState(); err != nil {
 			h.log.Warn("failed to publish state", zap.Error(err))
 		}
