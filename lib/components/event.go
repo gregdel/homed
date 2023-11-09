@@ -16,17 +16,21 @@ type EventHandler struct {
 
 // Subscribe is a function to handle subscribers
 func (e *EventHandler) Subscribe(id string, ch chan Event) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	if e.subscribers == nil {
 		e.subscribers = map[string]chan Event{}
 	}
 
-	e.mu.Lock()
 	e.subscribers[id] = ch
-	e.mu.Unlock()
 }
 
 // Notify is a function to notify subscribers
 func (e *EventHandler) Notify(event Event) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
 	if e.subscribers == nil {
 		return
 	}
