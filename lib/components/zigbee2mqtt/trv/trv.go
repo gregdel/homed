@@ -201,18 +201,26 @@ func (t *TRV) write(data interface{}) error {
 	return t.WriteCommand(payload)
 }
 
-func (t *TRV) updateMode() error {
-	forceMode := t.Force.Load()
-	if forceMode == ForceModeUnavailable {
+func (t *TRV) saswellEnsureHeat() error {
+	if t.Mode.Load() == SystemModeHeat {
 		return nil
 	}
 
+	s := struct {
+		Mode string `json:"system_mode"`
+	}{Mode: SystemModeHeat}
+
+	return t.write(s)
+}
+
+func (t *TRV) tuyaForce() error {
+	diff := (t.HeatingSetpoint.Load() - t.LocalTemperature.Load())
 	newMode := ForceModeNormal
-	if (t.HeatingSetpoint.Load() - t.LocalTemperature.Load()) >= forceModeDiff {
+	if diff >= forceModeDiff {
 		newMode = ForceModeOpen
 	}
 
-	if forceMode == newMode {
+	if t.Mode.Load() == newMode {
 		return nil
 	}
 
@@ -221,4 +229,14 @@ func (t *TRV) updateMode() error {
 	}{Force: newMode}
 
 	return t.write(s)
+}
+
+func (t *TRV) updateMode() error {
+	if t.isSaswell() {
+		// Ensure that the TRV is in "heat" mode and not auto
+		return t.saswellEnsureHeat()
+	}
+
+	// Force the TRV to open
+	return t.tuyaForce()
 }
