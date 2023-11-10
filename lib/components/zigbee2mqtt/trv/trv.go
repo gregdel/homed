@@ -214,18 +214,18 @@ func (t *TRV) saswellEnsureHeat() error {
 
 func (t *TRV) tuyaForce() error {
 	diff := (t.HeatingSetpoint.Load() - t.LocalTemperature.Load())
-	newMode := ForceModeNormal
+	force := ForceModeNormal
 	if diff >= forceModeDiff {
-		newMode = ForceModeOpen
+		force = ForceModeOpen
 	}
 
-	if t.Mode.Load() == newMode {
+	if t.Force.Load() == force {
 		return nil
 	}
 
 	s := struct {
 		Force string `json:"force"`
-	}{Force: newMode}
+	}{Force: force}
 
 	return t.write(s)
 }
