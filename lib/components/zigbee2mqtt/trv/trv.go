@@ -12,8 +12,6 @@ import (
 	"go.uber.org/atomic"
 )
 
-var zeroTime time.Time
-
 // Make sure that the module is a temperature controller
 var _ components.TemperatureController = (*TRV)(nil)
 
@@ -46,7 +44,7 @@ type TRV struct {
 	Data
 
 	// Track when the calibration was requested
-	CalibrationRequestTime atomic.Time `json:"calibration_request_time"`
+	CalibrationRequestTime common.Time `json:"calibration_request_time"`
 }
 
 // New returns a new component for Tuya TRVs
@@ -95,14 +93,14 @@ func (t *TRV) Update(value []byte) error {
 	// The temperature was updated, let's assume it take the calibration into
 	// account
 	if t.LocalTemperature.Load() != oldTemperature {
-		t.CalibrationRequestTime.Store(zeroTime)
+		t.CalibrationRequestTime.Store(nil)
 	}
 
 	// After some time, the calibration might not be relevant anymore
 	requestTime := t.CalibrationRequestTime.Load()
-	if !requestTime.IsZero() &&
-		time.Since(requestTime) > calibrationRequestTimeout {
-		t.CalibrationRequestTime.Store(zeroTime)
+	if requestTime != nil &&
+		time.Since(*requestTime) > calibrationRequestTimeout {
+		t.CalibrationRequestTime.Store(nil)
 	}
 
 	return nil
@@ -161,7 +159,7 @@ func (t *TRV) TemperatureCalibration() (float64, error) {
 		return 0, components.ErrDeviceOffline
 	}
 
-	if !t.CalibrationRequestTime.Load().IsZero() {
+	if t.CalibrationRequestTime.Load() != nil {
 		return 0, components.ErrOperatingInProgress
 	}
 
@@ -170,7 +168,7 @@ func (t *TRV) TemperatureCalibration() (float64, error) {
 
 // SetTemperatureCalibration implements the TemperatureController interface
 func (t *TRV) SetTemperatureCalibration(c float64) error {
-	if !t.CalibrationRequestTime.Load().IsZero() {
+	if t.CalibrationRequestTime.Load() != nil {
 		return components.ErrOperatingInProgress
 	}
 
@@ -183,7 +181,8 @@ func (t *TRV) SetTemperatureCalibration(c float64) error {
 		return err
 	}
 
-	t.CalibrationRequestTime.Store(time.Now())
+	now := time.Now()
+	t.CalibrationRequestTime.Store(&now)
 	return nil
 }
 
