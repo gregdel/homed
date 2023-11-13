@@ -74,8 +74,7 @@ func (fh *FakeHome) Run(ctx context.Context, config *apps.Config) error {
 	opts := mqtt.NewClientOptions().
 		AddBroker(fh.config.MQTT.Broker).
 		SetOnConnectHandler(fh.mqttOnConnectHandler).
-		SetConnectionLostHandler(fh.mqttOnConnectionLostHandler).
-		SetDefaultPublishHandler(fh.commandHandler)
+		SetConnectionLostHandler(fh.mqttOnConnectionLostHandler)
 	fh.client = mqtt.NewClient(opts)
 
 	for _, c := range config.Components.List() {
@@ -107,21 +106,17 @@ func (fh *FakeHome) mqttOnConnectHandler(c mqtt.Client) {
 	fh.logger.Info("connected to mqtt")
 
 	fh.mu.RLock()
-	topics := []string{}
+	topics := map[string]byte{}
 	for topic := range fh.cmdTopics {
-		topics = append(topics, topic)
+		topics[topic] = 0
 	}
 	fh.mu.RUnlock()
 
-	for _, topic := range topics {
-		fh.logger.Info("subscribing to command topic", zap.String("topic", topic))
-		token := fh.client.Subscribe(topic, 0, nil)
-		if token.Wait() && token.Error() != nil {
-			fh.logger.Error("failed to subscribe to the command topic",
-				zap.String("topic", topic),
-				zap.Error(token.Error()),
-			)
-		}
+	token := fh.client.SubscribeMultiple(topics, fh.commandHandler)
+	if token.Wait() && token.Error() != nil {
+		fh.logger.Error("failed to subscribe to all the command topic",
+			zap.Error(token.Error()),
+		)
 	}
 }
 
@@ -135,6 +130,10 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	fh.mu.RUnlock()
 	if !ok {
 		fh.logger.Warn("topic not found", zap.String("topic", msg.Topic()))
+		return
+	}
+
+	if !component.Device().IsOnline() {
 		return
 	}
 
@@ -227,7 +226,8 @@ func (fh *FakeHome) updateStates() {
 
 	var err error
 	for i, component := range fh.components.List() {
-		if component.MQTTClient() == nil || !component.MQTTClient().IsConnected() {
+		client := component.MQTTClient()
+		if client == nil || !client.IsConnectionOpen() {
 			fh.logger.Info("mqtt client is not connected, not updating states")
 			return
 		}
