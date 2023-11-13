@@ -3,11 +3,13 @@ package httpd
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
+	"go.uber.org/zap"
 )
 
 func (h *httpd) httpRender(w http.ResponseWriter, status string, data interface{}) {
@@ -57,10 +59,9 @@ func (h *httpd) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	h.logger.Info("mqtt broker connected")
-
 	err = component.WriteCommand(data)
 	if err != nil {
+		h.logger.Warn("failed to write mqtt command", zap.Error(err))
 		h.httpError(w, fmt.Sprintf("failed to write mqtt command: %s", err))
 		return
 	}
@@ -83,7 +84,6 @@ func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 		h.httpError(w, fmt.Sprintf("got error upgrading request: %s", err))
 		return
 	}
-	defer ws.Close()
 
 	// The pong handler only postpone the read deadline
 	ws.SetPongHandler(func(string) error {
@@ -91,17 +91,26 @@ func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 		return nil
 	})
 
-	uuid, err := h.registerWebsocket(ws)
+	host, port, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to register websocket: %s", err))
+		h.httpError(w, fmt.Sprintf("failed to get remote addr: %s", err))
 		return
 	}
-	defer h.unregisterWebsocket(uuid)
 
+	if r.Header.Get("X-Real-IP") != "" {
+		host = r.Header.Get("X-Real-IP")
+	}
+
+	h.registerWebsocket(ws, net.JoinHostPort(host, port))
 	for {
+		if h.exiting.Load() {
+			break
+		}
+
 		_, _, err := ws.ReadMessage()
 		if err != nil {
 			break
 		}
 	}
+	h.unregisterWebsocket(ws)
 }

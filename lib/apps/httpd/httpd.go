@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -28,12 +29,13 @@ type httpd struct {
 	render     *render.Render
 
 	mu         sync.RWMutex
-	websockets map[string]*websocket.Conn
+	websockets map[*websocket.Conn]string
+	exiting    atomic.Bool
 }
 
 func app() *httpd {
 	return &httpd{
-		websockets: map[string]*websocket.Conn{},
+		websockets: map[*websocket.Conn]string{},
 		render:     render.New(),
 	}
 }
@@ -69,6 +71,7 @@ func (h *httpd) Init(config *config.Config) error {
 		Addr:    config.HTTP.Addr,
 		Handler: router,
 	}
+	h.exiting.Store(false)
 
 	return nil
 }
@@ -83,6 +86,7 @@ func (h *httpd) Run(ctx context.Context, config *apps.Config) error {
 
 	go func() {
 		<-ctx.Done()
+		h.exiting.Store(true)
 
 		timeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()

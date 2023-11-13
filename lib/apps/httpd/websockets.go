@@ -1,53 +1,52 @@
 package httpd
 
 import (
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/gregdel/homed/lib/components"
 	"go.uber.org/zap"
 )
 
-func (h *httpd) registerWebsocket(ws *websocket.Conn) (string, error) {
-	u, err := uuid.NewRandom()
-	if err != nil {
-		return "", err
-	}
-
-	uuid := u.String()
+func (h *httpd) registerWebsocket(ws *websocket.Conn, remote string) {
 	h.mu.Lock()
-	h.websockets[uuid] = ws
+	h.websockets[ws] = remote
 	h.mu.Unlock()
 
-	h.logger.Info("new websocket registered", zap.String("uuid", uuid))
-
-	return uuid, nil
+	h.logger.Info("new websocket registered", zap.String("remote", remote))
 }
 
-func (h *httpd) unregisterWebsocket(uuid string) {
+func (h *httpd) unregisterWebsocket(ws *websocket.Conn) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	delete(h.websockets, uuid)
-	h.logger.Info("websocket unregistered", zap.String("uuid", uuid))
+
+	remote, ok := h.websockets[ws]
+	if !ok {
+		return
+	}
+
+	ws.Close()
+	delete(h.websockets, ws)
+	h.logger.Info("websocket unregistered", zap.String("remote", remote))
 }
 
 func (h *httpd) publishToWebsocket(component components.Component) {
-	toUnregister := []string{}
-
-	data := components.NewComponentJSON(component)
+	conns := map[*websocket.Conn]string{}
 	h.mu.RLock()
-	for uuid, ws := range h.websockets {
-		err := ws.WriteJSON(data)
-		if err != nil {
-			h.logger.Info("failed to publish to websocket",
-				zap.String("error", err.Error()),
-				zap.String("uuid", uuid))
-			toUnregister = append(toUnregister, uuid)
-			continue
-		}
+	for ws, remote := range h.websockets {
+		conns[ws] = remote
 	}
 	h.mu.RUnlock()
 
-	for _, uuid := range toUnregister {
-		h.unregisterWebsocket(uuid)
+	data := components.NewComponentJSON(component)
+	for ws, remote := range conns {
+		err := ws.WriteJSON(data)
+		if err != nil {
+			h.logger.Info(
+				"failed to publish to websocket",
+				zap.String("remote", remote),
+				zap.Error(err),
+			)
+			h.unregisterWebsocket(ws)
+			continue
+		}
 	}
 }
