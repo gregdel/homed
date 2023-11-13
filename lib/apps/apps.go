@@ -25,9 +25,8 @@ type App interface {
 
 // Config reprensents the running config of an app
 type Config struct {
-	Logger           *zap.Logger
-	Components       *components.Components
-	ComponentUpdated chan components.Component
+	Logger     *zap.Logger
+	Components *components.Components
 }
 
 // Register registers a new app

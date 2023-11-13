@@ -19,7 +19,6 @@ type mqttd struct {
 	logger     *zap.Logger
 	components *components.Components
 	config     *config.Config
-	updateChan chan components.Component
 
 	mu          sync.Mutex
 	client      mqtt.Client
@@ -94,7 +93,6 @@ func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
 	m.mu.Lock()
 	m.logger = config.Logger.With(zap.String("app", m.Name()))
 	m.components = config.Components
-	m.updateChan = config.ComponentUpdated
 
 	for _, c := range m.components.List() {
 		c.SetMQTTClient(m.client)
@@ -142,8 +140,6 @@ func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {
 		logger.Warn("failed to run the component post update", zap.Error(err))
 		return
 	}
-
-	m.updateChan <- component
 }
 
 func (m *mqttd) handleCommand(c mqtt.Client, msg mqtt.Message) {

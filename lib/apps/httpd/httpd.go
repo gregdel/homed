@@ -97,8 +97,18 @@ func (h *httpd) Run(ctx context.Context, config *apps.Config) error {
 	}()
 
 	go func() {
-		for component := range config.ComponentUpdated {
-			h.publishToWebsocket(component)
+		events := make(chan components.Event)
+		for _, c := range config.Components.List() {
+			c.Subscribe(h.Name(), events)
+		}
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case event := <-events:
+				h.publishToWebsocket(event.ID)
+			}
 		}
 	}()
 

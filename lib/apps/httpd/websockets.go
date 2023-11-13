@@ -28,7 +28,14 @@ func (h *httpd) unregisterWebsocket(ws *websocket.Conn) {
 	h.logger.Info("websocket unregistered", zap.String("remote", remote))
 }
 
-func (h *httpd) publishToWebsocket(component components.Component) {
+func (h *httpd) publishToWebsocket(id string) {
+	component, err := h.components.Get(id)
+	if err != nil {
+		h.logger.Error("failed to get component",
+			zap.String("id", id))
+		return
+	}
+
 	conns := map[*websocket.Conn]string{}
 	h.mu.RLock()
 	for ws, remote := range h.websockets {

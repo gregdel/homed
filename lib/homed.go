@@ -75,7 +75,6 @@ func (h *Homed) Run() error {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	componentChan := make(chan components.Component)
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-sigs
@@ -92,9 +91,8 @@ func (h *Homed) Run() error {
 	}
 
 	runConfig := &apps.Config{
-		Logger:           h.logger,
-		Components:       h.components,
-		ComponentUpdated: componentChan,
+		Logger:     h.logger,
+		Components: h.components,
 	}
 
 	// Wait for the apps
