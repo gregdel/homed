@@ -55,26 +55,30 @@ func (m *mqttd) Init(config *config.Config) error {
 func (m *mqttd) onConnectHandler(mqtt.Client) {
 	m.logger.Info("connected to the broker")
 
+	topics := map[string]byte{}
 	for topic := range m.stateTopics {
-		m.logger.Info("subscribing to status topic", zap.String("topic", topic))
-		token := m.client.Subscribe(topic, 0, m.handleMessage)
-		if token.Wait() && token.Error() != nil {
-			m.logger.Error("failed to subscribe to the status topic",
-				zap.String("topic", topic),
-				zap.Error(token.Error()),
-			)
-		}
+		topics[topic] = 0
 	}
 
+	m.logger.Info("subscribing to state topics")
+	token := m.client.SubscribeMultiple(topics, m.handleMessage)
+	if token.Wait() && token.Error() != nil {
+		m.logger.Error("failed to subscribe to the state topics",
+			zap.Error(token.Error()),
+		)
+	}
+
+	topics = map[string]byte{}
 	for topic := range m.cmdTopics {
-		m.logger.Info("subscribing to command topic", zap.String("topic", topic))
-		token := m.client.Subscribe(topic, 0, m.handleCommand)
-		if token.Wait() && token.Error() != nil {
-			m.logger.Error("failed to subscribe to the command topic",
-				zap.String("topic", topic),
-				zap.Error(token.Error()),
-			)
-		}
+		topics[topic] = 0
+	}
+
+	m.logger.Info("subscribing to command topics")
+	token = m.client.SubscribeMultiple(topics, m.handleCommand)
+	if token.Wait() && token.Error() != nil {
+		m.logger.Error("failed to subscribe to the command topics",
+			zap.Error(token.Error()),
+		)
 	}
 }
 

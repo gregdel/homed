@@ -174,7 +174,12 @@ func (c *Component) ExecCommand(data []byte) error {
 
 // PublishToStateTopic publishes data to the state topic
 func (c *Component) PublishToStateTopic(data []byte) error {
-	token := c.MQTTClient().Publish(c.StateTopic, 0, true, data)
+	client := c.MQTTClient()
+	if !client.IsConnected() || !client.IsConnectionOpen() {
+		return components.ErrMQTTClientNotConnected
+	}
+
+	token := client.Publish(c.StateTopic, 0, true, data)
 	if token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
