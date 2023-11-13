@@ -124,22 +124,31 @@ func (c *Components) Add(cfg config.Component, logger *zap.Logger, roomName, dev
 		return nil, err
 	}
 
-	id := fmt.Sprintf("%s_%s", deviceName, component.Type())
-	i := 1
-	for {
-		newID := fmt.Sprintf("%s_%d", id, i)
-		_, err := c.Get(newID)
+	var id string
+	if cfg.ID != "" {
+		_, err := c.Get(cfg.ID)
 		if err == nil {
-			i++
-			continue
+			return nil, fmt.Errorf("component with id %q is already configured", cfg.ID)
 		}
+		id = cfg.ID
+	} else {
+		id = fmt.Sprintf("%s_%s", deviceName, component.Type())
+		i := 1
+		for {
+			newID := fmt.Sprintf("%s_%d", id, i)
+			_, err := c.Get(newID)
+			if err == nil {
+				i++
+				continue
+			}
 
-		if err == ErrComponentNotFound {
-			id = newID
-			break
+			if err == ErrComponentNotFound {
+				id = newID
+				break
+			}
+
+			return nil, err
 		}
-
-		return nil, err
 	}
 
 	component.SetID(id)

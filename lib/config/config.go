@@ -38,6 +38,7 @@ type Config struct {
 
 // Component represents the configuration of a component.
 type Component struct {
+	ID           string    `yaml:"id"`
 	Type         string    `yaml:"type"`
 	FriendlyName string    `yaml:"friendly_name"`
 	StateTopic   string    `yaml:"state_topic"`
