@@ -210,12 +210,50 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	}
 
 	if errUpdate != nil {
-		fh.logger.Warn("failed to update component", zap.String("topic", msg.Topic()))
+		fh.logger.Warn(
+			"failed to update component",
+			zap.String("topic", msg.Topic()),
+			zap.Error(errUpdate))
 	}
 
 	if errPublish != nil {
-		fh.logger.Warn("failed to publish component state", zap.String("topic", msg.Topic()))
+		fh.logger.Warn(
+			"failed to publish component state",
+			zap.String("topic", msg.Topic()),
+			zap.Error(errPublish),
+		)
 	}
+}
+
+func (fh *FakeHome) fakeSensor(c *zClimate.Sensor) {
+	var isHeating = false
+	if c.Dev != nil {
+		tempController := fh.components.TemperatureController(c.Dev.Room)
+		if tempController != nil {
+			isHeating = tempController.IsHeating()
+		}
+	}
+
+	var factor = -1.0
+	if isHeating {
+		factor = 1
+	}
+
+	c.Humidity.Store(60)
+
+	temp := c.Temp.Load()
+	if temp == 0 {
+		temp = 15
+	} else if temp < 10 {
+		temp = 10
+	} else if temp > 22 {
+		temp = 22
+	} else {
+		temp = temp + (factor * 0.1)
+	}
+	c.Temp.Store(temp)
+
+	c.Pressure.Store(1000)
 }
 
 func (fh *FakeHome) updateStates() {
@@ -234,39 +272,16 @@ func (fh *FakeHome) updateStates() {
 
 		switch c := component.(type) {
 		case *zClimate.Sensor:
-			var isHeating = false
-			if c.Dev != nil {
-				tempController := fh.components.TemperatureController(c.Dev.Room)
-				if tempController != nil {
-					isHeating = tempController.IsHeating()
-				}
-			}
-
-			var factor = -1.0
-			if isHeating {
-				factor = 1
-			}
-
-			c.Humidity.Store(60)
-
-			temp := c.Temp.Load()
-			if temp == 0 {
-				temp = 15
-			} else if temp < 10 {
-				temp = 10
-			} else if temp > 22 {
-				temp = 22
-			} else {
-				temp = temp + (factor * 0.1)
-			}
-			c.Temp.Store(temp)
-
-			c.Pressure.Store(1000)
+			fh.fakeSensor(c)
 			err = fh.publishStateJSON(c)
 		case *trv.TRV:
 			c.LocalTemperature.Store(float64((i % 5) + 15))
 			c.HeatingSetpoint.Store(c.LocalTemperature.Load() + 1)
-			c.Mode.Store(trv.SystemModeAuto)
+			if i%2 == 0 {
+				c.Force.Store(trv.ForceModeUnavailable)
+			} else {
+				c.Mode.Store(trv.SystemModeHeat)
+			}
 			if (i % 2) == 0 {
 				c.LocalTemperatureCalibration.Store(-1)
 				c.Position.Store(60)
@@ -280,7 +295,9 @@ func (fh *FakeHome) updateStates() {
 		}
 
 		if err != nil {
-			fh.logger.Warn("failed to publish state", zap.Error(err))
+			fh.logger.Warn("failed to publish state",
+				zap.String("function", "updateStates"),
+				zap.Error(err))
 		}
 
 		err = nil
