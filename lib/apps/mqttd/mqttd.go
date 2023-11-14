@@ -22,6 +22,7 @@ type mqttd struct {
 
 	mu          sync.Mutex
 	client      mqtt.Client
+	errChan     chan error
 	stateTopics map[string]components.Component
 	cmdTopics   map[string]components.Component
 }
@@ -56,7 +57,9 @@ func (m *mqttd) onConnectHandler(mqtt.Client) {
 
 	topics := map[string]byte{}
 	for topic := range m.stateTopics {
-		topics[topic] = 0
+		if topic != "" {
+			topics[topic] = 0
+		}
 	}
 
 	m.logger.Info("subscribing to state topics")
@@ -65,11 +68,15 @@ func (m *mqttd) onConnectHandler(mqtt.Client) {
 		m.logger.Error("failed to subscribe to the state topics",
 			zap.Error(token.Error()),
 		)
+		m.errChan <- token.Error()
+		return
 	}
 
 	topics = map[string]byte{}
 	for topic := range m.cmdTopics {
-		topics[topic] = 0
+		if topic != "" {
+			topics[topic] = 0
+		}
 	}
 
 	m.logger.Info("subscribing to command topics")
@@ -78,6 +85,8 @@ func (m *mqttd) onConnectHandler(mqtt.Client) {
 		m.logger.Error("failed to subscribe to the command topics",
 			zap.Error(token.Error()),
 		)
+		m.errChan <- token.Error()
+		return
 	}
 }
 
@@ -93,6 +102,7 @@ func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
 	m.mu.Lock()
 	m.logger = config.Logger.With(zap.String("app", m.Name()))
 	m.components = config.Components
+	m.errChan = make(chan error)
 
 	for _, c := range m.components.List() {
 		c.SetMQTTClient(m.client)
@@ -112,12 +122,18 @@ func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
 		return token.Error()
 	}
 
-	<-ctx.Done()
+	var err error
+	select {
+	case <-ctx.Done():
+		// Nothing to do
+	case err = <-m.errChan:
+		// Error
+	}
 
 	m.logger.Info("disconnecting from the MQTT broker")
 	m.client.Disconnect(250)
 
-	return nil
+	return err
 }
 
 func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {

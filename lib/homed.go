@@ -97,6 +97,7 @@ func (h *Homed) Run() error {
 
 	// Wait for the apps
 	a.Run(ctx, runConfig)
+	cancel()
 
 	// Wait for the components
 	wg.Wait()
