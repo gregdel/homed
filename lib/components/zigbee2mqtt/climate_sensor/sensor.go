@@ -15,12 +15,12 @@ func init() {
 
 // Data represents the data of the sensor
 type Data struct {
-	Battery     atomic.Float64 `json:"battery"`
-	Humidity    atomic.Float64 `json:"humidity"`
-	LinkQuality atomic.Float64 `json:"linkquality"`
-	Pressure    atomic.Float64 `json:"pressure"`
-	Temp        atomic.Float64 `json:"temperature"`
-	Voltage     atomic.Float64 `json:"voltage"`
+	Battery      atomic.Float64 `json:"battery"`
+	HumidityV    atomic.Float64 `json:"humidity"`
+	LinkQuality  atomic.Float64 `json:"linkquality"`
+	Pressure     atomic.Float64 `json:"pressure"`
+	TemperatureV atomic.Float64 `json:"temperature"`
+	Voltage      atomic.Float64 `json:"voltage"`
 }
 
 // Sensor reprensents a zigbee climate sensor
@@ -50,20 +50,29 @@ func (s *Sensor) Temperature() (float64, error) {
 		return 0, components.ErrDeviceOffline
 	}
 
-	return s.Temp.Load(), nil
+	return s.TemperatureV.Load(), nil
+}
+
+// Humidity implements the HumidityGetter interface
+func (s *Sensor) Humidity() (float64, error) {
+	if !s.Device().IsOnline() {
+		return 0, components.ErrDeviceOffline
+	}
+
+	return s.HumidityV.Load(), nil
 }
 
 // Collectors implements the Component interface
 func (s *Sensor) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		components.GaugeCollector("temperature", labels,
-			func() float64 { return s.Temp.Load() },
+			func() float64 { return s.TemperatureV.Load() },
 		),
 		components.GaugeCollector("pressure", labels,
 			func() float64 { return s.Pressure.Load() },
 		),
 		components.GaugeCollector("humidity", labels,
-			func() float64 { return s.Humidity.Load() },
+			func() float64 { return s.HumidityV.Load() },
 		),
 	}
 }

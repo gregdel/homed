@@ -91,12 +91,14 @@ func (fh *FakeHome) Run(ctx context.Context, config *apps.Config) error {
 	}
 
 	ticker := time.NewTicker(30 * time.Second)
+	fh.updateLastSeen()
 	fh.updateStates()
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
+			fh.updateLastSeen()
 			fh.updateStates()
 		}
 	}
@@ -239,9 +241,15 @@ func (fh *FakeHome) fakeSensor(c *zClimate.Sensor) {
 		factor = 1
 	}
 
-	c.Humidity.Store(60)
+	humidity := c.HumidityV.Load()
+	if humidity < 60 || humidity > 70 {
+		humidity = 60
+	} else {
+		humidity += 2
+	}
+	c.HumidityV.Store(humidity)
 
-	temp := c.Temp.Load()
+	temp := c.TemperatureV.Load()
 	if temp == 0 {
 		temp = 15
 	} else if temp < 10 {
@@ -251,9 +259,28 @@ func (fh *FakeHome) fakeSensor(c *zClimate.Sensor) {
 	} else {
 		temp = temp + (factor * 0.1)
 	}
-	c.Temp.Store(temp)
+	c.TemperatureV.Store(temp)
 
 	c.Pressure.Store(1000)
+}
+
+func (fh *FakeHome) updateLastSeen() {
+	if !fh.client.IsConnectionOpen() {
+		fh.logger.Info("mqtt broker not connected, not updating last seen")
+		return
+	}
+
+	for _, component := range fh.components.List() {
+		c, ok := component.(*common.DeviceStatus)
+		if !ok {
+			continue
+		}
+
+		err := c.PublishToStateTopic([]byte("online"))
+		if err != nil {
+			fh.logger.Warn("failed to set device online", zap.Error(err))
+		}
+	}
 }
 
 func (fh *FakeHome) updateStates() {
@@ -290,8 +317,6 @@ func (fh *FakeHome) updateStates() {
 			err = fh.publishStateJSON(c)
 		case *common.PowerMeter:
 			err = c.PublishToStateTopic([]byte(strconv.Itoa((i % 3 * 100))))
-		case *common.DeviceStatus:
-			err = c.PublishToStateTopic([]byte("online"))
 		}
 
 		if err != nil {

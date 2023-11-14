@@ -154,3 +154,38 @@ devices:
     state_topic: home/devices/stairs_lights/sensor/power_2/state
   - type: device_status
     state_topic: home/devices/stairs_lights/status
+
+#############################
+# Bathroom
+#############################
+- name: bathroom_fan
+  room: bathroom
+  components:
+  - type: switch
+    id: bathroom_fan_switch
+    state_topic: home/devices/bathroom_fan/switch/relay/state
+    command_topic: home/devices/bathroom_fan/switch/relay/command
+    friendly_name: VMC Bathroom
+  - type: device_status
+    state_topic: home/devices/bathroom_fan/status
+
+- name: bathroom_sensor
+  room: bathroom
+  components:
+  - type: zigbee_climate_sensor
+    friendly_name: Bathroom
+    id: bathroom_tmp_sensor
+    state_topic: zigbee2mqtt/tmp_bathroom
+  - type: device_status
+    state_topic: zigbee2mqtt/tmp_bathroom/availability
+
+- name: bathroom_humidity_controler
+  room: bathroom
+  components:
+  - type: homed_humidity
+    hide: true
+    friendly_name: Salle de bain
+    params:
+      sensor: bathroom_tmp_sensor
+      switch: bathroom_fan_switch
+      humidity_threshold: 65

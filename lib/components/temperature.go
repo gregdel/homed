@@ -39,3 +39,10 @@ type TemperatureControllerInternal interface {
 
 	IsHeating() bool
 }
+
+// HumidityGetter is the interface implemented by anything that can return a
+// humidity
+type HumidityGetter interface {
+	Component
+	Humidity() (float64, error)
+}
