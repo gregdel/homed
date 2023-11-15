@@ -68,10 +68,18 @@ func (h *httpd) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 }
 
 func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	const (
-		// Time allowed to read the next pong message from the client
-		pongWait = 15 * time.Second
-	)
+	host, port, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		h.httpError(w, fmt.Sprintf("failed to get remote addr: %s", err))
+		return
+	}
+
+	if r.Header.Get("X-Real-IP") != "" {
+		host = r.Header.Get("X-Real-IP")
+	}
+
+	// Time allowed to read the next pong message from the client
+	const pongWait = 15 * time.Second
 
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -90,16 +98,6 @@ func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 		_ = ws.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
-
-	host, port, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to get remote addr: %s", err))
-		return
-	}
-
-	if r.Header.Get("X-Real-IP") != "" {
-		host = r.Header.Get("X-Real-IP")
-	}
 
 	h.registerWebsocket(ws, net.JoinHostPort(host, port))
 	for {

@@ -50,7 +50,6 @@ func (h *HomedHumidity) Update([]byte) error {
 
 // Run implements the Component interface
 func (h *HomedHumidity) Run(ctx context.Context, logger *zap.Logger, inventory *components.Components) error {
-
 	if err := h.YAMLParams.Decode(&h.Params); err != nil {
 		return err
 	}
@@ -60,7 +59,6 @@ func (h *HomedHumidity) Run(ctx context.Context, logger *zap.Logger, inventory *
 		zap.String("room", h.Device().Room),
 	)
 
-	// TODO: fetch the components
 	sensorComponent, err := inventory.Get(h.Params.Sensor)
 	if err != nil {
 		log.Error("failed to get sensor", zap.Error(err))
@@ -78,7 +76,7 @@ func (h *HomedHumidity) Run(ctx context.Context, logger *zap.Logger, inventory *
 
 	sw, ok := (swComponent).(components.Switch)
 	if !ok {
-		return fmt.Errorf("component %q is not a humidity getter", h.Params.Switch)
+		return fmt.Errorf("component %q is not a switch", h.Params.Switch)
 	}
 
 	h.Events.Incoming = make(chan components.Event)
