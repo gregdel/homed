@@ -8,7 +8,32 @@ import (
 	"go.uber.org/zap"
 )
 
+func (h *HomedTemperature) handleBinaryTRV() {
+	if len(h.binTRVs) == 0 {
+		return
+	}
+
+	current := h.Current.Load()
+	target, err := h.TemperatureTarget()
+	if err != nil {
+		h.log.Warn("failed to get temperature target", zap.Error(err))
+		return
+	}
+
+	for _, trv := range h.binTRVs {
+		if current < target {
+			trv.TurnOn()
+		} else {
+			trv.TurnOff()
+		}
+	}
+}
+
 func (h *HomedTemperature) setTRVTarget() {
+	if len(h.trvs) == 0 {
+		return
+	}
+
 	log := h.log
 
 	target, err := h.TemperatureTarget()

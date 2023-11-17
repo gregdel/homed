@@ -40,6 +40,7 @@ type HomedTemperature struct {
 
 	sensors map[string]components.TemperatureGetter
 	trvs    map[string]components.TemperatureController
+	binTRVs map[string]components.Switch
 
 	mu sync.RWMutex
 	Data
@@ -50,6 +51,7 @@ func New() components.Component {
 	h := &HomedTemperature{
 		sensors: map[string]components.TemperatureGetter{},
 		trvs:    map[string]components.TemperatureController{},
+		binTRVs: map[string]components.Switch{},
 	}
 	h.Mode.Store(string(components.TemperatureModeAuto))
 	h.Heating.Store(false)

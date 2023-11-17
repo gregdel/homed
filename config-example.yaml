@@ -184,8 +184,17 @@ devices:
   components:
   - type: homed_humidity
     hide: true
-    friendly_name: Salle de bain
     params:
       sensor: bathroom_tmp_sensor
       switch: bathroom_fan_switch
       humidity_threshold: 65
+
+- name: bathroom_trv
+  room: bathroom
+  components:
+  - type: binary_trv
+    state_topic: zigbee2mqtt/bathroom_trv/current_heating_setpoint
+    command_topic: zigbee2mqtt/bathroom_trv/set/current_heating_setpoint
+    friendly_name: Bathroom TRV
+  - type: device_status
+    state_topic: zigbee2mqtt/bathroom_trv/availability

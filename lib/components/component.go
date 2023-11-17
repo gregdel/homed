@@ -17,10 +17,11 @@ var (
 	// Common components
 	TypeGenericSensor Type = "generic_sensor"
 	TypeBinarySensor  Type = "binary_sensor"
+	TypeBinaryLight   Type = "binary_light"
+	TypeBinaryTRV     Type = "binary_trv"
 	TypePowerMeter    Type = "power_meter"
 	TypeCounter       Type = "counter"
 	TypeSwitch        Type = "switch"
-	TypeBinaryLight   Type = "binary_light"
 	TypeWifiSignal    Type = "wifi_signal"
 	TypeDeviceStatus  Type = "device_status"
 	TypeRollerShutter Type = "roller_shutter"

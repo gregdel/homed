@@ -5,6 +5,7 @@ import moment from "moment";
 import { Switch } from "./Switch";
 import { PowerMeter } from "./PowerMeter";
 import { BinaryLight } from "./BinaryLight";
+import { BinaryTRV } from "./BinaryTRV";
 
 import { Boiler } from "./Boiler";
 import { DeviceStatus } from "./DeviceStatus";
@@ -49,6 +50,9 @@ export const Component = ({
       break;
     case "binary_light":
       typedComponent = <BinaryLight id={id} />;
+      break;
+    case "binary_trv":
+      typedComponent = <BinaryTRV id={id} />;
       break;
     case "switch":
       typedComponent = <Switch id={id} />;

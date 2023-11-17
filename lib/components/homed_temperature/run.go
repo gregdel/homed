@@ -34,6 +34,7 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventor
 		}
 
 		h.updateTemperature()
+		h.handleBinaryTRV()
 		if err := h.PublishState(); err != nil {
 			h.log.Warn("failed to publish state", zap.Error(err))
 		}
@@ -54,6 +55,12 @@ func (h *HomedTemperature) setup(inventory *components.Components) error {
 		if c.Type() == components.TypeZigbeeTRV {
 			h.mu.Lock()
 			h.trvs[c.ID()] = c.(components.TemperatureController)
+			h.mu.Unlock()
+		}
+
+		if c.Type() == components.TypeBinaryTRV {
+			h.mu.Lock()
+			h.binTRVs[c.ID()] = c.(components.Switch)
 			h.mu.Unlock()
 		}
 
