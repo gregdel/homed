@@ -32,8 +32,8 @@ func (b *Boiler) Run(ctx context.Context, logger *zap.Logger, inventory *compone
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-b.Events.Incoming:
-			b.checkState(log)
+		case e := <-b.Events.Incoming:
+			b.checkState(log.With(zap.String("event_id", e.ID)))
 		}
 	}
 }

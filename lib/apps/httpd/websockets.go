@@ -50,6 +50,7 @@ func (h *httpd) publishToWebsocket(id string) {
 			h.logger.Info(
 				"failed to publish to websocket",
 				zap.String("remote", remote),
+				zap.String("event_id", id),
 				zap.Error(err),
 			)
 			h.unregisterWebsocket(ws)

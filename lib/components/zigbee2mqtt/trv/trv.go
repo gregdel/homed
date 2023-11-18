@@ -3,7 +3,6 @@ package trv
 import (
 	"encoding/json"
 	"math"
-	"sync"
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
@@ -38,8 +37,6 @@ type Data struct {
 
 // TRV represents a zigbee2mqtt TRV
 type TRV struct {
-	mu sync.RWMutex
-
 	common.Component
 	Data
 

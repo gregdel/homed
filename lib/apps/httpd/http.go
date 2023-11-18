@@ -55,7 +55,7 @@ func (h *httpd) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 
 	mqttClient := component.MQTTClient()
 	if mqttClient != nil && !mqttClient.IsConnectionOpen() {
-		h.httpError(w, fmt.Sprintf("not connected to the mqtt broker"))
+		h.httpError(w, "not connected to the mqtt broker")
 		return
 	}
 

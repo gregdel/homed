@@ -166,7 +166,6 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 				break
 			case "close":
 				factor = -1.0
-				break
 			}
 
 			ticker := time.NewTicker(500 * time.Millisecond)

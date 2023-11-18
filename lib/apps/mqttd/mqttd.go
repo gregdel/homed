@@ -94,8 +94,8 @@ func (m *mqttd) reconnectingHandler(mqtt.Client, *mqtt.ClientOptions) {
 	m.logger.Info("attempting to connect to the mqtt broker")
 }
 
-func (m *mqttd) connectionLostHandler(mqtt.Client, error) {
-	m.logger.Info("connection to the mqtt broker is lost")
+func (m *mqttd) connectionLostHandler(_ mqtt.Client, err error) {
+	m.logger.Warn("connection to the mqtt broker is lost", zap.Error(err))
 }
 
 func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
@@ -128,6 +128,7 @@ func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
 		// Nothing to do
 	case err = <-m.errChan:
 		// Error
+		m.logger.Warn("MQTT client returned error", zap.Error(err))
 	}
 
 	m.logger.Info("disconnecting from the MQTT broker")
