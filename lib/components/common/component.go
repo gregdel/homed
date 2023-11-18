@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -11,6 +12,9 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
+
+// Timeout to wait for MQTT publish method
+const publishTimeout = 15 * time.Second
 
 // Component represents a base component
 type Component struct {
@@ -152,7 +156,10 @@ func (c *Component) WriteCommand(data []byte) error {
 	}
 
 	token := c.mqttClient.Publish(c.CommandTopic, 0, false, data)
-	if token.Wait() && token.Error() != nil {
+	if !token.WaitTimeout(publishTimeout) {
+		return fmt.Errorf("timeout reached while publishing")
+	}
+	if token.Error() != nil {
 		return token.Error()
 	}
 
@@ -180,7 +187,10 @@ func (c *Component) PublishToStateTopic(data []byte) error {
 	}
 
 	token := client.Publish(c.StateTopic, 0, true, data)
-	if token.Wait() && token.Error() != nil {
+	if !token.WaitTimeout(publishTimeout) {
+		return fmt.Errorf("timeout reached while publishing")
+	}
+	if token.Error() != nil {
 		return token.Error()
 	}
 
