@@ -12,6 +12,12 @@ import (
 	"go.uber.org/zap"
 )
 
+// Time allowed to read the next pong message from the client
+const pongWait = 15 * time.Second
+
+// Time allowed to write to a websocket
+const writeWait = 15 * time.Second
+
 func (h *httpd) httpRender(w http.ResponseWriter, status string, data interface{}) {
 	o := struct {
 		Status string      `json:"status"`
@@ -77,9 +83,6 @@ func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 	if r.Header.Get("X-Real-IP") != "" {
 		host = r.Header.Get("X-Real-IP")
 	}
-
-	// Time allowed to read the next pong message from the client
-	const pongWait = 15 * time.Second
 
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,

@@ -1,6 +1,8 @@
 package httpd
 
 import (
+	"time"
+
 	"github.com/gorilla/websocket"
 	"github.com/gregdel/homed/lib/components"
 	"go.uber.org/zap"
@@ -45,6 +47,7 @@ func (h *httpd) publishToWebsocket(id string) {
 
 	data := components.NewComponentJSON(component)
 	for ws, remote := range conns {
+		ws.SetWriteDeadline(time.Now().Add(writeWait))
 		err := ws.WriteJSON(data)
 		if err != nil {
 			h.logger.Info(
@@ -56,5 +59,6 @@ func (h *httpd) publishToWebsocket(id string) {
 			h.unregisterWebsocket(ws)
 			continue
 		}
+		ws.SetWriteDeadline(time.Time{})
 	}
 }
