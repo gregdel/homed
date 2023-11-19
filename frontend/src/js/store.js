@@ -1,8 +1,5 @@
-import { createHashHistory } from "history";
 import { createStore, applyMiddleware, compose } from "redux";
 import thunk from "redux-thunk";
-
-export const history = createHashHistory();
 
 import rootReducer from "./reducers/index";
 

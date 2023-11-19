@@ -4,8 +4,8 @@ import { Provider } from "react-redux";
 import {
   HashRouter as Router,
   Route,
-  Switch,
-  Redirect,
+  Routes,
+  Navigate,
 } from "react-router-dom";
 
 import { Layout } from "antd";
@@ -18,53 +18,73 @@ import { Dashboard } from "./components/TemperatureControl/Dashboard";
 import { Components } from "./components/Components/Components";
 import { Schedule } from "./components/Schedule/Schedule";
 
-import store, { history } from "./store";
+import store from "./store";
 
 import "@ant-design/cssinjs";
 import "../assets/app.css";
 
 const App = () => (
   <Provider store={store}>
-    <Router history={history}>
+    <Router>
       <DataFetcher>
         <Layout style={{ minHeight: "100vh" }}>
           <AppMenu />
           <Layout>
             <Content style={{ padding: "1em" }}>
               <Notifications />
-              <Switch>
-                <Route path="/all" exact component={Components} />
-                <Route path="/temperature" exact component={Dashboard} />
-                <Route path="/trv" exact>
-                  <Components typesFilter={["zigbee_trv", "binary_trv"]} />
-                </Route>
-                <Route path="/lights" exact>
-                  <Components typesFilter={["binary_light"]} />
-                </Route>
-                <Route path="/power" exact>
-                  <Components typesFilter={["power_meter"]} />
-                </Route>
-                <Route path="/switches" exact>
-                  <Components typesFilter={["switch"]} />
-                </Route>
-                <Route path="/shutters" exact>
-                  <Components typesFilter={["roller_shutter"]} />
-                </Route>
-                <Route path="/sensors" exact>
-                  <Components
-                    typesFilter={["generic_sensor", "binary_sensor"]}
-                  />
-                </Route>
-                <Route path="/climate_sensors" exact>
-                  <Components typesFilter={["zigbee_climate_sensor"]} />
-                </Route>
+              <Routes>
+                <Route path="/all" exact element={<Components />} />
+                <Route path="/temperature" exact element={<Dashboard />} />
+                <Route
+                  path="/trv"
+                  exact
+                  element={
+                    <Components typesFilter={["zigbee_trv", "binary_trv"]} />
+                  }
+                />
+                <Route
+                  path="/lights"
+                  exact
+                  element={<Components typesFilter={["binary_light"]} />}
+                />
+                <Route
+                  path="/power"
+                  exact
+                  element={<Components typesFilter={["power_meter"]} />}
+                />
+                <Route
+                  path="/switches"
+                  exact
+                  element={<Components typesFilter={["switch"]} />}
+                />
+                <Route
+                  path="/shutters"
+                  exact
+                  element={<Components typesFilter={["roller_shutter"]} />}
+                />
+                <Route
+                  path="/sensors"
+                  exact
+                  element={
+                    <Components
+                      typesFilter={["generic_sensor", "binary_sensor"]}
+                    />
+                  }
+                />
+                <Route
+                  path="/climate_sensors"
+                  exact
+                  element={
+                    <Components typesFilter={["zigbee_climate_sensor"]} />
+                  }
+                />
                 <Route
                   path="/components/:componentId/schedule"
                   exact
-                  component={Schedule}
+                  element={<Schedule />}
                 />
-                <Route render={() => <Redirect to="/temperature" />} />
-              </Switch>
+                <Route path="*" element={<Navigate to="/temperature" />} />
+              </Routes>
             </Content>
           </Layout>
         </Layout>
