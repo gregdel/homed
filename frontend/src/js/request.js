@@ -1,26 +1,29 @@
-import axios from "axios";
-
 import { notificationAdd } from "./actions/notifications";
 
-// This functions returns an axios instance, the token is added to the
-// configuration if found in the localStorage
-export function configureAxios(headers = {}) {
-  // Get the token from the localStorate
-  const token = localStorage.getItem("token");
-  if (token) {
-    headers = { Authorization: `Bearer ${token}` };
+const headers = (method, data) => {
+  let h = {
+    method: method,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
+  if (data !== null) {
+    if (typeof data === "string") {
+      h.body = data;
+    } else {
+      h.body = JSON.stringify(data);
+    }
   }
 
-  return axios.create({
-    headers,
-  });
-}
+  return h;
+};
 
-// This function takes en event prefix to dispatch evens during the life of the
-// request, it also take a promise (axios request)
 export function request(
   eventPrefix,
-  promise,
+  method,
+  url,
+  data = null,
   callbackEvents = null,
   mainPayload = null
 ) {
@@ -37,14 +40,17 @@ export function request(
       },
     });
 
-    return promise
-      .then((response) => {
-        if (response.data.status === "error") {
-          dispatch(notificationAdd(response.data.data, "error", 10));
+    const conf = headers(method, data);
+
+    return fetch(url, conf)
+      .then((response) => response.json())
+      .then((body) => {
+        if (body.status === "error") {
+          dispatch(notificationAdd(body.data, "error", 10));
           dispatch({
             type: errored,
             payload: {
-              response: response.data,
+              response: body,
               main: mainPayload,
             },
           });
@@ -53,7 +59,7 @@ export function request(
         dispatch({
           type: fulfilled,
           payload: {
-            response: response.data.data,
+            response: body.data,
             main: mainPayload,
           },
         });
@@ -66,14 +72,8 @@ export function request(
           }
         }
       })
-      .catch((error) => {
-        // Unauthorized
-        if (error.response && error.response.status == 401) {
-          dispatch({
-            type: "USER_LOGOUT",
-          });
-        }
-        dispatch(notificationAdd(error.response.data, "error", 10));
+      .catch((response) => {
+        console.warn(response);
       });
   };
 }

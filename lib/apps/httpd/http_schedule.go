@@ -83,6 +83,8 @@ func (h *httpd) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
 		return
 	}
+
+	h.httpRenderJSON(w, nil)
 }
 
 func (h *httpd) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -109,6 +111,8 @@ func (h *httpd) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, 
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
 		return
 	}
+
+	h.httpRenderJSON(w, nil)
 }
 
 func (h *httpd) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -137,6 +141,8 @@ func (h *httpd) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
 		return
 	}
+
+	h.httpRenderJSON(w, nil)
 }
 
 func (h *httpd) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -172,6 +178,8 @@ func (h *httpd) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
 		return
 	}
+
+	h.httpRenderJSON(w, nil)
 }
 
 func (h *httpd) httpDeleteScheduleOverride(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -194,4 +202,6 @@ func (h *httpd) httpDeleteScheduleOverride(w http.ResponseWriter, r *http.Reques
 		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err))
 		return
 	}
+
+	h.httpRenderJSON(w, nil)
 }

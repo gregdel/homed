@@ -71,6 +71,8 @@ func (h *httpd) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 		h.httpError(w, fmt.Sprintf("failed to write mqtt command: %s", err))
 		return
 	}
+
+	h.httpRenderJSON(w, nil)
 }
 
 func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
