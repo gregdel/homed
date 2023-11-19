@@ -35,54 +35,62 @@ export const AppMenu = () => {
     setCollapsed(true);
   };
 
-  const menu = [
+  const link = (title, path) => (
+    <Link to={path} component={Typography.Link}>
+      {title}
+    </Link>
+  );
+
+  const icon = (path) => <Icon path={path} size={1} />;
+
+  const items = [
     {
-      path: "/temperature",
-      title: "Temperature",
-      icon: mdiHomeThermometer,
+      icon: icon(mdiHomeThermometer),
+      key: "temperature",
+      label: link("Temperature", "/temperature"),
     },
     {
-      icon: mdiRadiator,
-      path: "/trv",
-      title: "Thermostatic valves",
+      icon: icon(mdiRadiator),
+      label: link("Thermostatic valves", "/trv"),
+      key: "trv",
     },
     {
-      icon: mdiThermometer,
-      path: "/climate_sensors",
-      title: "Temperature sensors",
+      icon: icon(mdiThermometer),
+      label: link("Temperature sensors", "/climate_sensors"),
+      key: "climate_sensors",
     },
     {
-      icon: mdiLightbulb,
-      path: "/lights",
-      title: "Lights",
+      icon: icon(mdiLightbulb),
+      label: link("Lights", "/lights"),
+      key: "lights",
     },
     {
-      icon: mdiLightningBolt,
-      path: "/power",
-      title: "Power consumption",
+      icon: icon(mdiLightningBolt),
+      label: link("Power consumption", "/power"),
+      key: "power_consumption",
     },
     {
-      icon: mdiPower,
-      path: "/switches",
-      title: "Switches",
+      icon: icon(mdiPower),
+      label: link("Switches", "/switches"),
+      key: "switches",
     },
     {
-      icon: mdiWindowShutter,
-      path: "/shutters",
-      title: "Roller shutters",
+      icon: icon(mdiWindowShutter),
+      label: link("Roller shutters", "/shutters"),
+      key: "shutters",
     },
     {
-      icon: mdiRuler,
-      path: "/sensors",
-      title: "Sensors",
+      icon: icon(mdiRuler),
+      label: link("Sensors", "/sensors"),
+      key: "sensors",
     },
   ];
 
   useEffect(() => {
     let keys = [];
-    menu.map((entry, key) => {
-      if (location.pathname === entry.path) {
-        keys.push(key.toString());
+    items.map((entry) => {
+      if (location.pathname === entry.label.props.to) {
+        keys.push(entry.key);
       }
     });
     setSelectedKeys(keys);
@@ -101,21 +109,8 @@ export const AppMenu = () => {
         style={{ paddingTop: "1em" }}
         onClick={onClick}
         selectedKeys={selectedKeys}
-      >
-        {menu.map((entry, key) => {
-          return (
-            <Menu.Item
-              key={key}
-              icon={<Icon path={entry.icon} size={1} />}
-              style={{ display: "flex", alignItems: "center" }}
-            >
-              <Link to={entry.path} component={Typography.Link}>
-                {entry.title}
-              </Link>
-            </Menu.Item>
-          );
-        })}
-      </Menu>
+        items={items}
+      />
     </Sider>
   );
 };
