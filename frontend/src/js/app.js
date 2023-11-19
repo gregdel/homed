@@ -21,7 +21,7 @@ import { Schedule } from "./components/Schedule/Schedule";
 import store, { history } from "./store";
 
 import "@ant-design/cssinjs";
-import "../css/index.css";
+import "../assets/app.css";
 
 const App = () => (
   <Provider store={store}>

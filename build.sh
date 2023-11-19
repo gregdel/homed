@@ -1,19 +1,15 @@
 #!/bin/sh
-set -e
 
 BUILD_DIR="build"
-mkdir -p "$BUILD_DIR"
 
-_cleanup_buildir() {
-	rm -rf "$BUILD_DIR"
-	mkdir -p "$BUILD_DIR"
-	[ "$1" ] || return 0
-	touch "$BUILD_DIR/$1"
+_err() {
+	echo "$@"
+	exit 1
 }
 
 _backend_build() {
 	echo "Running tests..."
-	CGO_ENABLED=0 go test -v ./...
+	CGO_ENABLED=0 go test ./... || _err "Backend test failed"
 
 	echo "Embeding files in the binary:"
 	ls -lah "$BUILD_DIR"
@@ -22,28 +18,25 @@ _backend_build() {
 		-trimpath \
 		-v \
 		-o "homed" \
-		.
+		. || _err "Backend build failed"
 }
 
 _frontend_build() {
 	cd frontend || return
-	npm install
-	npm run-script build
+	npm install || _err "npm install failed"
+	npm run-script build || _err "frondend build failed"
 	cd .. || return
 }
 
 case "$1" in
 	frontend)
-		_cleanup_buildir
 		_frontend_build
 		;;
 	backend)
 		_backend_build
 		;;
 	*)
-		_cleanup_buildir
 		_frontend_build
 		_backend_build
-		_cleanup_buildir keep
 		;;
 esac
