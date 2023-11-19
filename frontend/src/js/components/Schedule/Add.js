@@ -51,13 +51,13 @@ export const Add = ({ day }) => {
       </Button>
       <Modal
         title="Add in schedule"
-        visible={show}
+        open={show}
         onOk={handleOk}
         onCancel={handleCancel}
       >
         <Form
           labelCol={{ span: 5 }}
-          name="basic"
+          name="add-schedule-timeslot"
           onFinish={handleOk}
           onFinishFailed={handleOk}
         >
@@ -96,7 +96,7 @@ export const Add = ({ day }) => {
           </Form.Item>
           <Form.Item label="Opportunistic" name="opportunistic" value={on}>
             <Switch
-              defaultChecked={on}
+              checked={on}
               onChange={() => {
                 setOn(!on);
               }}

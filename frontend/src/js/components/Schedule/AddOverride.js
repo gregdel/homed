@@ -49,13 +49,13 @@ export const AddOverride = () => {
       </Button>
       <Modal
         title="Add schedule override"
-        visible={show}
+        open={show}
         onOk={handleOk}
         onCancel={handleCancel}
       >
         <Form
           labelCol={{ span: 5 }}
-          name="basic"
+          name="add-schedule-override"
           onFinish={handleOk}
           onFinishFailed={handleOk}
         >
@@ -96,7 +96,7 @@ export const AddOverride = () => {
           </Form.Item>
           <Form.Item label="Opportunistic" name="opportunistic" value={on}>
             <Switch
-              defaultChecked={on}
+              checked={on}
               onChange={() => {
                 setOn(!on);
               }}

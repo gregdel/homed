@@ -20,7 +20,7 @@ import { Schedule } from "./components/Schedule/Schedule";
 
 import store, { history } from "./store";
 
-import "antd/dist/antd.css";
+import "@ant-design/cssinjs";
 import "../css/index.css";
 
 const App = () => (
