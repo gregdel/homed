@@ -1,6 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
-import moment from "moment";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
 import { Switch } from "./Switch";
 import { PowerMeter } from "./PowerMeter";
@@ -83,10 +85,7 @@ export const Component = ({
 
   var status = "offline";
   if (online === true) {
-    const m = moment(updatedAt, "YYYY-MM-DD HH:mm:ss Z");
-    if (m.isValid()) {
-      status = m.fromNow();
-    }
+    status = dayjs(updatedAt).fromNow();
   }
 
   const newTitle =

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useSelector, useDispatch } from "react-redux";
 import { prettyName } from "../../utils";
-import moment from "moment";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
 import { componentUpdate } from "../../actions/components";
 
@@ -202,8 +204,7 @@ HomedTemperature.propTypes = {
 };
 
 const HeatingMode = ({ mode, date }) => {
-  const m = moment(date, "YYYY-MM-DD HH:mm:ss Z");
-  const prettyDate = m.isValid() ? m.fromNow() : date;
+  const prettyDate = date === null ? "" : dayjs(date).fromNow();
 
   switch (mode) {
     case "auto":
