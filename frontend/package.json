@@ -8,8 +8,8 @@
     },
     "devDependencies": {
         "@ant-design/cssinjs": "^1.18.0-alpha.0",
-        "@mdi/js": "^5.9.55",
-        "@mdi/react": "^1.5.0",
+        "@mdi/js": "^7.3.67",
+        "@mdi/react": "^1.6.1",
         "antd": "^5.11.2",
         "dayjs": "^1.11.10",
         "esbuild": "0.19.6",
