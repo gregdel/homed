@@ -19,6 +19,7 @@ import { HomedTemperature } from "./HomedTemperature";
 import { ZigbeeTRV } from "./ZigbeeTRV";
 import { WifiSignal } from "./WifiSignal";
 import { ZigbeeClimateSensor } from "./ZigbeeClimateSensor";
+import { VirtualSwitch } from "./VirtualSwitch";
 
 import { Card } from "antd";
 
@@ -77,6 +78,9 @@ export const Component = ({
       break;
     case "zigbee_trv":
       typedComponent = <ZigbeeTRV id={id} />;
+      break;
+    case "virtual_switch":
+      typedComponent = <VirtualSwitch id={id} />;
       break;
     default:
       typedComponent = <>Unhandled {type}</>;

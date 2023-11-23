@@ -55,7 +55,9 @@ const App = () => (
                 <Route
                   path="/switches"
                   exact
-                  element={<Components typesFilter={["switch"]} />}
+                  element={
+                    <Components typesFilter={["switch", "virtual_switch"]} />
+                  }
                 />
                 <Route
                   path="/fans"

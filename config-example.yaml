@@ -142,10 +142,12 @@ devices:
     state_topic: home/devices/stairs_lights/switch/light_1/state
     command_topic: home/devices/stairs_lights/switch/light_1/command
     friendly_name: Floor 1
+    id: light_floor_1
   - type: binary_light
     state_topic: home/devices/stairs_lights/switch/light_2/state
     command_topic: home/devices/stairs_lights/switch/light_2/command
     friendly_name: Floor 2
+    id: light_floor_2
   - type: power_meter
     friendly_name: Lights floor 1
     state_topic: home/devices/stairs_lights/sensor/power_1/state
@@ -154,6 +156,22 @@ devices:
     state_topic: home/devices/stairs_lights/sensor/power_2/state
   - type: device_status
     state_topic: home/devices/stairs_lights/status
+
+#############################
+# Virtual switch
+#############################
+
+- name: virtual_switch
+  room: none
+  components:
+  - type: virtual_switch
+    state_topic: zigbee2mqtt/virtual_switch_1/action
+    params:
+      switches:
+        - light_floor_1
+        - light_floor_2
+  - type: device_status
+    state_topic: zigbee2mqtt/virtual_switch_1/availability
 
 #############################
 # Bathroom

@@ -17,6 +17,7 @@ var (
 	// Common components
 	TypeGenericSensor  Type = "generic_sensor"
 	TypeGenericCounter Type = "generic_counter"
+	TypeVirtualSwitch  Type = "virtual_switch"
 	TypeBinarySensor   Type = "binary_sensor"
 	TypeBinaryLight    Type = "binary_light"
 	TypeBinaryFan      Type = "binary_fan"
