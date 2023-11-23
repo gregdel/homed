@@ -37,11 +37,11 @@ devices:
 - name: linky
   room: basement
   components:
-  - type: generic_sensor
+  - type: generic_counter
     state_topic: zigbee2mqtt/linky/current_tier1_summ_delivered
     friendly_name: Linky HC
     hide: true
-  - type: generic_sensor
+  - type: generic_counter
     state_topic: zigbee2mqtt/linky/current_tier2_summ_delivered
     friendly_name: Linky HP
     hide: true
