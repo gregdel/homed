@@ -1,3 +1,20 @@
 .ant-menu-inline-collapsed-tooltip {
     display: none;
 }
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rotating {
+  animation: rotating 3s linear infinite;
+}
+
+.paused {
+  animation-play-state: paused;
+}

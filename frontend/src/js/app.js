@@ -58,6 +58,11 @@ const App = () => (
                   element={<Components typesFilter={["switch"]} />}
                 />
                 <Route
+                  path="/fans"
+                  exact
+                  element={<Components typesFilter={["binary_fan"]} />}
+                />
+                <Route
                   path="/shutters"
                   exact
                   element={<Components typesFilter={["roller_shutter"]} />}

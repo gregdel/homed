@@ -208,6 +208,9 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	case *common.BinaryTRV:
 		errUpdate = x.Update(payload)
 		errPublish = x.PublishToStateTopic(payload)
+	case *common.BinaryFan:
+		errUpdate = x.Update(payload)
+		errPublish = x.PublishToStateTopic(payload)
 	case *common.Switch:
 		errUpdate = x.Update(payload)
 		errPublish = x.PublishToStateTopic(payload)

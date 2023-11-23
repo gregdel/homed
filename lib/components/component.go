@@ -19,6 +19,7 @@ var (
 	TypeGenericCounter Type = "generic_counter"
 	TypeBinarySensor   Type = "binary_sensor"
 	TypeBinaryLight    Type = "binary_light"
+	TypeBinaryFan      Type = "binary_fan"
 	TypeBinaryTRV      Type = "binary_trv"
 	TypePowerMeter     Type = "power_meter"
 	TypeCounter        Type = "counter"

@@ -161,7 +161,7 @@ devices:
 - name: bathroom_fan
   room: bathroom
   components:
-  - type: switch
+  - type: binary_fan
     id: bathroom_fan_switch
     state_topic: home/devices/bathroom_fan/switch/relay/state
     command_topic: home/devices/bathroom_fan/switch/relay/command

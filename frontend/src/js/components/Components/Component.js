@@ -7,6 +7,7 @@ dayjs.extend(relativeTime);
 import { Switch } from "./Switch";
 import { PowerMeter } from "./PowerMeter";
 import { BinaryLight } from "./BinaryLight";
+import { BinaryFan } from "./BinaryFan";
 import { BinaryTRV } from "./BinaryTRV";
 
 import { Boiler } from "./Boiler";
@@ -52,6 +53,9 @@ export const Component = ({
       break;
     case "binary_light":
       typedComponent = <BinaryLight id={id} />;
+      break;
+    case "binary_fan":
+      typedComponent = <BinaryFan id={id} />;
       break;
     case "binary_trv":
       typedComponent = <BinaryTRV id={id} />;

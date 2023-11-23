@@ -12,6 +12,7 @@ import {
   mdiRuler,
   mdiThermometer,
   mdiWindowShutter,
+  mdiFan,
 } from "@mdi/js";
 
 const { Sider } = Layout;
@@ -73,6 +74,11 @@ export const AppMenu = () => {
       icon: icon(mdiPower),
       label: link("Switches", "/switches"),
       key: "switches",
+    },
+    {
+      icon: icon(mdiFan),
+      label: link("Fans", "/fans"),
+      key: "fans",
     },
     {
       icon: icon(mdiWindowShutter),

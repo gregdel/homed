@@ -3,9 +3,10 @@ import PropTypes from "prop-types";
 
 import Icon from "@mdi/react";
 
-export const IconToggle = ({ iconOn, iconOff, toggle, on }) => (
+export const IconToggle = ({ iconOn, iconOff, toggle, on, rotate }) => (
   <>
     <div
+      className={rotate ? "rotating" : "rotating paused"}
       style={{
         display: "flex",
         justifyContent: "center",
@@ -37,4 +38,5 @@ IconToggle.propTypes = {
   iconOff: PropTypes.string.isRequired,
   toggle: PropTypes.func.isRequired,
   on: PropTypes.bool.isRequired,
+  rotate: PropTypes.bool,
 };
