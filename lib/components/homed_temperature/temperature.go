@@ -126,7 +126,7 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 	h.Mode.Store(string(data.Mode))
 
 	h.updateTemperatureMode()
-	return nil
+	return h.PublishState()
 }
 
 // PublishState publishes the mqtt state of the component
