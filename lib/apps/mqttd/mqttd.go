@@ -148,6 +148,10 @@ func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {
 
 	logger := component.LoggerWithFields(m.logger)
 
+	if msg.Retained() {
+		logger.Debug("updating from retained message")
+	}
+
 	if err := component.Update(msg.Payload()); err != nil {
 		logger.Warn("failed to update component", zap.Error(err))
 		return
@@ -174,10 +178,4 @@ func (m *mqttd) handleCommand(c mqtt.Client, msg mqtt.Message) {
 		logger.Warn("failed to write component command", zap.Error(err))
 		return
 	}
-
-	logger.Debug(
-		"Writing component command",
-		zap.String("topic", msg.Topic()),
-		zap.String("value", string(msg.Payload())),
-	)
 }

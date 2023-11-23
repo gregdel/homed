@@ -102,7 +102,7 @@ func (v *VirtualSwitch) Run(ctx context.Context, logger *zap.Logger,
 	inventory *components.Components) error {
 	v.Events.Incoming = make(chan components.Event)
 
-	v.log = logger.With(zap.String("device", v.Device().Name))
+	v.log = v.LoggerWithFields(logger)
 
 	params := struct {
 		Switches []string `yaml:"switches"`

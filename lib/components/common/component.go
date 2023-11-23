@@ -55,12 +55,15 @@ func (c *Component) ReadOnly() bool {
 
 // LoggerWithFields implements the Component interface
 func (c *Component) LoggerWithFields(logger *zap.Logger) *zap.Logger {
-	return logger.With(
-		zap.String("id", c.Cid),
-		zap.String("friendly_name", c.Name),
-		zap.String("room", c.Dev.Room),
-		zap.String("device", c.Dev.Name),
-	)
+	log := logger.With(zap.String("device", c.Device().Name))
+
+	if c.FriendlyName() != "" {
+		log = log.With(zap.String("friendly_name", c.FriendlyName()))
+	} else {
+		log = log.With(zap.String("id", c.ID()))
+	}
+
+	return log
 }
 
 // SetMQTTClient implements the Component interface

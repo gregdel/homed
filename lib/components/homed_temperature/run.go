@@ -15,7 +15,7 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventor
 		return err
 	}
 
-	h.log = logger.With(zap.String("friendly_name", h.Name))
+	h.log = h.LoggerWithFields(logger)
 
 	ticker := time.NewTicker(30 * time.Second)
 
