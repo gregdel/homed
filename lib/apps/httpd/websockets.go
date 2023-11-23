@@ -1,6 +1,7 @@
 package httpd
 
 import (
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -45,20 +46,27 @@ func (h *httpd) publishToWebsocket(id string) {
 	}
 	h.mu.RUnlock()
 
+	var wg sync.WaitGroup
 	data := components.NewComponentJSON(component)
 	for ws, remote := range conns {
-		ws.SetWriteDeadline(time.Now().Add(writeWait))
-		err := ws.WriteJSON(data)
-		if err != nil {
-			h.logger.Info(
-				"failed to publish to websocket",
-				zap.String("remote", remote),
-				zap.String("event_id", id),
-				zap.Error(err),
-			)
-			h.unregisterWebsocket(ws)
-			continue
-		}
-		ws.SetWriteDeadline(time.Time{})
+		wg.Add(1)
+		go func(ws *websocket.Conn, remote string) {
+			defer wg.Done()
+
+			ws.SetWriteDeadline(time.Now().Add(writeWait))
+			err := ws.WriteJSON(data)
+			if err != nil {
+				h.logger.Info(
+					"failed to publish to websocket",
+					zap.String("remote", remote),
+					zap.String("event_id", id),
+					zap.Error(err),
+				)
+				h.unregisterWebsocket(ws)
+			}
+			ws.SetWriteDeadline(time.Time{})
+		}(ws, remote)
 	}
+
+	wg.Wait()
 }
