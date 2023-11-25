@@ -125,6 +125,15 @@ func (s *Schedule) Add(day time.Weekday, slot *TimeSlot) error {
 	return ds.Add(slot)
 }
 
+// Update updates the schedule by replacing a timeslot by another
+func (s *Schedule) Update(day time.Weekday, slot *TimeSlot, id string) error {
+	if err := s.Delete(day, id); err != nil {
+		return err
+	}
+
+	return s.Add(day, slot)
+}
+
 // AddOverride adds a schedule override
 func (s *Schedule) AddOverride(override *Override) error {
 	return s.Overrides.Add(override)

@@ -1,25 +1,36 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
 
-import { deleteSchedule } from "../../actions/schedule";
+import { deleteScheduleTimeSlot } from "../../actions/schedule";
 
 import Icon from "@mdi/react";
-import { mdiTrashCanOutline, mdiLeaf } from "@mdi/js";
+import { mdiPencilOutline, mdiTrashCanOutline, mdiLeaf } from "@mdi/js";
 
-// Remove the seconds from the displayed time
-const formatTime = (time) => time.slice(0, -3);
+import { TimeSlotModal } from "./TimeSlotModal";
 
 export const TimeSlot = ({ start, stop, value, on, id, day }) => {
   const dispatch = useDispatch();
   const { componentId } = useParams();
+  const [open, setOpen] = useState(false);
 
   const handleDelete = () => {
-    dispatch(deleteSchedule(componentId, day, id));
+    dispatch(deleteScheduleTimeSlot(componentId, day, id));
   };
 
+  const handleEdit = () => {
+    setOpen(true);
+  };
+
+  // Remove the seconds from the displayed time
+  const formatTime = (time) => time.slice(0, -3);
+
   const color = on ? "#b7eb8f" : "#ffd666";
+
+  if (!id) {
+    return null;
+  }
 
   return (
     <div
@@ -35,11 +46,31 @@ export const TimeSlot = ({ start, stop, value, on, id, day }) => {
         marginRight: "0.2em",
       }}
     >
+      <TimeSlotModal
+        day={day}
+        open={open}
+        setOpen={setOpen}
+        start={start}
+        stop={stop}
+        on={on}
+        id={id}
+        target={value}
+        edit
+      />
       <div
-        style={{ cursor: "pointer", alignSelf: "flex-end" }}
-        onClick={handleDelete}
+        style={{
+          width: "100%",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+        }}
       >
-        <Icon path={mdiTrashCanOutline} size={1} />
+        <div style={{ cursor: "pointer" }} onClick={handleEdit}>
+          <Icon path={mdiPencilOutline} size={1} />
+        </div>
+        <div style={{ cursor: "pointer" }} onClick={handleDelete}>
+          <Icon path={mdiTrashCanOutline} size={1} />
+        </div>
       </div>
       <div style={{ fontSize: "2.3em" }}>
         {value}°C

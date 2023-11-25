@@ -16,7 +16,7 @@ func (h *httpd) getScheduledComponent(ps httprouter.Params) (components.Schedule
 	componentID := ps.ByName("id")
 	c, err := h.components.Get(componentID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get the component: %s", err)
+		return nil, fmt.Errorf("failed to get the component: %w", err)
 	}
 
 	sc, ok := c.(components.Scheduled)
@@ -27,7 +27,39 @@ func (h *httpd) getScheduledComponent(ps httprouter.Params) (components.Schedule
 	return sc, nil
 }
 
-func (h *httpd) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) saveSchedule(w http.ResponseWriter, sc components.Scheduled) {
+	if err := sc.SaveSchedule(); err != nil {
+		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err))
+		return
+	}
+
+	h.httpRenderJSON(w, nil)
+}
+
+func (h *httpd) timeSlot(r *http.Request) (*schedule.TimeSlot, error) {
+	ts := schedule.TimeSlot{}
+	if err := json.NewDecoder(r.Body).Decode(&ts); err != nil {
+		return nil, err
+	}
+
+	return &ts, nil
+}
+
+func (h *httpd) getWeekday(ps httprouter.Params) (time.Weekday, error) {
+	weekdayStr := ps.ByName("weekday")
+	weekday, err := strconv.Atoi(weekdayStr)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse weekday: %w", err)
+	}
+
+	if weekday < 0 || weekday > 6 {
+		return 0, fmt.Errorf("invalid weekday: %s", weekdayStr)
+	}
+
+	return time.Weekday(weekday), nil
+}
+
+func (h *httpd) getSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sc, err := h.getScheduledComponent(ps)
 	if err != nil {
 		h.httpError(w, err.Error())
@@ -45,23 +77,16 @@ func (h *httpd) httpGetSchedule(w http.ResponseWriter, r *http.Request, ps httpr
 	h.httpRenderJSON(w, data)
 }
 
-func (h *httpd) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	ts := schedule.TimeSlot{}
-	err := json.NewDecoder(r.Body).Decode(&ts)
+func (h *httpd) addScheduleTimeSlot(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	ts, err := h.timeSlot(r)
 	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to decode data: %s", err.Error()))
+		h.httpError(w, fmt.Sprintf("failed to decode timeslot: %s", err.Error()))
 		return
 	}
 
-	weekdayStr := ps.ByName("weekday")
-	weekday, err := strconv.Atoi(weekdayStr)
+	weekday, err := h.getWeekday(ps)
 	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to parse weekday: %s", err.Error()))
-		return
-	}
-
-	if weekday < 0 || weekday > 6 {
-		h.httpError(w, "invalid weekday")
+		h.httpError(w, err.Error())
 		return
 	}
 
@@ -71,23 +96,16 @@ func (h *httpd) httpPostSchedule(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	schedule := sc.Schedule()
-	err = schedule.Add(time.Weekday(weekday), &ts)
+	err = sc.Schedule().Add(weekday, ts)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to add to the schedule: %s", err.Error()))
 		return
 	}
 
-	err = sc.SaveSchedule(schedule)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
-		return
-	}
-
-	h.httpRenderJSON(w, nil)
+	h.saveSchedule(w, sc)
 }
 
-func (h *httpd) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) updateScheduleDefault(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	d := struct {
 		Value float64 `json:"value"`
 	}{}
@@ -104,18 +122,11 @@ func (h *httpd) httpPostScheduleDefault(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	schedule := sc.Schedule()
-	schedule.DefaultValue = d.Value
-	err = sc.SaveSchedule(schedule)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
-		return
-	}
-
-	h.httpRenderJSON(w, nil)
+	sc.Schedule().DefaultValue = d.Value
+	h.saveSchedule(w, sc)
 }
 
-func (h *httpd) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) getScheduleOverrides(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	override := &schedule.Override{}
 	err := json.NewDecoder(r.Body).Decode(override)
 	if err != nil {
@@ -129,36 +140,23 @@ func (h *httpd) httpPostScheduleOverrides(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	schedule := sc.Schedule()
-	err = schedule.AddOverride(override)
+	err = sc.Schedule().AddOverride(override)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to add schedule override: %s", err))
 		return
 	}
 
-	err = sc.SaveSchedule(schedule)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
-		return
-	}
-
-	h.httpRenderJSON(w, nil)
+	h.saveSchedule(w, sc)
 }
 
-func (h *httpd) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	weekdayStr := ps.ByName("weekday")
-	weekday, err := strconv.Atoi(weekdayStr)
+func (h *httpd) updateScheduleTimeSlot(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	tsID := ps.ByName("tsID")
+
+	weekday, err := h.getWeekday(ps)
 	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to parse weekday: %s", err.Error()))
+		h.httpError(w, err.Error())
 		return
 	}
-
-	if weekday < 0 || weekday > 6 {
-		h.httpError(w, "invalid weekday")
-		return
-	}
-
-	uuid := ps.ByName("uuid")
 
 	sc, err := h.getScheduledComponent(ps)
 	if err != nil {
@@ -166,23 +164,46 @@ func (h *httpd) httpDeleteSchedule(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	schedule := sc.Schedule()
-	err = schedule.Delete(time.Weekday(weekday), uuid)
+	ts, err := h.timeSlot(r)
+	if err != nil {
+		h.httpError(w, fmt.Sprintf("failed to decode timeslot: %s", err.Error()))
+		return
+	}
+
+	err = sc.Schedule().Update(weekday, ts, tsID)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to delete the schedule: %s", err.Error()))
 		return
 	}
 
-	err = sc.SaveSchedule(schedule)
+	h.saveSchedule(w, sc)
+}
+
+func (h *httpd) deleteScheduleTimeSlot(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	weekday, err := h.getWeekday(ps)
 	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err.Error()))
+		h.httpError(w, err.Error())
 		return
 	}
 
-	h.httpRenderJSON(w, nil)
+	tsID := ps.ByName("tsID")
+
+	sc, err := h.getScheduledComponent(ps)
+	if err != nil {
+		h.httpError(w, err.Error())
+		return
+	}
+
+	err = sc.Schedule().Delete(weekday, tsID)
+	if err != nil {
+		h.httpError(w, fmt.Sprintf("failed to delete the schedule: %s", err.Error()))
+		return
+	}
+
+	h.saveSchedule(w, sc)
 }
 
-func (h *httpd) httpDeleteScheduleOverride(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *httpd) deleteScheduleOverride(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sc, err := h.getScheduledComponent(ps)
 	if err != nil {
 		h.httpError(w, err.Error())
@@ -190,18 +211,11 @@ func (h *httpd) httpDeleteScheduleOverride(w http.ResponseWriter, r *http.Reques
 	}
 
 	id := ps.ByName("overrideID")
-	schedule := sc.Schedule()
-	err = schedule.DeleteOverride(id)
+	err = sc.Schedule().DeleteOverride(id)
 	if err != nil {
 		h.httpError(w, fmt.Sprintf("failed to delete the schedule override: %s", err))
 		return
 	}
 
-	err = sc.SaveSchedule(schedule)
-	if err != nil {
-		h.httpError(w, fmt.Sprintf("failed to save schedule: %s", err))
-		return
-	}
-
-	h.httpRenderJSON(w, nil)
+	h.saveSchedule(w, sc)
 }

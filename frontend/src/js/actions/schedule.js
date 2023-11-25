@@ -2,57 +2,64 @@ import { request } from "../request";
 
 import { notificationAdd } from "./notifications";
 
-export const fetchSchedule = (id) =>
-  request("SCHEDULE_FETCH", "GET", `/components/${id}/schedule`, null, null, {
-    id,
+export const fetchSchedule = (cid) =>
+  request("SCHEDULE_FETCH", "GET", `/components/${cid}/schedule`, null, null, {
+    id: cid,
   });
 
-export const addSchedule = (id, weekday, data) =>
+export const addScheduleTimeSlot = (cid, weekday, data) =>
   request(
-    "SCHEDULE_ADD",
+    "SCHEDULE_ADD_TIMESLOT",
     "POST",
-    `/components/${id}/schedule/daily/${weekday}`,
+    `/components/${cid}/schedule/daily/${weekday}`,
     data,
-    [() => fetchSchedule(id)],
-    { id }
+    [() => fetchSchedule(cid)]
   );
 
-export const addScheduleOverride = (id, data) =>
+export const updateScheduleTimeSlot = (cid, weekday, data, id) =>
+  request(
+    "SCHEDULE_UPDATE_TIMESLOT",
+    "PUT",
+    `/components/${cid}/schedule/daily/${weekday}/${id}`,
+    data,
+    [() => fetchSchedule(cid)]
+  );
+
+export const deleteScheduleTimeSlot = (cid, weekday, id) =>
+  request(
+    "SCHEDULE_DELETE_TIMESLOT",
+    "DELETE",
+    `/components/${cid}/schedule/daily/${weekday}/${id}`,
+    null,
+    [() => fetchSchedule(cid)]
+  );
+
+export const addScheduleOverride = (cid, data) =>
   request(
     "SCHEDULE_ADD_OVERRIDE",
     "POST",
-    `/components/${id}/schedule/overrides`,
+    `/components/${cid}/schedule/overrides`,
     data,
-    [() => fetchSchedule(id)],
-    { id }
+    [() => fetchSchedule(cid)]
   );
 
-export const deleteSchedule = (componentId, weekday, scheduleId) =>
+export const deleteScheduleOverride = (cid, oid) =>
   request(
-    "SCHEDULE_DELETE",
+    "SCHEDULE_DELETE_OVERRIDE",
     "DELETE",
-    `/components/${componentId}/schedule/daily/${weekday}/${scheduleId}`,
+    `/components/${cid}/schedule/overrides/${oid}`,
     null,
-    [() => fetchSchedule(componentId)]
+    [() => fetchSchedule(cid)]
   );
 
-export const deleteScheduleOverride = (componentId, overrideId) =>
-  request(
-    "SCHEDULE_OVERRIDE_DELETE",
-    "DELETE",
-    `/components/${componentId}/schedule/overrides/${overrideId}`,
-    null,
-    [() => fetchSchedule(componentId)]
-  );
-
-export const setScheduleDefault = (id, value) =>
+export const setScheduleDefault = (cid, value) =>
   request(
     "SCHEDULE_SET_DEFAULT",
     "POST",
-    `/components/${id}/schedule/default`,
+    `/components/${cid}/schedule/default`,
     { value: parseInt(value) },
     [
-      () => fetchSchedule(id),
+      () => fetchSchedule(cid),
       () =>
         notificationAdd(
           "Schedule default updated",
@@ -60,6 +67,5 @@ export const setScheduleDefault = (id, value) =>
           4,
           "schedule_default_update"
         ),
-    ],
-    { id }
+    ]
   );

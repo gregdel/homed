@@ -43,12 +43,12 @@ func (c *ScheduledComponent) SetSchedule(s *schedule.Schedule, path, name string
 }
 
 // SaveSchedule implements the Scheduled interface
-func (c *ScheduledComponent) SaveSchedule(s *schedule.Schedule) error {
+func (c *ScheduledComponent) SaveSchedule() error {
 	file, err := os.OpenFile(c.schedulePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	return yaml.NewEncoder(file).Encode(s)
+	return yaml.NewEncoder(file).Encode(c.schedule)
 }

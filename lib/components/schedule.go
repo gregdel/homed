@@ -16,7 +16,7 @@ type Scheduled interface {
 	Schedule() *schedule.Schedule
 	ScheduleName() string
 	SetSchedule(*schedule.Schedule, string, string)
-	SaveSchedule(*schedule.Schedule) error
+	SaveSchedule() error
 }
 
 func schedulePath(path, name string) string {

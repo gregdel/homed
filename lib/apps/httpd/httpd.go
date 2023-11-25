@@ -47,12 +47,13 @@ func (h *httpd) Init(config *config.Config) error {
 
 	router.GET("/components", h.httpComponentList)
 	router.PUT("/components/:id", h.updateComponent)
-	router.GET("/components/:id/schedule", h.httpGetSchedule)
-	router.POST("/components/:id/schedule/default", h.httpPostScheduleDefault)
-	router.POST("/components/:id/schedule/overrides", h.httpPostScheduleOverrides)
-	router.DELETE("/components/:id/schedule/overrides/:overrideID", h.httpDeleteScheduleOverride)
-	router.POST("/components/:id/schedule/daily/:weekday", h.httpPostSchedule)
-	router.DELETE("/components/:id/schedule/daily/:weekday/:uuid", h.httpDeleteSchedule)
+	router.GET("/components/:id/schedule", h.getSchedule)
+	router.POST("/components/:id/schedule/default", h.updateScheduleDefault)
+	router.POST("/components/:id/schedule/overrides", h.getScheduleOverrides)
+	router.DELETE("/components/:id/schedule/overrides/:overrideID", h.deleteScheduleOverride)
+	router.POST("/components/:id/schedule/daily/:weekday", h.addScheduleTimeSlot)
+	router.DELETE("/components/:id/schedule/daily/:weekday/:tsID", h.deleteScheduleTimeSlot)
+	router.PUT("/components/:id/schedule/daily/:weekday/:tsID", h.updateScheduleTimeSlot)
 
 	var httpFS http.FileSystem
 	if config.Dev {
