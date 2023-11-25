@@ -30,11 +30,12 @@ var (
 	TypeRollerShutter  Type = "roller_shutter"
 
 	// Other components
-	TypeHomedTemperature    Type = "homed_temperature"
-	TypeHomedHumidity       Type = "homed_humidity"
-	TypeZigbeeTRV           Type = "zigbee_trv"
-	TypeBoiler              Type = "boiler"
-	TypeZigbeeClimateSensor Type = "zigbee_climate_sensor"
+	TypeHomedTemperature       Type = "homed_temperature"
+	TypeHomedTemperatureSwitch Type = "homed_temperature_switch"
+	TypeHomedHumidity          Type = "homed_humidity"
+	TypeZigbeeTRV              Type = "zigbee_trv"
+	TypeBoiler                 Type = "boiler"
+	TypeZigbeeClimateSensor    Type = "zigbee_climate_sensor"
 )
 
 // Component represents a component

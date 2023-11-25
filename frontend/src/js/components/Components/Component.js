@@ -16,6 +16,7 @@ import { RollerShutter } from "./RollerShutter";
 import { GenericSensor } from "./GenericSensor";
 import { BinarySensor } from "./BinarySensor";
 import { HomedTemperature } from "./HomedTemperature";
+import { TemperatureSwitch } from "./TemperatureSwitch";
 import { ZigbeeTRV } from "./ZigbeeTRV";
 import { WifiSignal } from "./WifiSignal";
 import { ZigbeeClimateSensor } from "./ZigbeeClimateSensor";
@@ -69,6 +70,9 @@ export const Component = ({
       break;
     case "homed_temperature":
       typedComponent = <HomedTemperature id={id} />;
+      break;
+    case "homed_temperature_switch":
+      typedComponent = <TemperatureSwitch id={id} />;
       break;
     case "zigbee_climate_sensor":
       typedComponent = <ZigbeeClimateSensor id={id} />;

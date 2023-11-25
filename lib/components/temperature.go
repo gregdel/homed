@@ -5,6 +5,7 @@ type TemperatureMode string
 
 // Available modes
 var (
+	TemperatureModeOnOff           TemperatureMode = "on_off"
 	TemperatureModeAuto            TemperatureMode = "auto"
 	TemperatureModeFixed           TemperatureMode = "fixed"
 	TemperatureModeDuration        TemperatureMode = "duration"

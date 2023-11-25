@@ -31,6 +31,14 @@ roller_shutter: &roller_shutter
   random_delay: 20
 
 devices:
+- name: homed_temperature_switch
+  room: none
+  components:
+  - type: homed_temperature_switch
+    params:
+      switches:
+        - homed_temperature_living_room
+
 #############################
 # Basement
 #############################
@@ -92,6 +100,7 @@ devices:
   room: living_room
   components:
   - type: homed_temperature
+    id: homed_temperature_living_room
     schedule_name: temperature_floor_0
     internal: true
     state_topic: home/homed/temperature/rooms/living_room/state

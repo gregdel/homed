@@ -20,12 +20,14 @@ export default (state = defaultState, action) =>
           const room = component.values.room_name;
           draft.components.set(id, component);
 
-          // Keep the temperature controled rooms in a different map
           if (component.type === "homed_temperature") {
             draft.temperatureControl.rooms.set(room, id);
           }
 
-          // Keep the temperature controled rooms in a different map
+          if (component.type === "homed_temperature_switch") {
+            draft.temperatureControl.temperatureSwitch = id;
+          }
+
           if (component.type === "boiler") {
             draft.temperatureControl.boiler = id;
           }

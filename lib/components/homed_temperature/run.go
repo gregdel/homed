@@ -113,6 +113,10 @@ func (h *HomedTemperature) updateTemperature() {
 func (h *HomedTemperature) updateTemperatureMode() {
 	log := h.log
 
+	if !h.On.Load() {
+		return
+	}
+
 	// Unset manual until
 	manualUntil := h.ManualUntil.Load()
 	if manualUntil != nil && time.Now().After(*manualUntil) {

@@ -15,11 +15,13 @@ import {
   mdiTimerOutline,
   mdiAutorenew,
   mdiCalendarClock,
+  mdiThermometer,
+  mdiThermometerOff,
   mdiRadiator,
   mdiLeaf,
 } from "@mdi/js";
 
-import { Card, Slider, Popover, DatePicker, Input } from "antd";
+import { Card, Slider, Popover, DatePicker, Input, Divider } from "antd";
 import { Link } from "react-router-dom";
 
 export const HomedTemperature = ({ id }) => {
@@ -32,6 +34,7 @@ export const HomedTemperature = ({ id }) => {
       mode,
       device,
       heating,
+      on,
       opportunistic,
       manual_target: manualTarget,
       manual_until: manualUntil,
@@ -48,12 +51,19 @@ export const HomedTemperature = ({ id }) => {
 
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  const sendChange = ({ mode, target, duration = null, date = null }) => {
+  const sendChange = ({
+    mode,
+    target,
+    duration = null,
+    date = null,
+    on = null,
+  }) => {
     const data = {
       mode,
       manual_target: target,
       manual_until: date,
       manual_duration: duration,
+      on,
     };
     setShowTimePicker(false);
 
@@ -142,9 +152,10 @@ export const HomedTemperature = ({ id }) => {
     </div>
   );
 
-  const actions = showTimePicker
-    ? [ActionTimer, ActionCalendar, ActionUntilNext, ActionInfinity]
-    : [];
+  const actions =
+    on && showTimePicker
+      ? [ActionTimer, ActionCalendar, ActionUntilNext, ActionInfinity]
+      : [];
 
   const icon = opportunistic ? mdiLeaf : mdiRadiator;
 
@@ -154,9 +165,30 @@ export const HomedTemperature = ({ id }) => {
     <Card
       title={title}
       extra={
-        <Link to={`/components/${id}/schedule`} style={{ color: "#000000d9" }}>
-          <Icon path={mdiCalendarClock} size={1} />
-        </Link>
+        <div style={{ display: "flex" }}>
+          <div
+            onClick={() => {
+              sendChange({ mode: "on_off", on: !on });
+            }}
+          >
+            <Icon
+              path={on ? mdiThermometer : mdiThermometerOff}
+              size={1}
+              style={{
+                cursor: "pointer",
+                color: on ? "#000000" : "#00000040",
+                transition: "color 0.3s ease-out 0s",
+              }}
+            />
+          </div>
+          <Divider type="vertical" style={{ height: "1.8rem" }} />
+          <Link
+            to={`/components/${id}/schedule`}
+            style={{ color: "#000000d9" }}
+          >
+            <Icon path={mdiCalendarClock} size={1} />
+          </Link>
+        </div>
       }
       actions={actions}
     >
@@ -164,38 +196,55 @@ export const HomedTemperature = ({ id }) => {
         <span>{current.toFixed(1)}°C</span>
       </div>
 
-      <div
-        style={{
-          fontSize: "1em",
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-      >
-        <span>Target set to {mode === "auto" ? target : manualTarget}°C</span>
-        <Icon
-          path={icon}
-          size={1}
+      {on && (
+        <div>
+          <div
+            style={{
+              fontSize: "1em",
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <span>
+              Target set to {mode === "auto" ? target : manualTarget}°C
+            </span>
+            <Icon
+              path={icon}
+              size={1}
+              style={{
+                color: heating ? "#ff00005e" : "#00000040",
+              }}
+            />
+          </div>
+
+          <div style={{ fontSize: "1em" }}>
+            <HeatingMode mode={mode} date={manualUntil} />
+          </div>
+
+          <Slider
+            min={8}
+            max={25}
+            step={0.5}
+            marks={marks}
+            value={newTarget}
+            onChange={(value) => {
+              setNewTarget(value);
+            }}
+            onAfterChange={onAfterChange}
+          />
+        </div>
+      )}
+      {!on && (
+        <div
           style={{
-            color: heating ? "#ff00005e" : "#00000040",
+            fontSize: "2em",
+            marginTop: "0px",
+            marginBotton: "0px",
           }}
-        />
-      </div>
-
-      <div style={{ fontSize: "1em" }}>
-        <HeatingMode mode={mode} date={manualUntil} />
-      </div>
-
-      <Slider
-        min={8}
-        max={25}
-        step={0.5}
-        marks={marks}
-        value={newTarget}
-        onChange={(value) => {
-          setNewTarget(value);
-        }}
-        onAfterChange={onAfterChange}
-      />
+        >
+          OFF
+        </div>
+      )}
     </Card>
   );
 };

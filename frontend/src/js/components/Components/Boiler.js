@@ -20,23 +20,24 @@ export const Boiler = ({ id }) => {
       style={{
         display: "flex",
         alignItems: "flex-end",
+        flexWrap: "wrap",
         justifyContent: "space-between",
       }}
     >
       <div>
-        <Typography.Title level={3}>
-          Boiler is {on ? "on" : "off"}
-        </Typography.Title>
+        <Typography.Title level={2}>Boiler</Typography.Title>
       </div>
       <div>
-        <Icon
-          path={mdiFire}
-          size={2}
-          style={{
-            color: on ? "#ff4d4f" : "#00000040",
-            transition: "color 0.3s ease-out 0s",
-          }}
-        />
+        <div>
+          <Icon
+            path={mdiFire}
+            size={3}
+            style={{
+              color: on ? "#ff4d4f" : "#00000040",
+              transition: "color 0.3s ease-out 0s",
+            }}
+          />
+        </div>
       </div>
     </div>
   );

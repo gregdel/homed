@@ -42,6 +42,7 @@ type HomedTemperature struct {
 	trvs    map[string]components.TemperatureController
 	binTRVs map[string]components.Switch
 
+	On atomic.Bool `json:"on"`
 	mu sync.RWMutex
 	Data
 }
@@ -78,12 +79,22 @@ func (h *HomedTemperature) Collectors(labels prometheus.Labels) []prometheus.Col
 				return t
 			},
 		),
+		components.GaugeCollector("temperature_control_on", labels,
+			func() float64 {
+				if h.IsOn() {
+					return 1
+				}
+
+				return 0
+			},
+		),
 	}
 }
 
 // ExecCommand implements the Component interface
 func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 	data := struct {
+		On             bool                       `json:"on"`
 		Mode           components.TemperatureMode `json:"mode"`
 		ManualTarget   float64                    `json:"manual_target"`
 		ManualUntil    *time.Time                 `json:"manual_until,omitempty"`
@@ -94,36 +105,42 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 		return err
 	}
 
+	if data.ManualUntil != nil && time.Now().After(*data.ManualUntil) {
+		return fmt.Errorf("components: homed_temperature: date is in the past")
+	}
+
 	switch data.Mode {
+	case components.TemperatureModeOnOff:
+		h.On.Store(data.On)
 	case components.TemperatureModeAuto:
-		data.ManualTarget = h.Target.Load()
-		data.ManualUntil = nil
+		h.ManualUntil.Store(nil)
 	case components.TemperatureModeFixed:
-		data.ManualUntil = nil
+		h.ManualUntil.Store(nil)
+		h.ManualTarget.Store(data.ManualTarget)
 	case components.TemperatureModeDuration:
 		d, err := time.ParseDuration(data.ManualDuration)
 		if err != nil {
 			return err
 		}
 		t := time.Now().Add(d)
-		data.ManualUntil = &t
+		h.ManualUntil.Store(&t)
+		h.ManualTarget.Store(data.ManualTarget)
 	case components.TemperatureModeUntilDate:
 		if data.ManualUntil == nil {
 			return fmt.Errorf("components: homed_temperature: missing date")
 		}
+		h.ManualUntil.Store(data.ManualUntil)
+		h.ManualTarget.Store(data.ManualTarget)
 	case components.TemperatureModeUntilNextChange:
-		data.ManualUntil = nil
+		h.ManualUntil.Store(nil)
+		h.ManualTarget.Store(data.ManualTarget)
 	default:
 		return nil
 	}
 
-	if data.ManualUntil != nil && time.Now().After(*data.ManualUntil) {
-		return fmt.Errorf("components: homed_temperature: date is in the past")
+	if data.Mode != components.TemperatureModeOnOff {
+		h.Mode.Store(string(data.Mode))
 	}
-
-	h.ManualUntil.Store(data.ManualUntil)
-	h.ManualTarget.Store(data.ManualTarget)
-	h.Mode.Store(string(data.Mode))
 
 	h.updateTemperatureMode()
 	return h.PublishState()
@@ -155,5 +172,31 @@ func (h *HomedTemperature) TemperatureTarget() (float64, error) {
 
 // IsHeating implements the TemperatureController interface
 func (h *HomedTemperature) IsHeating() bool {
-	return h.Heating.Load()
+	return h.IsOn() && h.Heating.Load()
+}
+
+// IsOn implements the Switch interface
+func (h *HomedTemperature) IsOn() bool {
+	return h.On.Load()
+}
+
+// TurnOn implements the Switch interface
+func (h *HomedTemperature) TurnOn() error {
+	h.On.Store(true)
+	return h.PublishState()
+}
+
+// TurnOff implements the Switch interface
+func (h *HomedTemperature) TurnOff() error {
+	h.On.Store(false)
+	return h.PublishState()
+}
+
+// Toggle implements the Switch interface
+func (h *HomedTemperature) Toggle() error {
+	if h.IsOn() {
+		return h.TurnOff()
+	}
+
+	return h.TurnOn()
 }
