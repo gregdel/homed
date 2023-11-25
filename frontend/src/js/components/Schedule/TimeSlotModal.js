@@ -3,14 +3,17 @@ import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 
+import Icon from "@mdi/react";
+import { mdiCheckboxBlank, mdiCheckboxBlankOutline } from "@mdi/js";
+
+import { Modal, Form, Input, Switch, Typography, Divider } from "antd";
+
 import {
   addScheduleTimeSlot,
   updateScheduleTimeSlot,
 } from "../../actions/schedule";
 
 import { daysMap } from "./DailySchedule";
-
-import { Modal, Form, Input, Switch, Checkbox } from "antd";
 
 const DaysCheckboxes = ({ checked, setChecked }) => {
   const handleCheck = (i) => {
@@ -22,14 +25,38 @@ const DaysCheckboxes = ({ checked, setChecked }) => {
   let items = [];
   for (let i = 0; i < 7; i = i + 1) {
     items.push(
-      <Form.Item label={daysMap[i]} name={`day-${i}`} key={`day-${i}`}>
-        <Checkbox checked={checked[i]} onChange={() => handleCheck(i)} />
-      </Form.Item>
+      <div
+        style={{
+          cursor: "pointer",
+          display: "flex",
+          justifyContent: "space-between",
+          marginLeft: "3em",
+          marginRight: "3em",
+        }}
+        onClick={() => handleCheck(i)}
+      >
+        <Typography.Title style={{ fontWeight: "300" }} level={3}>
+          {daysMap[i]}
+        </Typography.Title>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div>
+            <Icon
+              path={checked[i] ? mdiCheckboxBlank : mdiCheckboxBlankOutline}
+              size={2}
+            />
+          </div>
+        </div>
+      </div>
     );
   }
   items.push(items.shift());
 
-  return items;
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <Divider />
+      {items}
+    </div>
+  );
 };
 DaysCheckboxes.propTypes = {
   checked: PropTypes.array.isRequired,
