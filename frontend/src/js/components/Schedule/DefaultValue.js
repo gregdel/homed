@@ -3,33 +3,56 @@ import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 
-import { Input } from "antd";
+import { Modal, Form, Input } from "antd";
 
 import { setScheduleDefault } from "../../actions/schedule";
 
-export const DefaultValue = ({ defaultValue: v }) => {
+export const DefaultValue = ({ defaultValue }) => {
   const dispatch = useDispatch();
   const { componentId } = useParams();
-  const [defaultValue, setDefaultValue] = useState(v);
+  const [value, setValue] = useState(defaultValue);
 
-  const update = () => {
-    dispatch(setScheduleDefault(componentId, defaultValue));
+  const handleOk = () => {
+    setOpen(false);
+    dispatch(setScheduleDefault(componentId, value));
   };
 
+  const [open, setOpen] = useState(false);
+
   return (
-    <div>
-      <div>Default value</div>
-      <div>
-        <Input
-          onChange={(e) => {
-            setDefaultValue(e.target.value);
-          }}
-          onPressEnter={update}
-          value={defaultValue}
-          suffix="°C"
-          type="number"
-        />
+    <div style={{ cursor: "pointer" }}>
+      <div
+        style={{ display: "flex", flexDirection: "column" }}
+        onClick={() => setOpen(true)}
+      >
+        <div style={{ fontSize: "2em" }}>Default:</div>
+        <div style={{ fontSize: "3em" }}>{value} °C</div>
       </div>
+      <Modal
+        title="Set default value"
+        open={open}
+        onOk={handleOk}
+        onCancel={() => setOpen(false)}
+      >
+        <Form
+          labelCol={{ span: 5 }}
+          name="schedule-default-value"
+          onFinish={handleOk}
+          onFinishFailed={handleOk}
+          initialValues={{
+            defaultValue: defaultValue,
+          }}
+        >
+          <Form.Item
+            label="Default value"
+            name="defaultValue"
+            suffix="°C"
+            onChange={(e) => setValue(e.target.value)}
+          >
+            <Input type="number" step=".5" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

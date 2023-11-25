@@ -14,7 +14,7 @@ import {
   mdiCalendar,
   mdiTimerOutline,
   mdiAutorenew,
-  mdiAvTimer,
+  mdiCalendarClock,
   mdiRadiator,
   mdiLeaf,
 } from "@mdi/js";
@@ -155,7 +155,7 @@ export const HomedTemperature = ({ id }) => {
       title={title}
       extra={
         <Link to={`/components/${id}/schedule`} style={{ color: "#000000d9" }}>
-          <Icon path={mdiAvTimer} size={1} />
+          <Icon path={mdiCalendarClock} size={1} />
         </Link>
       }
       actions={actions}
@@ -186,8 +186,8 @@ export const HomedTemperature = ({ id }) => {
       </div>
 
       <Slider
-        min={5}
-        max={35}
+        min={8}
+        max={25}
         step={0.5}
         marks={marks}
         value={newTarget}

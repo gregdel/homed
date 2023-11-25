@@ -8,7 +8,33 @@ import {
   updateScheduleTimeSlot,
 } from "../../actions/schedule";
 
-import { Modal, Form, Input, Switch } from "antd";
+import { daysMap } from "./DailySchedule";
+
+import { Modal, Form, Input, Switch, Checkbox } from "antd";
+
+const DaysCheckboxes = ({ checked, setChecked }) => {
+  const handleCheck = (i) => {
+    let values = [...checked];
+    values[i] = !values[i];
+    setChecked(values);
+  };
+
+  let items = [];
+  for (let i = 0; i < 7; i = i + 1) {
+    items.push(
+      <Form.Item label={daysMap[i]} name={`day-${i}`} key={`day-${i}`}>
+        <Checkbox checked={checked[i]} onChange={() => handleCheck(i)} />
+      </Form.Item>
+    );
+  }
+  items.push(items.shift());
+
+  return items;
+};
+DaysCheckboxes.propTypes = {
+  checked: PropTypes.array.isRequired,
+  setChecked: PropTypes.func.isRequired,
+};
 
 export const TimeSlotModal = ({
   start: defaultStart,
@@ -28,6 +54,15 @@ export const TimeSlotModal = ({
   const [stop, setStop] = useState(defaultStop);
   const [target, setTarget] = useState(defaultTarget);
   const [on, setOn] = useState(defaultOn);
+  const [checked, setChecked] = useState([
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+  ]);
 
   const handleOk = () => {
     setOpen(false);
@@ -41,7 +76,16 @@ export const TimeSlotModal = ({
     if (edit) {
       dispatch(updateScheduleTimeSlot(componentId, day, data, id));
     } else {
-      dispatch(addScheduleTimeSlot(componentId, day, data));
+      if (day === undefined) {
+        checked.map((v, day) => {
+          if (v === false) {
+            return;
+          }
+          dispatch(addScheduleTimeSlot(componentId, day, data));
+        });
+      } else {
+        dispatch(addScheduleTimeSlot(componentId, day, data));
+      }
     }
   };
 
@@ -51,9 +95,10 @@ export const TimeSlotModal = ({
 
   const title = edit ? "Edit timeslot" : "Add in schedule";
 
+  const dayStr = day ? day : "all";
   const formName = id
-    ? `ts-${componentId}-${day}-modal-${id}`
-    : `ts-${componentId}-${day}-modal`;
+    ? `ts-${componentId}-${dayStr}-modal-${id}`
+    : `ts-${componentId}-${dayStr}-modal`;
 
   return (
     <Modal title={title} open={open} onOk={handleOk} onCancel={handleCancel}>
@@ -98,6 +143,9 @@ export const TimeSlotModal = ({
             checked={on}
           />
         </Form.Item>
+        {day === undefined && (
+          <DaysCheckboxes checked={checked} setChecked={setChecked} />
+        )}
       </Form>
     </Modal>
   );
@@ -105,7 +153,7 @@ export const TimeSlotModal = ({
 TimeSlotModal.propTypes = {
   open: PropTypes.bool.isRequired,
   setOpen: PropTypes.func.isRequired,
-  day: PropTypes.number.isRequired,
+  day: PropTypes.number,
   id: PropTypes.string,
   start: PropTypes.any,
   stop: PropTypes.any,

@@ -7,17 +7,17 @@ const { Title } = Typography;
 import { Add } from "./Add";
 import { Timeline } from "./Timeline";
 
-export const DailySchedule = ({ day = 0, data = [] }) => {
-  const days = {
-    0: "Sunday",
-    1: "Monday",
-    2: "Tuesday",
-    3: "Wednesay",
-    4: "Thrusday",
-    5: "Friday",
-    6: "Saturday",
-  };
+export const daysMap = {
+  0: "Sunday",
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesay",
+  4: "Thrusday",
+  5: "Friday",
+  6: "Saturday",
+};
 
+export const DailySchedule = ({ day = 0, data = [] }) => {
   return (
     <>
       <div
@@ -27,7 +27,7 @@ export const DailySchedule = ({ day = 0, data = [] }) => {
           alignItems: "baseline",
         }}
       >
-        <Title level={3}>{days[day]}</Title>
+        <Title level={3}>{daysMap[day]}</Title>
         <Add day={day} />
       </div>
       <Timeline day={day} data={data} />
