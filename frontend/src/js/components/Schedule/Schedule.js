@@ -1,20 +1,16 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
-import PropTypes from "prop-types";
 import { prettyName } from "../../utils";
 
-import { fetchSchedule, deleteSchedule } from "../../actions/schedule";
-
-import Icon from "@mdi/react";
-import { mdiTrashCanOutline, mdiLeaf } from "@mdi/js";
+import { fetchSchedule } from "../../actions/schedule";
 
 import { Typography, Divider } from "antd";
 const { Title } = Typography;
 
-import { Add } from "./Add";
 import { DefaultValue } from "./DefaultValue";
 import { Overrides } from "./Overrides";
+import { DailySchedule } from "./DailySchedule";
 
 export const Schedule = () => {
   const dispatch = useDispatch();
@@ -45,125 +41,4 @@ export const Schedule = () => {
       {items}
     </>
   );
-};
-
-const DailySchedule = ({ day = 0, data = [] }) => {
-  const days = {
-    0: "Sunday",
-    1: "Monday",
-    2: "Tuesday",
-    3: "Wednesay",
-    4: "Thrusday",
-    5: "Friday",
-    6: "Saturday",
-  };
-
-  return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-        }}
-      >
-        <Title level={3}>{days[day]}</Title>
-        <Add day={day} />
-      </div>
-      <Timeline day={day} data={data} />
-      <Divider />
-    </>
-  );
-};
-DailySchedule.propTypes = {
-  day: PropTypes.number.isRequired,
-  data: PropTypes.array.isRequired,
-};
-
-export const Timeline = ({ day, data = [] }) => {
-  if (data.length === 0) {
-    return <div>No schedule defined</div>;
-  }
-
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "8em",
-        overflow: "auto",
-        backgroundColor: "#69c0ff",
-        borderRadius: "0.3em",
-      }}
-    >
-      <div
-        style={{
-          height: "100%",
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-around",
-        }}
-      >
-        {data.map((v, i) => (
-          <TimeSlot key={i} day={day} {...v} />
-        ))}
-      </div>
-    </div>
-  );
-};
-Timeline.propTypes = {
-  day: PropTypes.number.isRequired,
-  data: PropTypes.array.isRequired,
-};
-
-// Remove the seconds from the displayed time
-const formatTime = (time) => time.slice(0, -3);
-
-export const TimeSlot = ({ start, stop, value, on, id, day }) => {
-  const dispatch = useDispatch();
-  const { componentId } = useParams();
-
-  const handleDelete = () => {
-    dispatch(deleteSchedule(componentId, day, id));
-  };
-
-  const color = on ? "#b7eb8f" : "#ffd666";
-
-  return (
-    <div
-      style={{
-        minWidth: "8em",
-        backgroundColor: color,
-        padding: "0.3em",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginLeft: "0.2em",
-        marginRight: "0.2em",
-      }}
-    >
-      <div
-        style={{ cursor: "pointer", alignSelf: "flex-end" }}
-        onClick={handleDelete}
-      >
-        <Icon path={mdiTrashCanOutline} size={1} />
-      </div>
-      <div style={{ fontSize: "2.3em" }}>
-        {value}°C
-        {on && <Icon style={{ marginLeft: "0.2em" }} path={mdiLeaf} size={1} />}
-      </div>
-      <div>
-        <span>{formatTime(start)}</span>
-        {stop && <span> - {formatTime(stop)}</span>}
-      </div>
-    </div>
-  );
-};
-TimeSlot.propTypes = {
-  id: PropTypes.string.isRequired,
-  on: PropTypes.bool.isRequired,
-  start: PropTypes.string.isRequired,
-  stop: PropTypes.string,
-  value: PropTypes.number.isRequired,
-  day: PropTypes.number.isRequired,
 };

@@ -1,0 +1,41 @@
+import React from "react";
+import PropTypes from "prop-types";
+
+import { Typography, Divider } from "antd";
+const { Title } = Typography;
+
+import { Add } from "./Add";
+import { Timeline } from "./Timeline";
+
+export const DailySchedule = ({ day = 0, data = [] }) => {
+  const days = {
+    0: "Sunday",
+    1: "Monday",
+    2: "Tuesday",
+    3: "Wednesay",
+    4: "Thrusday",
+    5: "Friday",
+    6: "Saturday",
+  };
+
+  return (
+    <>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+        }}
+      >
+        <Title level={3}>{days[day]}</Title>
+        <Add day={day} />
+      </div>
+      <Timeline day={day} data={data} />
+      <Divider />
+    </>
+  );
+};
+DailySchedule.propTypes = {
+  day: PropTypes.number.isRequired,
+  data: PropTypes.array.isRequired,
+};
