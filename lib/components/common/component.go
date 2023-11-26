@@ -34,6 +34,7 @@ type Component struct {
 	Cid        string    `json:"id"`
 	UpdatedAt  Time      `json:"updated_at"`
 	Name       string    `json:"friendly_name"`
+	GraphURL   string    `json:"graph_url"`
 	YAMLParams yaml.Node `json:"-"`
 }
 
@@ -96,6 +97,7 @@ func (c *Component) SetConfig(config *config.Component) {
 	c.StateTopic = config.StateTopic
 	c.Name = config.FriendlyName
 	c.YAMLParams = config.Params
+	c.GraphURL = config.GraphURL
 }
 
 // SetID implements the Component interface

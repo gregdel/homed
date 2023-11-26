@@ -47,6 +47,7 @@ type Component struct {
 	Hide         bool      `yaml:"hide"`
 	ScheduleName string    `yaml:"schedule_name"`
 	Params       yaml.Node `yaml:"params"`
+	GraphURL     string    `yaml:"graph_url"`
 }
 
 // TemperatureControl represents the configuration of the temperature control

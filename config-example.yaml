@@ -107,6 +107,7 @@ devices:
     command_topic: home/homed/temperature/rooms/living_room/command
     params: *temperature_control
     friendly_name: Living Room
+    graph_url: http://grafana.example.com/asdfadfafas
 
 - name: climate_sensor_living_room
   room: living_room

@@ -15,6 +15,7 @@ import {
   mdiTimerOutline,
   mdiAutorenew,
   mdiCalendarClock,
+  mdiChartLine,
   mdiThermometer,
   mdiThermometerOff,
   mdiRadiator,
@@ -30,6 +31,7 @@ export const HomedTemperature = ({ id }) => {
     values: {
       current,
       friendly_name: friendlyName,
+      graph_url: graphURL,
       target,
       mode,
       device,
@@ -166,6 +168,17 @@ export const HomedTemperature = ({ id }) => {
       title={title}
       extra={
         <div style={{ display: "flex" }}>
+          {graphURL !== "" && (
+            <>
+              <Link
+                to={`/components/${id}/graph`}
+                style={{ color: "#000000d9" }}
+              >
+                <Icon path={mdiChartLine} size={1} />
+              </Link>
+              <Divider type="vertical" style={{ height: "1.8rem" }} />
+            </>
+          )}
           <div
             onClick={() => {
               sendChange({ mode: "on_off", on: !on });

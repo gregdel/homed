@@ -31,6 +31,7 @@ export const Components = ({ typesFilter, noCard }) => {
         online: value.values.device.online,
         updatedAt: value.values.updated_at,
         friendlyName: value.values.friendly_name,
+        graphURL: value.values.graph_url,
         type: value.type,
       }))
       .sort((a, b) => {
@@ -59,6 +60,7 @@ export const Components = ({ typesFilter, noCard }) => {
           deviceName,
           online,
           friendlyName,
+          graphURL,
           updatedAt,
           type,
         }) => (
@@ -72,6 +74,7 @@ export const Components = ({ typesFilter, noCard }) => {
               roomName={roomName}
               friendlyName={friendlyName}
               updatedAt={updatedAt}
+              graphURL={graphURL}
             />
           </Col>
         )

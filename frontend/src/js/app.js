@@ -17,6 +17,7 @@ import { Notifications } from "./components/Notifications";
 import { Dashboard } from "./components/TemperatureControl/Dashboard";
 import { Components } from "./components/Components/Components";
 import { Schedule } from "./components/Schedule/Schedule";
+import { Graph } from "./components/Graph";
 
 import store from "./store";
 
@@ -89,6 +90,11 @@ const App = () => (
                   path="/components/:componentId/schedule"
                   exact
                   element={<Schedule />}
+                />
+                <Route
+                  path="/components/:componentId/graph"
+                  exact
+                  element={<Graph />}
                 />
                 <Route path="*" element={<Navigate to="/temperature" />} />
               </Routes>

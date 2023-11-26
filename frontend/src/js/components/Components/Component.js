@@ -4,6 +4,11 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 dayjs.extend(relativeTime);
 
+import Icon from "@mdi/react";
+import { mdiChartLine } from "@mdi/js";
+
+import { Link } from "react-router-dom";
+
 import { Switch } from "./Switch";
 import { PowerMeter } from "./PowerMeter";
 import { BinaryLight } from "./BinaryLight";
@@ -28,12 +33,12 @@ export const Component = ({
   id,
   type,
   title,
-  extra,
   roomName,
   deviceName,
   online,
   friendlyName,
   updatedAt,
+  graphURL,
   noCard,
 }) => {
   var typedComponent;
@@ -95,9 +100,21 @@ export const Component = ({
     return typedComponent;
   }
 
-  var status = "offline";
-  if (online === true) {
-    status = dayjs(updatedAt).fromNow();
+  var extras = [];
+  extras.push(
+    <div key="status">
+      {online === true ? dayjs(updatedAt).fromNow() : "offline"}
+    </div>
+  );
+
+  if (graphURL && graphURL != "") {
+    extras.push(
+      <div key="graphIcon" style={{ marginRight: "-1em", marginLeft: "0.3em" }}>
+        <Link to={`/components/${id}/graph`}>
+          <Icon path={mdiChartLine} style={{ color: "#000000d9" }} size={0.8} />
+        </Link>
+      </div>
+    );
   }
 
   const newTitle =
@@ -105,7 +122,10 @@ export const Component = ({
       ? friendlyName
       : `${roomName} - ${type} - ${deviceName}`;
   return (
-    <Card title={title ? title : newTitle} extra={extra ? extra : status}>
+    <Card
+      title={title ? title : newTitle}
+      extra={<div style={{ display: "flex" }}>{extras}</div>}
+    >
       {typedComponent}
     </Card>
   );
@@ -122,6 +142,6 @@ Component.propTypes = {
   online: PropTypes.bool,
   updatedAt: PropTypes.string,
   title: PropTypes.string,
-  extra: PropTypes.any,
   noCard: PropTypes.bool.isRequired,
+  graphURL: PropTypes.string,
 };
