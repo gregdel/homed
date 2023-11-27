@@ -10,11 +10,13 @@ export const ZigbeeClimateSensor = ({ id }) => {
     (state) => state.components.components.get(id).values
   );
 
+  const prettyTemperature = (t) => t.toFixed(2);
+
   return (
     <div>
       <div style={{ display: "flex", marginBottom: "0.3em" }}>
         <Icon path={mdiThermometer} size={1} />
-        Temperature: {temperature}°C
+        Temperature: {prettyTemperature(temperature)}°C
       </div>
       <div style={{ display: "flex", marginBottom: "0.3em" }}>
         <Icon path={mdiWaterPercent} size={1} />

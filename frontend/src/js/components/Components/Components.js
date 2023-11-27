@@ -6,7 +6,7 @@ import { Component } from "./Component";
 
 import { Row, Col } from "antd";
 
-export const Components = ({ typesFilter, noCard }) => {
+export const Components = ({ typesFilter = [], noCard = false }) => {
   const components = useSelector((state) =>
     [...state.components.components]
       .filter(([, component]) => {
@@ -27,11 +27,7 @@ export const Components = ({ typesFilter, noCard }) => {
       .map(([, value]) => ({
         id: value.values.id,
         roomName: value.values.room_name,
-        deviceName: value.values.device_name,
-        online: value.values.device.online,
-        updatedAt: value.values.updated_at,
         friendlyName: value.values.friendly_name,
-        graphURL: value.values.graph_url,
         type: value.type,
       }))
       .sort((a, b) => {
@@ -53,38 +49,13 @@ export const Components = ({ typesFilter, noCard }) => {
 
   return (
     <Row gutter={[10, 10]}>
-      {components.map(
-        ({
-          id,
-          roomName,
-          deviceName,
-          online,
-          friendlyName,
-          graphURL,
-          updatedAt,
-          type,
-        }) => (
-          <Col key={id} xs={24} sm={12} lg={8}>
-            <Component
-              id={id}
-              type={type}
-              noCard={noCard}
-              deviceName={deviceName}
-              online={online}
-              roomName={roomName}
-              friendlyName={friendlyName}
-              updatedAt={updatedAt}
-              graphURL={graphURL}
-            />
-          </Col>
-        )
-      )}
+      {components.map(({ id, type }) => (
+        <Col key={id} xs={24} sm={12} lg={8}>
+          <Component id={id} type={type} noCard={noCard} />
+        </Col>
+      ))}
     </Row>
   );
-};
-Components.defaultProps = {
-  typesFilter: [],
-  noCard: false,
 };
 Components.propTypes = {
   typesFilter: PropTypes.array.isRequired,
