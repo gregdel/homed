@@ -9,7 +9,7 @@ import (
 )
 
 func (h *HomedTemperature) handleBinaryTRV() {
-	if len(h.trvs) == 0 || !h.On.Load() {
+	if len(h.binTRVs) == 0 || !h.On.Load() {
 		return
 	}
 

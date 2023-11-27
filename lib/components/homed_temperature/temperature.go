@@ -30,6 +30,7 @@ type Data struct {
 	ManualUntil   common.Time    `json:"manual_until,omitempty"`
 	Heating       atomic.Bool    `json:"heating"`
 	Opportunistic atomic.Bool    `json:"opportunistic"`
+	On            atomic.Bool    `json:"on"`
 }
 
 // HomedTemperature is a component that handles temperatures
@@ -42,7 +43,6 @@ type HomedTemperature struct {
 	trvs    map[string]components.TemperatureController
 	binTRVs map[string]components.Switch
 
-	On atomic.Bool `json:"on"`
 	mu sync.RWMutex
 	Data
 }
