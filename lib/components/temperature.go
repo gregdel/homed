@@ -27,9 +27,6 @@ type TemperatureController interface {
 
 	TemperatureTarget() (float64, error)
 	SetTemperatureTarget(float64) error
-
-	TemperatureCalibration() (float64, error)
-	SetTemperatureCalibration(float64) error
 }
 
 // TemperatureControllerInternal is an interface to reprensents something that be get

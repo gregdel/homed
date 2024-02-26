@@ -53,11 +53,7 @@ type Component struct {
 // TemperatureControl represents the configuration of the temperature control
 // daemon.
 type TemperatureControl struct {
-	Enabled              bool    `yaml:"enabled"`
-	Hysteresis           float64 `yaml:"hysteresis"`
-	CalibrateTRV         bool    `yaml:"calibrate_trv"`
-	CalibrationThreshold float64 `yaml:"calibration_threshold"`
-	CalibrationMaxOffset float64 `yaml:"calibration_max_offset"`
+	Enabled bool `yaml:"enabled"`
 }
 
 // RollerShutter represents the configuration for the automatic roller shutter

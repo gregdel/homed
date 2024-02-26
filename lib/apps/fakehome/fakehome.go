@@ -16,7 +16,6 @@ import (
 	"github.com/gregdel/homed/lib/components/common"
 	rollershutter "github.com/gregdel/homed/lib/components/roller_shutter"
 	zClimate "github.com/gregdel/homed/lib/components/zigbee2mqtt/climate_sensor"
-	"github.com/gregdel/homed/lib/components/zigbee2mqtt/trv"
 	"github.com/gregdel/homed/lib/config"
 	"go.uber.org/zap"
 )
@@ -199,9 +198,6 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 		fh.mu.Lock()
 		fh.cancelFuncs[x.ID()] = cancel
 		fh.mu.Unlock()
-	case *trv.TRV:
-		errUpdate = x.Update(payload)
-		errPublish = fh.publishStateJSON(x)
 	case *common.BinaryLight:
 		errUpdate = x.Update(payload)
 		errPublish = x.PublishToStateTopic(payload)
@@ -305,20 +301,6 @@ func (fh *FakeHome) updateStates() {
 		switch c := component.(type) {
 		case *zClimate.Sensor:
 			fh.fakeSensor(c)
-			err = fh.publishStateJSON(c)
-		case *trv.TRV:
-			c.LocalTemperature.Store(float64((i % 5) + 15))
-			c.HeatingSetpoint.Store(c.LocalTemperature.Load() + 1)
-			if i%2 == 0 {
-				c.Force.Store(trv.ForceModeUnavailable)
-			} else {
-				c.Mode.Store(trv.SystemModeHeat)
-			}
-			if (i % 2) == 0 {
-				c.LocalTemperatureCalibration.Store(-1)
-				c.Position.Store(60)
-				c.Force.Store(trv.ForceModeOpen)
-			}
 			err = fh.publishStateJSON(c)
 		case *common.PowerMeter:
 			err = c.PublishToStateTopic([]byte(strconv.Itoa((i % 3 * 100))))

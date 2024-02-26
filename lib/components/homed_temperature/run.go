@@ -28,7 +28,6 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventor
 			return nil
 		case <-ticker.C:
 			h.updateTemperatureMode()
-			h.setTRVTarget()
 		case <-h.Events.Incoming:
 			// We're only subcribed to sensors, let's not check the event ID
 		}
@@ -52,12 +51,6 @@ func (h *HomedTemperature) setup(inventory *components.Components) error {
 
 	list := inventory.ListByRoom(room)
 	for _, c := range list {
-		if c.Type() == components.TypeZigbeeTRV {
-			h.mu.Lock()
-			h.trvs[c.ID()] = c.(components.TemperatureController)
-			h.mu.Unlock()
-		}
-
 		if c.Type() == components.TypeBinaryTRV {
 			h.mu.Lock()
 			h.binTRVs[c.ID()] = c.(components.Switch)
@@ -66,8 +59,7 @@ func (h *HomedTemperature) setup(inventory *components.Components) error {
 
 		sensor, ok := c.(components.TemperatureGetter)
 		if ok {
-			if c.Type() == components.TypeHomedTemperature ||
-				c.Type() == components.TypeZigbeeTRV {
+			if c.Type() == components.TypeHomedTemperature {
 				continue
 			}
 
