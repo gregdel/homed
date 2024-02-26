@@ -105,7 +105,7 @@ func (h *HomedTemperature) updateTemperature() {
 func (h *HomedTemperature) updateTemperatureMode() {
 	log := h.log
 
-	if !h.On.Load() {
+	if !h.IsOn() {
 		return
 	}
 

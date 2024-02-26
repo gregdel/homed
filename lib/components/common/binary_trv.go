@@ -6,6 +6,7 @@ import (
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/atomic"
 )
 
 func init() {
@@ -16,8 +17,9 @@ func init() {
 type BinaryTRV struct {
 	Switch
 
-	OnTemperature  int
-	OffTemperature int
+	currentSetPoint atomic.Float64
+	OnTemperature   int
+	OffTemperature  int
 }
 
 // NewBinaryTRV returns a new binary light
@@ -31,12 +33,13 @@ func NewBinaryTRV() components.Component {
 
 // Update implements the Component interface
 func (b *BinaryTRV) Update(value []byte) error {
-	v, err := strconv.Atoi(string(value))
+	v, err := strconv.ParseFloat(string(value), 64)
 	if err != nil {
 		return fmt.Errorf("binary_trv: invalid payload: %s", value)
 	}
 
-	b.On.Store(v == b.OnTemperature)
+	b.On.Store(v == float64(b.OnTemperature))
+	b.currentSetPoint.Store(v)
 	return nil
 }
 
@@ -51,7 +54,7 @@ func (b *BinaryTRV) TurnOn() error {
 
 // TurnOff implements the switch interface
 func (b *BinaryTRV) TurnOff() error {
-	if !b.IsOn() {
+	if b.currentSetPoint.Load() == float64(b.OffTemperature) {
 		return nil
 	}
 

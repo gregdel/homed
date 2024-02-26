@@ -3,7 +3,14 @@ package homedtemperature
 import "go.uber.org/zap"
 
 func (h *HomedTemperature) handleBinaryTRV() {
-	if len(h.binTRVs) == 0 || !h.On.Load() {
+	if len(h.binTRVs) == 0 {
+		return
+	}
+
+	if !h.IsOn() {
+		for _, trv := range h.binTRVs {
+			trv.TurnOff()
+		}
 		return
 	}
 
