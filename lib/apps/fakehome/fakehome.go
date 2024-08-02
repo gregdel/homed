@@ -14,6 +14,7 @@ import (
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/boiler"
 	"github.com/gregdel/homed/lib/components/common"
+	"github.com/gregdel/homed/lib/components/esphome"
 	rollershutter "github.com/gregdel/homed/lib/components/roller_shutter"
 	zClimate "github.com/gregdel/homed/lib/components/zigbee2mqtt/climate_sensor"
 	"github.com/gregdel/homed/lib/config"
@@ -144,6 +145,9 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	var errPublish error
 	switch x := component.(type) {
 	case *boiler.Boiler:
+		errUpdate = x.Update(payload)
+		errPublish = x.PublishToStateTopic(payload)
+	case *esphome.Light:
 		errUpdate = x.Update(payload)
 		errPublish = x.PublishToStateTopic(payload)
 	case *rollershutter.RollerShutter:

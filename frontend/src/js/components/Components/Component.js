@@ -17,6 +17,7 @@ import { TemperatureSwitch } from "./TemperatureSwitch";
 import { WifiSignal } from "./WifiSignal";
 import { ZigbeeClimateSensor } from "./ZigbeeClimateSensor";
 import { VirtualSwitch } from "./VirtualSwitch";
+import { EsphomeLight } from "./EsphomeLight";
 import { HeaderCard } from "./common/HeaderCard";
 
 export const Component = ({ id, type, noCard = false }) => {
@@ -66,6 +67,9 @@ export const Component = ({ id, type, noCard = false }) => {
       break;
     case "virtual_switch":
       typedComponent = <VirtualSwitch id={id} />;
+      break;
+    case "esphome_light":
+      typedComponent = <EsphomeLight id={id} />;
       break;
     default:
       typedComponent = <>Unhandled {type}</>;

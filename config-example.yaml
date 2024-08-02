@@ -118,6 +118,16 @@ devices:
   - type: device_status
     state_topic: zigbee2mqtt/trv_living_room/availability
 
+- name: living_room_light
+  room: living_room
+  components:
+  - type: esphome_light
+    state_topic: home/devices/living_room/light/state
+    command_topic: home/devices/living_room/light/command
+    friendly_name: Living Room
+  - type: device_status
+    state_topic: home/devices/living_room/status
+
 #############################
 # Living room
 #############################

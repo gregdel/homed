@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/gregdel/homed/lib/components/boiler"
 	_ "github.com/gregdel/homed/lib/components/common"
+	_ "github.com/gregdel/homed/lib/components/esphome"
 	_ "github.com/gregdel/homed/lib/components/homed_humidity"
 	_ "github.com/gregdel/homed/lib/components/homed_temperature"
 	_ "github.com/gregdel/homed/lib/components/roller_shutter"

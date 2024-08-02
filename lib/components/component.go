@@ -35,6 +35,7 @@ var (
 	TypeHomedHumidity          Type = "homed_humidity"
 	TypeBoiler                 Type = "boiler"
 	TypeZigbeeClimateSensor    Type = "zigbee_climate_sensor"
+	TypeEsphomeLight           Type = "esphome_light"
 )
 
 // Component represents a component

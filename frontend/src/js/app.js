@@ -46,7 +46,11 @@ const App = () => (
                 <Route
                   path="/lights"
                   exact
-                  element={<Components typesFilter={["binary_light"]} />}
+                  element={
+                    <Components
+                      typesFilter={["binary_light", "esphome_light"]}
+                    />
+                  }
                 />
                 <Route
                   path="/power"

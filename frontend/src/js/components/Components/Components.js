@@ -58,6 +58,6 @@ export const Components = ({ typesFilter = [], noCard = false }) => {
   );
 };
 Components.propTypes = {
-  typesFilter: PropTypes.array.isRequired,
-  noCard: PropTypes.bool.isRequired,
+  typesFilter: PropTypes.array,
+  noCard: PropTypes.bool,
 };
