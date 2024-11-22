@@ -72,7 +72,7 @@ export const HomedTemperature = ({ id }) => {
     dispatch(componentUpdate(id, data));
   };
 
-  const onAfterChange = (value) => {
+  const onChangeComplete = (value) => {
     if (value === target) {
       sendChange({ mode: "auto", target: value });
     } else {
@@ -82,7 +82,9 @@ export const HomedTemperature = ({ id }) => {
 
   var marks = {};
   if (target !== newTarget) {
-    marks[target] = target + "°C";
+    marks[target] = (
+      <span onClick={() => onChangeComplete(target)}>{target}°C</span>
+    );
   }
 
   const ActionInfinity = (
@@ -243,7 +245,7 @@ export const HomedTemperature = ({ id }) => {
             onChange={(value) => {
               setNewTarget(value);
             }}
-            onAfterChange={onAfterChange}
+            onChangeComplete={onChangeComplete}
           />
         </div>
       )}
