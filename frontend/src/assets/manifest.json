@@ -23,5 +23,15 @@
         "type": "image/png",
         "purpose": "any maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Temperature",
+      "url": "/#/temperature"
+    },
+    {
+      "name": "Lights",
+      "url": "/#/lights"
+    }
   ]
 }
