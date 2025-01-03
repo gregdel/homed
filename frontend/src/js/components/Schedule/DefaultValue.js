@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNav } from "./../Navigation";
 
 import { Modal, Form, Input } from "antd";
 
@@ -9,12 +9,12 @@ import { setScheduleDefault } from "../../actions/schedule";
 
 export const DefaultValue = ({ defaultValue }) => {
   const dispatch = useDispatch();
-  const { componentId } = useParams();
+  const { params } = useNav();
   const [value, setValue] = useState(defaultValue);
 
   const handleOk = () => {
     setOpen(false);
-    dispatch(setScheduleDefault(componentId, value));
+    dispatch(setScheduleDefault(params.componentId, value));
   };
 
   const [open, setOpen] = useState(false);

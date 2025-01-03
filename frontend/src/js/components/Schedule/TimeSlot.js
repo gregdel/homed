@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNav } from "./../Navigation";
 import PropTypes from "prop-types";
 
 import { deleteScheduleTimeSlot } from "../../actions/schedule";
@@ -12,11 +12,11 @@ import { TimeSlotModal } from "./TimeSlotModal";
 
 export const TimeSlot = ({ start, stop, value, on, id, day }) => {
   const dispatch = useDispatch();
-  const { componentId } = useParams();
+  const { params } = useNav();
   const [open, setOpen] = useState(false);
 
   const handleDelete = () => {
-    dispatch(deleteScheduleTimeSlot(componentId, day, id));
+    dispatch(deleteScheduleTimeSlot(params.componentId, day, id));
   };
 
   const handleEdit = () => {

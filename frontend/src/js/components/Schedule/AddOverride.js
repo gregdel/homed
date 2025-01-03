@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNav } from "./../Navigation";
 
 import { Modal, Button, Form, Input, Switch } from "antd";
 
@@ -11,7 +11,7 @@ import { addScheduleOverride } from "../../actions/schedule";
 
 export const AddOverride = () => {
   const dispatch = useDispatch();
-  const { componentId } = useParams();
+  const { params } = useNav();
 
   const [show, setShow] = useState(false);
   const [from, setFrom] = useState();
@@ -31,7 +31,7 @@ export const AddOverride = () => {
       value: new Number(target),
       on: on,
     };
-    dispatch(addScheduleOverride(componentId, data));
+    dispatch(addScheduleOverride(params.componentId, data));
   };
 
   const handleCancel = () => {

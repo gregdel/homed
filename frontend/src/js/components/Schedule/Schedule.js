@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
 import { prettyName } from "../../utils";
+import { useNav } from "./../Navigation";
 
 import { Typography, Divider } from "antd";
 const { Title } = Typography;
@@ -18,15 +18,17 @@ import { TimeSlotModal } from "./TimeSlotModal";
 
 export const Schedule = () => {
   const dispatch = useDispatch();
-  const { componentId: id } = useParams();
+  const { params } = useNav();
 
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchSchedule(id));
+    dispatch(fetchSchedule(params.componentId));
   }, [dispatch]);
 
-  const data = useSelector((state) => state.schedules.schedules.get(id));
+  const data = useSelector((state) =>
+    state.schedules.schedules.get(params.componentId)
+  );
   if (data === undefined) {
     return null;
   }

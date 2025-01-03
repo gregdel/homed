@@ -1,17 +1,12 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
-import {
-  HashRouter as Router,
-  Route,
-  Routes,
-  Navigate,
-} from "react-router-dom";
-
 import { Layout } from "antd";
 const { Content } = Layout;
 
 import { AppMenu } from "./components/Menu";
+import { NavigationProvider, useNav } from "./components/Navigation";
+
 import { DataFetcher } from "./components/DataFetcher";
 import { Notifications } from "./components/Notifications";
 import { Dashboard } from "./components/TemperatureControl/Dashboard";
@@ -24,92 +19,73 @@ import store from "./store";
 import "@ant-design/cssinjs";
 import "../assets/app.css";
 
+const AppContent = () => {
+  const { currentPath, params } = useNav();
+
+  // Route mapping function
+  const getComponent = () => {
+    // Extract component paths for better matching
+    const path = currentPath.split("?")[0]; // Remove query parameters if any
+
+    switch (path) {
+      case "/all":
+        return <Components />;
+      case "/temperature":
+        return <Dashboard />;
+      case "/trv":
+        return <Components typesFilter={["zigbee_trv", "binary_trv"]} />;
+      case "/lights":
+        return <Components typesFilter={["binary_light", "esphome_light"]} />;
+      case "/power":
+        return <Components typesFilter={["power_meter"]} />;
+      case "/switches":
+        return <Components typesFilter={["switch", "virtual_switch"]} />;
+      case "/fans":
+        return <Components typesFilter={["binary_fan"]} />;
+      case "/shutters":
+        return <Components typesFilter={["roller_shutter"]} />;
+      case "/sensors":
+        return <Components typesFilter={["generic_sensor", "binary_sensor"]} />;
+      case "/climate_sensors":
+        return <Components typesFilter={["zigbee_climate_sensor"]} />;
+      case `/components/${params.componentId}/schedule`:
+        return <Schedule />;
+      case `/components/${params.componentId}/graph`:
+        return <Graph />;
+      default:
+        // Redirect to temperature (replacing Navigate component)
+        if (path !== "/temperature") {
+          window.location.replace("#/temperature");
+        }
+        return <Dashboard />;
+    }
+  };
+
+  return (
+    <Layout style={{ minHeight: "100vh" }}>
+      <AppMenu />
+      <Layout>
+        <Content style={{ padding: "1em" }}>
+          <Notifications />
+          {getComponent()}
+        </Content>
+      </Layout>
+    </Layout>
+  );
+};
+
 const App = () => (
   <Provider store={store}>
-    <Router>
+    <NavigationProvider>
       <DataFetcher>
-        <Layout style={{ minHeight: "100vh" }}>
-          <AppMenu />
-          <Layout>
-            <Content style={{ padding: "1em" }}>
-              <Notifications />
-              <Routes>
-                <Route path="/all" exact element={<Components />} />
-                <Route path="/temperature" exact element={<Dashboard />} />
-                <Route
-                  path="/trv"
-                  exact
-                  element={
-                    <Components typesFilter={["zigbee_trv", "binary_trv"]} />
-                  }
-                />
-                <Route
-                  path="/lights"
-                  exact
-                  element={
-                    <Components
-                      typesFilter={["binary_light", "esphome_light"]}
-                    />
-                  }
-                />
-                <Route
-                  path="/power"
-                  exact
-                  element={<Components typesFilter={["power_meter"]} />}
-                />
-                <Route
-                  path="/switches"
-                  exact
-                  element={
-                    <Components typesFilter={["switch", "virtual_switch"]} />
-                  }
-                />
-                <Route
-                  path="/fans"
-                  exact
-                  element={<Components typesFilter={["binary_fan"]} />}
-                />
-                <Route
-                  path="/shutters"
-                  exact
-                  element={<Components typesFilter={["roller_shutter"]} />}
-                />
-                <Route
-                  path="/sensors"
-                  exact
-                  element={
-                    <Components
-                      typesFilter={["generic_sensor", "binary_sensor"]}
-                    />
-                  }
-                />
-                <Route
-                  path="/climate_sensors"
-                  exact
-                  element={
-                    <Components typesFilter={["zigbee_climate_sensor"]} />
-                  }
-                />
-                <Route
-                  path="/components/:componentId/schedule"
-                  exact
-                  element={<Schedule />}
-                />
-                <Route
-                  path="/components/:componentId/graph"
-                  exact
-                  element={<Graph />}
-                />
-                <Route path="*" element={<Navigate to="/temperature" />} />
-              </Routes>
-            </Content>
-          </Layout>
-        </Layout>
+        <AppContent />
       </DataFetcher>
-    </Router>
+    </NavigationProvider>
   </Provider>
 );
 
 const container = document.getElementById("app");
 const root = createRoot(container);
 root.render(<App />);
+
+export default App;

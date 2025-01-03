@@ -10,7 +10,7 @@ import { mdiChartLine } from "@mdi/js";
 
 import { Card } from "antd";
 
-import { Link } from "react-router-dom";
+import { Link } from "../../Navigation";
 
 export const HeaderCard = ({ id, children }) => {
   const {

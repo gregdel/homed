@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNav } from "./../Navigation";
 
 import Icon from "@mdi/react";
 import { mdiCheckboxBlank, mdiCheckboxBlankOutline } from "@mdi/js";
@@ -75,7 +75,7 @@ export const TimeSlotModal = ({
   day,
 }) => {
   const dispatch = useDispatch();
-  const { componentId } = useParams();
+  const { params } = useNav();
 
   const [start, setStart] = useState(defaultStart);
   const [stop, setStop] = useState(defaultStop);
@@ -101,17 +101,17 @@ export const TimeSlotModal = ({
     };
 
     if (edit) {
-      dispatch(updateScheduleTimeSlot(componentId, day, data, id));
+      dispatch(updateScheduleTimeSlot(params.componentId, day, data, id));
     } else {
       if (day === undefined) {
         checked.map((v, day) => {
           if (v === false) {
             return;
           }
-          dispatch(addScheduleTimeSlot(componentId, day, data));
+          dispatch(addScheduleTimeSlot(params.componentId, day, data));
         });
       } else {
-        dispatch(addScheduleTimeSlot(componentId, day, data));
+        dispatch(addScheduleTimeSlot(params.componentId, day, data));
       }
     }
   };
@@ -124,8 +124,8 @@ export const TimeSlotModal = ({
 
   const dayStr = day ? day : "all";
   const formName = id
-    ? `ts-${componentId}-${dayStr}-modal-${id}`
-    : `ts-${componentId}-${dayStr}-modal`;
+    ? `ts-${params.componentId}-${dayStr}-modal-${id}`
+    : `ts-${params.componentId}-${dayStr}-modal`;
 
   return (
     <Modal title={title} open={open} onOk={handleOk} onCancel={handleCancel}>

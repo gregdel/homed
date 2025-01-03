@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNav } from "./../Navigation";
 
 import PropTypes from "prop-types";
 
@@ -15,10 +15,10 @@ import { AddOverride } from "./AddOverride";
 import { deleteScheduleOverride } from "../../actions/schedule";
 
 export const Overrides = () => {
-  const { componentId } = useParams();
+  const { params } = useNav();
 
   const { overrides } = useSelector(
-    (state) => state.schedules.schedules.get(componentId).schedule
+    (state) => state.schedules.schedules.get(params.componentId).schedule
   );
 
   return (
@@ -48,10 +48,10 @@ Overrides.propTypes = {};
 
 const Override = ({ id, start, stop, value, on }) => {
   const dispatch = useDispatch();
-  const { componentId } = useParams();
+  const { params } = useNav();
 
   const handleDelete = () => {
-    dispatch(deleteScheduleOverride(componentId, id));
+    dispatch(deleteScheduleOverride(params.componentId, id));
   };
 
   const formatDate = (date) => {

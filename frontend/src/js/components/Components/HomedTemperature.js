@@ -23,7 +23,7 @@ import {
 } from "@mdi/js";
 
 import { Card, Slider, Popover, DatePicker, Input, Divider } from "antd";
-import { Link } from "react-router-dom";
+import { Link } from "../Navigation";
 
 export const HomedTemperature = ({ id }) => {
   const dispatch = useDispatch();

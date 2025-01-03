@@ -1,11 +1,13 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNav } from "./Navigation";
 
 export const Graph = () => {
-  const { componentId: id } = useParams();
+  const { params } = useNav();
 
-  const data = useSelector((state) => state.components.components.get(id));
+  const data = useSelector((state) =>
+    state.components.components.get(params.componentId)
+  );
   if (!data || !data.values || !data.values.graph_url) {
     return null;
   }

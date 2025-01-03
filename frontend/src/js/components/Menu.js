@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Layout, Menu, Typography } from "antd";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { Layout, Menu } from "antd";
+import { useNav } from "./Navigation";
 
 import Icon from "@mdi/react";
 import {
@@ -20,8 +20,7 @@ const { Sider } = Layout;
 export const AppMenu = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [collapsedType, setCollapsedType] = useState(null);
-  const [selectedKeys, setSelectedKeys] = useState([]);
-  const location = useLocation();
+  const { currentPath, navigate } = useNav();
 
   const onCollapse = (collapsed, type) => {
     setCollapsed(collapsed);
@@ -36,71 +35,71 @@ export const AppMenu = () => {
     setCollapsed(true);
   };
 
-  const link = (title, path) => (
-    <Link to={path} component={Typography.Link}>
-      {title}
-    </Link>
-  );
-
   const icon = (path) => <Icon path={path} size={1} />;
 
   const items = [
     {
       icon: icon(mdiHomeThermometer),
       key: "temperature",
-      label: link("Temperature", "/temperature"),
+      label: "Temperature",
+      onClick: () => navigate("/temperature"),
     },
     {
       icon: icon(mdiRadiator),
-      label: link("Thermostatic valves", "/trv"),
       key: "trv",
+      label: "Thermostatic valves",
+      onClick: () => navigate("/trv"),
     },
     {
       icon: icon(mdiThermometer),
-      label: link("Temperature sensors", "/climate_sensors"),
       key: "climate_sensors",
+      label: "Temperature sensors",
+      onClick: () => navigate("/climate_sensors"),
     },
     {
       icon: icon(mdiLightbulb),
-      label: link("Lights", "/lights"),
       key: "lights",
+      label: "Lights",
+      onClick: () => navigate("/lights"),
     },
     {
       icon: icon(mdiLightningBolt),
-      label: link("Power consumption", "/power"),
       key: "power_consumption",
+      label: "Power consumption",
+      onClick: () => navigate("/power"),
     },
     {
       icon: icon(mdiPower),
-      label: link("Switches", "/switches"),
       key: "switches",
+      label: "Switches",
+      onClick: () => navigate("/switches"),
     },
     {
       icon: icon(mdiFan),
-      label: link("Fans", "/fans"),
       key: "fans",
+      label: "Fans",
+      onClick: () => navigate("/fans"),
     },
     {
       icon: icon(mdiWindowShutter),
-      label: link("Roller shutters", "/shutters"),
       key: "shutters",
+      label: "Roller shutters",
+      onClick: () => navigate("/shutters"),
     },
     {
       icon: icon(mdiRuler),
-      label: link("Sensors", "/sensors"),
       key: "sensors",
+      label: "Sensors",
+      onClick: () => navigate("/sensors"),
     },
   ];
 
-  useEffect(() => {
-    let keys = [];
-    items.map((entry) => {
-      if (location.pathname === entry.label.props.to) {
-        keys.push(entry.key);
-      }
-    });
-    setSelectedKeys(keys);
-  }, [location]);
+  const getSelectedKeys = () => {
+    const item = items.find(
+      (item) => currentPath === item.onClick.toString().match(/"([^"]+)"/)[1]
+    );
+    return item ? [item.key] : [];
+  };
 
   return (
     <Sider
@@ -114,7 +113,7 @@ export const AppMenu = () => {
         mode="inline"
         style={{ paddingTop: "1em" }}
         onClick={onClick}
-        selectedKeys={selectedKeys}
+        selectedKeys={getSelectedKeys()}
         items={items}
       />
     </Sider>
