@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useSelector } from "react-redux";
+import { useComponents } from "../ComponentsContext";
 
 import Icon from "@mdi/react";
 import { mdiFire } from "@mdi/js";
@@ -8,12 +8,14 @@ import { mdiFire } from "@mdi/js";
 import { Typography } from "antd";
 
 export const Boiler = ({ id }) => {
-  const state = useSelector((state) => state.components.components.get(id));
-  if (!state) {
+  const { getComponentById } = useComponents();
+
+  const component = getComponentById(id);
+  if (component === undefined) {
     return null;
   }
 
-  const on = state.values.on;
+  const { on } = component.values;
 
   return (
     <div

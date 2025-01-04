@@ -1,14 +1,18 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useSelector } from "react-redux";
+import { useComponents } from "../ComponentsContext";
 
 import Icon from "@mdi/react";
 import { mdiThermometer, mdiWaterPercent, mdiGauge } from "@mdi/js";
 
 export const ZigbeeClimateSensor = ({ id }) => {
-  const { humidity, pressure, temperature } = useSelector(
-    (state) => state.components.components.get(id).values
-  );
+  const { getComponentById } = useComponents();
+  const component = getComponentById(id);
+  if (component === undefined) {
+    return null;
+  }
+
+  const { humidity, pressure, temperature } = component.values;
 
   const prettyTemperature = (t) => t.toFixed(2);
 

@@ -6,6 +6,7 @@ const { Content } = Layout;
 
 import { AppMenu } from "./components/Menu";
 import { NavigationProvider, useNav } from "./components/Navigation";
+import { ComponentsProvider } from "./components/ComponentsContext";
 
 import { DataFetcher } from "./components/DataFetcher";
 import { Notifications } from "./components/Notifications";
@@ -77,9 +78,11 @@ const AppContent = () => {
 const App = () => (
   <Provider store={store}>
     <NavigationProvider>
-      <DataFetcher>
-        <AppContent />
-      </DataFetcher>
+      <ComponentsProvider>
+        <DataFetcher>
+          <AppContent />
+        </DataFetcher>
+      </ComponentsProvider>
     </NavigationProvider>
   </Provider>
 );

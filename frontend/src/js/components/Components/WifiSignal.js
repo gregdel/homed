@@ -1,11 +1,15 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useSelector } from "react-redux";
+import { useComponents } from "../ComponentsContext";
 
 export const WifiSignal = ({ id }) => {
-  const value = useSelector(
-    (state) => state.components.components.get(id).values.value
-  );
+  const { getComponentById } = useComponents();
+  const component = getComponentById(id);
+  if (component === undefined) {
+    return null;
+  }
+
+  const { value } = component.values;
   if (!value) {
     return null;
   }

@@ -1,17 +1,19 @@
 import React from "react";
-import { useSelector } from "react-redux";
 import PropTypes from "prop-types";
+import { useComponents } from "../ComponentsContext";
 
 export const GenericSensor = ({ id }) => {
-  const data = useSelector((state) => state.components.components.get(id));
-  if (!data) {
+  const { getComponentById } = useComponents();
+
+  const component = getComponentById(id);
+  if (component === undefined) {
     return null;
   }
 
   return (
     <div style={{ display: "flex", justifyContent: "space-evenly" }}>
       <div style={{ fontSize: "2em", fontWeight: 200 }}>
-        <span>{data.values.value}</span>
+        <span>{component.values.value}</span>
       </div>
     </div>
   );

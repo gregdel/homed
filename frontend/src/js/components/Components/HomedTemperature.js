@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { useSelector, useDispatch } from "react-redux";
+import { useComponents } from "../ComponentsContext";
+
 import { prettyName } from "../../utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 dayjs.extend(relativeTime);
-
-import { componentUpdate } from "../../actions/components";
 
 import Icon from "@mdi/react";
 import {
@@ -26,22 +25,26 @@ import { Card, Slider, Popover, DatePicker, Input, Divider } from "antd";
 import { Link } from "../Navigation";
 
 export const HomedTemperature = ({ id }) => {
-  const dispatch = useDispatch();
+  const { getComponentById, updateComponent } = useComponents();
+
+  const component = getComponentById(id);
+  if (component === undefined) {
+    return null;
+  }
+
   const {
-    values: {
-      current,
-      friendly_name: friendlyName,
-      graph_url: graphURL,
-      target,
-      mode,
-      device,
-      heating,
-      on,
-      opportunistic,
-      manual_target: manualTarget,
-      manual_until: manualUntil,
-    },
-  } = useSelector((state) => state.components.components.get(id));
+    current,
+    friendly_name: friendlyName,
+    graph_url: graphURL,
+    target,
+    mode,
+    device,
+    heating,
+    on,
+    opportunistic,
+    manual_target: manualTarget,
+    manual_until: manualUntil,
+  } = component.values;
 
   const [newTarget, setNewTarget] = useState(
     mode === "auto" ? target : manualTarget
@@ -69,7 +72,7 @@ export const HomedTemperature = ({ id }) => {
     };
     setShowTimePicker(false);
 
-    dispatch(componentUpdate(id, data));
+    updateComponent(id, data);
   };
 
   const onChangeComplete = (value) => {

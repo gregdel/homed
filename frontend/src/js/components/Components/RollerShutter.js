@@ -1,5 +1,5 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useComponents } from "../ComponentsContext";
 
 import PropTypes from "prop-types";
 
@@ -11,21 +11,20 @@ import {
 
 import Icon from "@mdi/react";
 
-import { componentUpdate } from "../../actions/components";
-
 import { IconRollerShutter } from "./common/IconRollerShutter";
 
 export const RollerShutter = ({ id }) => {
-  const dispatch = useDispatch();
-  const data = useSelector((state) => state.components.components.get(id));
-  if (!data) {
+  const { getComponentById, updateComponent } = useComponents();
+
+  const component = getComponentById(id);
+  if (component === undefined) {
     return null;
   }
 
-  const percentOpen = data.values.value;
+  const { value: percentOpen } = component.values;
 
   const handleClick = (action) => {
-    dispatch(componentUpdate(id, action));
+    updateComponent(id, action);
   };
 
   const msg = () => {

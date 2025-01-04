@@ -1,11 +1,16 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useSelector } from "react-redux";
+import { useComponents } from "../ComponentsContext";
 
 export const DeviceStatus = ({ id }) => {
-  const online = useSelector(
-    (state) => state.components.components.get(id).values.on
-  );
+  const { getComponentById } = useComponents();
+
+  const component = getComponentById(id);
+  if (component === undefined) {
+    return null;
+  }
+
+  const { on: online } = component.values;
   return <>{online ? "Online" : "Offline"}</>;
 };
 

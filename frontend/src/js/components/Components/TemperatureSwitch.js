@@ -1,23 +1,22 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
+import { useComponents } from "../ComponentsContext";
 
 import Icon from "@mdi/react";
 import { mdiThermometer, mdiThermometerOff } from "@mdi/js";
 
-import { componentUpdate } from "../../actions/components";
-
 export const TemperatureSwitch = ({ id }) => {
-  const dispatch = useDispatch();
-  const data = useSelector((state) => state.components.components.get(id));
-  if (!data) {
+  const { getComponentById, updateComponent } = useComponents();
+
+  const component = getComponentById(id);
+  if (component === undefined) {
     return null;
   }
 
-  const on = data.values.on;
+  const { on } = component.values;
 
   const toggle = () => {
-    dispatch(componentUpdate(id, on ? "OFF" : "ON"));
+    updateComponent(id, on ? "OFF" : "ON");
   };
 
   return (

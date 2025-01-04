@@ -1,5 +1,5 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useComponents } from "../ComponentsContext";
 
 import PropTypes from "prop-types";
 
@@ -8,11 +8,10 @@ import { Slider } from "antd";
 
 import Icon from "@mdi/react";
 
-import { componentUpdate } from "../../actions/components";
-
 export const EsphomeLight = ({ id }) => {
-  const dispatch = useDispatch();
-  const data = useSelector((state) => state.components.components.get(id));
+  const { getComponentById, updateComponent } = useComponents();
+
+  const data = getComponentById(id);
   if (!data || !data.values || !data.values.device) {
     return null;
   }
@@ -32,7 +31,7 @@ export const EsphomeLight = ({ id }) => {
         w: 255,
       },
     };
-    dispatch(componentUpdate(id, cmd));
+    updateComponent(id, cmd);
   };
 
   const toggle = () => {

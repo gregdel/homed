@@ -1,9 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import { useDispatch } from "react-redux";
-import { eventComponentUpdate } from "../actions/components";
+import { useComponents } from "./ComponentsContext";
 
 export const WsHandler = () => {
-  const dispatch = useDispatch();
+  const { replaceComponent } = useComponents();
   const [ws, setWs] = useState(null);
 
   const stop = useCallback(() => {
@@ -32,7 +31,7 @@ export const WsHandler = () => {
         return;
       }
 
-      dispatch(eventComponentUpdate(data));
+      replaceComponent(data);
     };
 
     socket.onerror = () => {
@@ -40,7 +39,7 @@ export const WsHandler = () => {
     };
 
     setWs(socket);
-  }, [ws, dispatch, stop]);
+  }, [ws, stop]);
 
   useEffect(() => {
     const intervalID = setInterval(() => {

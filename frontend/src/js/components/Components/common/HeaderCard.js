@@ -1,6 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useSelector } from "react-redux";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 dayjs.extend(relativeTime);
@@ -11,15 +10,23 @@ import { mdiChartLine } from "@mdi/js";
 import { Card } from "antd";
 
 import { Link } from "../../Navigation";
+import { useComponents } from "../../ComponentsContext";
 
 export const HeaderCard = ({ id, children }) => {
+  const { getComponentById } = useComponents();
+
+  const component = getComponentById(id);
+  if (component === undefined) {
+    return null;
+  }
+
   const {
     updated_at: updatedAt,
     graph_url: graphURL,
     friendly_name: friendlyName,
     device: device,
     type,
-  } = useSelector((state) => state.components.components.get(id).values);
+  } = component.values;
 
   var extras = [];
   extras.push(

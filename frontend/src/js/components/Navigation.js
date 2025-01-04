@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import PropTypes from "prop-types";
 
 // Navigation Context and Hook
 const NavigationContext = createContext();
@@ -23,17 +24,13 @@ const useNavigation = () => {
       }
     };
 
-    // Listen to hashchange instead of popstate
     window.addEventListener("hashchange", handleLocationChange);
-    // Initial parameter extraction
     handleLocationChange();
 
     return () => window.removeEventListener("hashchange", handleLocationChange);
   }, []);
 
   const navigate = (path) => {
-    console.warn("navigating to " + path);
-    // Update hash instead of using pushState
     window.location.hash = path;
   };
 
@@ -48,6 +45,9 @@ export const NavigationProvider = ({ children }) => {
       {children}
     </NavigationContext.Provider>
   );
+};
+NavigationProvider.propTypes = {
+  children: PropTypes.node,
 };
 
 // Custom hook to use navigation in components
@@ -92,4 +92,14 @@ export const Link = ({
       {children}
     </a>
   );
+};
+
+Link.propTypes = {
+  children: PropTypes.node,
+  to: PropTypes.string.isRequired,
+  className: PropTypes.string,
+  activeClassName: PropTypes.string,
+  style: PropTypes.object,
+  activeStyle: PropTypes.object,
+  onClick: PropTypes.func,
 };
