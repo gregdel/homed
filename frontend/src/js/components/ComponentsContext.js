@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import PropTypes from "prop-types";
 
+import { useNotifications } from "./NotificationsContext";
+
 // Create context
 const ComponentsContext = createContext();
 
@@ -20,19 +22,26 @@ export const useComponents = () => {
 };
 
 export const ComponentsProvider = ({ children }) => {
+  const { addNotificationOk, addNotificationError } = useNotifications();
   const [components, setComponents] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const fetchComponents = useCallback(async () => {
+    if (loading) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       const response = await fetch("/components");
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const message = `HTTP error! status: ${response.status}`;
+        addNotificationError(message);
+        throw new Error(message);
       }
 
       const data = await response.json();
@@ -44,12 +53,16 @@ export const ComponentsProvider = ({ children }) => {
 
         setComponents(c);
         setLastUpdated(new Date());
+        addNotificationOk("Components updated");
       } else {
-        throw new Error("Invalid data format received");
+        const message = "Invalid data format received";
+        addNotificationError(message);
+        throw new Error(message);
       }
     } catch (err) {
       setError(err.message);
       console.error("Error fetching components:", err);
+      addNotificationError("Error while fetching components");
     } finally {
       setLoading(false);
     }

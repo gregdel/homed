@@ -1,7 +1,5 @@
 import { request } from "../request";
 
-import { notificationAdd } from "./notifications";
-
 export const fetchSchedule = (cid) =>
   request("SCHEDULE_FETCH", "GET", `/components/${cid}/schedule`, null, null, {
     id: cid,
@@ -60,12 +58,12 @@ export const setScheduleDefault = (cid, value) =>
     { value: parseInt(value) },
     [
       () => fetchSchedule(cid),
-      () =>
-        notificationAdd(
-          "Schedule default updated",
-          "success",
-          4,
-          "schedule_default_update"
-        ),
+      // () =>
+      //   notificationAdd(
+      //     "Schedule default updated",
+      //     "success",
+      //     4,
+      //     "schedule_default_update"
+      //   ),
     ]
   );

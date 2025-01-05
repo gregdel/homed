@@ -1,5 +1,3 @@
-import { notificationAdd } from "./actions/notifications";
-
 const headers = (method, data) => {
   let h = {
     method: method,
@@ -46,7 +44,6 @@ export function request(
       .then((response) => response.json())
       .then((body) => {
         if (body.status === "error") {
-          dispatch(notificationAdd(body.data, "error", 10));
           dispatch({
             type: errored,
             payload: {

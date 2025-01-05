@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
+import { useNotifications } from "./NotificationsContext";
 
 import { message } from "antd";
 
-import { notificationRemove } from "../actions/notifications";
-
 export const Notifications = () => {
-  const notifications = useSelector((state) => state.notifications);
+  const { notifications } = useNotifications();
   if (!notifications || notifications.size === 0) {
     return null;
   }
 
   return (
     <>
-      {[...notifications].map(([, value]) => (
+      {Object.values(notifications).map((value) => (
         <Notification
           key={value.id}
           id={value.id}
@@ -28,7 +26,7 @@ export const Notifications = () => {
 };
 
 const Notification = ({ id, type, content, duration }) => {
-  const dispatch = useDispatch();
+  const { removeNotification } = useNotifications();
   const [delay, setDelay] = useState(0);
   const [closed, setClosed] = useState(false);
 
@@ -40,7 +38,7 @@ const Notification = ({ id, type, content, duration }) => {
     setClosed(true);
     setDelay(0.1);
     setTimeout(() => {
-      dispatch(notificationRemove(id));
+      removeNotification(id);
     }, 1000);
   };
 
