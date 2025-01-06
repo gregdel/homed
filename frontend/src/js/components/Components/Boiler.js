@@ -1,21 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useComponents } from "../ComponentsContext";
 
 import Icon from "@mdi/react";
 import { mdiFire } from "@mdi/js";
 
 import { Typography } from "antd";
+import { getSwitch } from "./common/switch.js";
 
 export const Boiler = ({ id }) => {
-  const { getComponentById } = useComponents();
-
-  const component = getComponentById(id);
-  if (component === undefined) {
-    return null;
-  }
-
-  const { on } = component.values;
+  const { on } = getSwitch(id);
 
   return (
     <div

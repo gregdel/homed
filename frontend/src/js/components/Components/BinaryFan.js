@@ -1,26 +1,13 @@
 import React from "react";
-
 import PropTypes from "prop-types";
 
 import { mdiFan } from "@mdi/js";
 
 import { IconToggle } from "./common/IconToggle";
-
-import { useComponents } from "../ComponentsContext";
+import { getSwitch } from "./common/switch.js";
 
 export const BinaryFan = ({ id }) => {
-  const { getComponentById, updateComponent } = useComponents();
-  const component = getComponentById(id);
-  if (component === undefined) {
-    return null;
-  }
-
-  const { on } = component.values;
-
-  const toggle = () => {
-    updateComponent(id, on ? "OFF" : "ON");
-  };
-
+  const { toggle, on } = getSwitch(id);
   return (
     <IconToggle
       iconOn={mdiFan}

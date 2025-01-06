@@ -1,20 +1,13 @@
 import React from "react";
-import { useComponents } from "../ComponentsContext";
 
 import PropTypes from "prop-types";
 
 import Icon from "@mdi/react";
 import { mdiRadiator } from "@mdi/js";
+import { getSwitch } from "./common/switch.js";
 
 export const BinaryTRV = ({ id }) => {
-  const { getComponentById } = useComponents();
-
-  const component = getComponentById(id);
-  if (component === undefined) {
-    return null;
-  }
-
-  const { on } = component.values;
+  const { on } = getSwitch(id);
 
   return (
     <>

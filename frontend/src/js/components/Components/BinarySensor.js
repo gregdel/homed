@@ -1,19 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { useComponents } from "../ComponentsContext";
 
 import { mdiToggleSwitchOffOutline, mdiToggleSwitch } from "@mdi/js";
 import Icon from "@mdi/react";
 
+import { getSwitch } from "./common/switch.js";
+
 export const BinarySensor = ({ id }) => {
-  const { getComponentById } = useComponents();
-
-  const component = getComponentById(id);
-  if (component === undefined) {
-    return null;
-  }
-
-  const { on } = component.values;
+  const { on } = getSwitch(id);
 
   return (
     <div style={{ display: "flex", justifyContent: "space-evenly" }}>
