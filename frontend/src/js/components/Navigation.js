@@ -6,27 +6,26 @@ const NavigationContext = createContext();
 
 const useNavigation = () => {
   // Get path from hash, removing the '#' character
-  const getPathFromHash = () => window.location.hash.slice(1) || "/temperature";
+  const getPathFromHash = () => window.location.hash.slice(1) || "";
 
-  const [currentPath, setCurrentPath] = useState(getPathFromHash());
-  const [params, setParams] = useState({});
+  // Extract parameters from path
+  const getParamsFromPath = (path) => {
+    const matches = path.match(/\/components\/([^/]+)\/(schedule|graph)/);
+    return matches ? { componentId: matches[1] } : {};
+  };
+
+  const initialPath = getPathFromHash();
+  const [currentPath, setCurrentPath] = useState(initialPath);
+  const [params, setParams] = useState(getParamsFromPath(initialPath));
 
   useEffect(() => {
     const handleLocationChange = () => {
       const path = getPathFromHash();
       setCurrentPath(path);
-      // Extract URL parameters
-      const matches = path.match(/\/components\/([^/]+)\/(schedule|graph)/);
-      if (matches) {
-        setParams({ componentId: matches[1] });
-      } else {
-        setParams({});
-      }
+      setParams(getParamsFromPath(path));
     };
 
     window.addEventListener("hashchange", handleLocationChange);
-    handleLocationChange();
-
     return () => window.removeEventListener("hashchange", handleLocationChange);
   }, []);
 

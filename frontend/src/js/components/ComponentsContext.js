@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import PropTypes from "prop-types";
 
 import { useNotifications } from "./NotificationsContext";
@@ -84,11 +78,6 @@ export const ComponentsProvider = ({ children }) => {
       console.error("Error posting data:", error);
     }
   };
-
-  // Initial fetch on mount
-  useEffect(() => {
-    fetchComponents();
-  }, [fetchComponents]);
 
   const getComponentById = useCallback(
     (id) => {

@@ -19,7 +19,7 @@ import "@ant-design/cssinjs";
 import "../assets/app.css";
 
 const AppContent = () => {
-  const { currentPath, params } = useNav();
+  const { currentPath, params, navigate } = useNav();
 
   // Route mapping function
   const getComponent = () => {
@@ -52,11 +52,7 @@ const AppContent = () => {
       case `/components/${params.componentId}/graph`:
         return <Graph />;
       default:
-        // Redirect to temperature (replacing Navigate component)
-        if (path !== "/temperature") {
-          window.location.replace("#/temperature");
-        }
-        return <Dashboard />;
+        navigate("/temperature");
     }
   };
 
