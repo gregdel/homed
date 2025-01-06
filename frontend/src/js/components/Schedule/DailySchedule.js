@@ -17,7 +17,7 @@ export const daysMap = {
   6: "Saturday",
 };
 
-export const DailySchedule = ({ day = 0, data = [] }) => {
+export const DailySchedule = ({ day = 0, data = [], refresh }) => {
   return (
     <>
       <div
@@ -28,9 +28,9 @@ export const DailySchedule = ({ day = 0, data = [] }) => {
         }}
       >
         <Title level={3}>{daysMap[day]}</Title>
-        <Add day={day} />
+        <Add day={day} refresh={refresh} />
       </div>
-      <Timeline day={day} data={data} />
+      <Timeline day={day} data={data} refresh={refresh} />
       <Divider />
     </>
   );
@@ -38,4 +38,5 @@ export const DailySchedule = ({ day = 0, data = [] }) => {
 DailySchedule.propTypes = {
   day: PropTypes.number.isRequired,
   data: PropTypes.array.isRequired,
+  refresh: PropTypes.func.isRequired,
 };

@@ -1,5 +1,4 @@
 import React from "react";
-import { useSelector, useDispatch } from "react-redux";
 import { useNav } from "./../Navigation";
 
 import PropTypes from "prop-types";
@@ -12,15 +11,7 @@ import { mdiTrashCanOutline, mdiLeaf } from "@mdi/js";
 
 import { AddOverride } from "./AddOverride";
 
-import { deleteScheduleOverride } from "../../actions/schedule";
-
-export const Overrides = () => {
-  const { params } = useNav();
-
-  const { overrides } = useSelector(
-    (state) => state.schedules.schedules.get(params.componentId).schedule
-  );
-
+export const Overrides = ({ refresh, overrides = [] }) => {
   return (
     <>
       <div
@@ -31,27 +22,44 @@ export const Overrides = () => {
         }}
       >
         <Title level={3}>Overrides</Title>
-        <AddOverride />
+        <AddOverride refresh={refresh} />
       </div>
       {overrides.length !== 0 && (
         <List
           bordered
           dataSource={overrides}
-          renderItem={(v) => <Override {...v} />}
+          renderItem={(v) => <Override refresh={refresh} {...v} />}
         />
       )}
       {overrides.length === 0 && <div>No override defined</div>}
     </>
   );
 };
-Overrides.propTypes = {};
+Overrides.propTypes = {
+  overrides: PropTypes.array,
+  refresh: PropTypes.func.isRequired,
+};
 
-const Override = ({ id, start, stop, value, on }) => {
-  const dispatch = useDispatch();
+const Override = ({ id, start, stop, value, on, refresh }) => {
   const { params } = useNav();
 
-  const handleDelete = () => {
-    dispatch(deleteScheduleOverride(params.componentId, id));
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(
+        `/components/${params.componentId}/schedule/overrides/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error posting data:", error);
+    } finally {
+      refresh();
+    }
   };
 
   const formatDate = (date) => {
@@ -83,4 +91,5 @@ Override.propTypes = {
   stop: PropTypes.string.isRequired,
   value: PropTypes.number.isRequired,
   on: PropTypes.bool.isRequired,
+  refresh: PropTypes.func.isRequired,
 };

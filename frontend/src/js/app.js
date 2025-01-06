@@ -1,6 +1,5 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { Provider } from "react-redux";
 import { Layout } from "antd";
 const { Content } = Layout;
 
@@ -15,8 +14,6 @@ import { Dashboard } from "./components/TemperatureControl/Dashboard";
 import { Components } from "./components/Components/Components";
 import { Schedule } from "./components/Schedule/Schedule";
 import { Graph } from "./components/Graph";
-
-import store from "./store";
 
 import "@ant-design/cssinjs";
 import "../assets/app.css";
@@ -77,17 +74,15 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <Provider store={store}>
-    <NavigationProvider>
-      <NotificationsProvider>
-        <ComponentsProvider>
-          <DataFetcher>
-            <AppContent />
-          </DataFetcher>
-        </ComponentsProvider>
-      </NotificationsProvider>
-    </NavigationProvider>
-  </Provider>
+  <NavigationProvider>
+    <NotificationsProvider>
+      <ComponentsProvider>
+        <DataFetcher>
+          <AppContent />
+        </DataFetcher>
+      </ComponentsProvider>
+    </NotificationsProvider>
+  </NavigationProvider>
 );
 
 const container = document.getElementById("app");

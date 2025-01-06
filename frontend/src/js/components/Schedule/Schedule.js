@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useEffect, useState, useCallback } from "react";
 import { prettyName } from "../../utils";
 import { useNav } from "./../Navigation";
 
@@ -9,39 +8,50 @@ const { Title } = Typography;
 import Icon from "@mdi/react";
 import { mdiCalendarPlus } from "@mdi/js";
 
-import { fetchSchedule } from "../../actions/schedule";
-
 import { DefaultValue } from "./DefaultValue";
 import { Overrides } from "./Overrides";
 import { DailySchedule } from "./DailySchedule";
 import { TimeSlotModal } from "./TimeSlotModal";
 
 export const Schedule = () => {
-  const dispatch = useDispatch();
+  const [schedule, setSchedule] = useState(undefined);
+  const [name, setName] = useState("");
   const { params } = useNav();
 
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchSchedule(params.componentId));
-  }, [dispatch]);
+  const fetchSchedule = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/components/${params.componentId}/schedule`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-  const data = useSelector((state) =>
-    state.schedules.schedules.get(params.componentId)
-  );
-  if (data === undefined) {
+      const data = await response.json();
+      if (data.status === "success") {
+        setName(data.data.schedule_name);
+        setSchedule(data.data.schedule);
+      } else {
+        throw new Error("Invalid data format received");
+      }
+    } catch (err) {
+      console.error("Error fetching components:", err);
+    }
+  }, [setSchedule, params]);
+
+  useEffect(() => {
+    fetchSchedule();
+  }, [fetchSchedule, params]);
+
+  if (schedule === undefined) {
     return null;
   }
 
-  let items = [];
-  for (let i = 0; i < 7; i = i + 1) {
-    items.push(<DailySchedule key={i} day={i} data={data.schedule.days[i]} />);
-  }
-  items.push(items.shift());
-
   return (
     <>
-      <Title>Schedule: {prettyName(data.schedule_name)}</Title>
+      <Title>Schedule: {prettyName(name)}</Title>
       <Divider />
       <div
         style={{
@@ -51,9 +61,12 @@ export const Schedule = () => {
           alignContent: "center",
         }}
       >
-        <DefaultValue defaultValue={data.schedule.default_value} />
+        <DefaultValue
+          defaultValue={schedule.default_value}
+          refresh={fetchSchedule}
+        />
         <Divider type="vertical" style={{ height: "5rem" }} />
-        <TimeSlotModal open={open} setOpen={setOpen} />
+        <TimeSlotModal refresh={fetchSchedule} open={open} setOpen={setOpen} />
         <div
           onClick={() => setOpen(true)}
           style={{ cursor: "pointer", alignSelf: "center" }}
@@ -64,9 +77,16 @@ export const Schedule = () => {
         </div>
       </div>
       <Divider />
-      <Overrides />
+      <Overrides refresh={fetchSchedule} overrides={schedule.overrides} />
       <Divider />
-      {items}
+      {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+        <DailySchedule
+          key={day}
+          day={day}
+          data={schedule.days[day]}
+          refresh={fetchSchedule}
+        />
+      ))}
     </>
   );
 };

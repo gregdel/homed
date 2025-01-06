@@ -1,22 +1,33 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
 import { useNav } from "./../Navigation";
 import PropTypes from "prop-types";
-
-import { deleteScheduleTimeSlot } from "../../actions/schedule";
 
 import Icon from "@mdi/react";
 import { mdiPencilOutline, mdiTrashCanOutline, mdiLeaf } from "@mdi/js";
 
 import { TimeSlotModal } from "./TimeSlotModal";
 
-export const TimeSlot = ({ start, stop, value, on, id, day }) => {
-  const dispatch = useDispatch();
+export const TimeSlot = ({ start, stop, value, on, id, day, refresh }) => {
   const { params } = useNav();
   const [open, setOpen] = useState(false);
 
-  const handleDelete = () => {
-    dispatch(deleteScheduleTimeSlot(params.componentId, day, id));
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(
+        `/components/${params.componentId}/schedule/daily/${day}/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error posting data:", error);
+    } finally {
+      refresh();
+    }
   };
 
   const handleEdit = () => {
@@ -55,6 +66,7 @@ export const TimeSlot = ({ start, stop, value, on, id, day }) => {
         on={on}
         id={id}
         target={value}
+        refresh={refresh}
         edit
       />
       <div
@@ -90,4 +102,5 @@ TimeSlot.propTypes = {
   stop: PropTypes.string,
   value: PropTypes.number.isRequired,
   day: PropTypes.number.isRequired,
+  refresh: PropTypes.func.isRequired,
 };

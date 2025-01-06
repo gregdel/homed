@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 
 import { TimeSlot } from "./TimeSlot";
 
-export const Timeline = ({ day, data = [] }) => {
+export const Timeline = ({ day, data = [], refresh }) => {
   if (data.length === 0) {
     return <div>No schedule defined</div>;
   }
@@ -27,7 +27,7 @@ export const Timeline = ({ day, data = [] }) => {
         }}
       >
         {data.map((v, i) => (
-          <TimeSlot key={i} day={day} {...v} />
+          <TimeSlot key={i} day={day} refresh={refresh} {...v} />
         ))}
       </div>
     </div>
@@ -36,4 +36,5 @@ export const Timeline = ({ day, data = [] }) => {
 Timeline.propTypes = {
   day: PropTypes.number.isRequired,
   data: PropTypes.array.isRequired,
+  refresh: PropTypes.func.isRequired,
 };

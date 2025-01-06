@@ -1,16 +1,13 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
 import { useNav } from "./../Navigation";
+import PropTypes from "prop-types";
 
 import { Modal, Button, Form, Input, Switch } from "antd";
 
 import Icon from "@mdi/react";
 import { mdiCalendarPlus } from "@mdi/js";
 
-import { addScheduleOverride } from "../../actions/schedule";
-
-export const AddOverride = () => {
-  const dispatch = useDispatch();
+export const AddOverride = ({ refresh }) => {
   const { params } = useNav();
 
   const [show, setShow] = useState(false);
@@ -23,6 +20,32 @@ export const AddOverride = () => {
     setShow(true);
   };
 
+  const add = async (data) => {
+    try {
+      const response = await fetch(
+        `/components/${params.componentId}/schedule/overrides`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const respData = await response.json();
+      if (respData.status === "error") {
+        addNotificationError(respData.data);
+      }
+    } catch (error) {
+      console.error("Error posting data:", error);
+    } finally {
+      refresh();
+    }
+  };
+
   const handleOk = () => {
     setShow(false);
     const data = {
@@ -31,7 +54,7 @@ export const AddOverride = () => {
       value: new Number(target),
       on: on,
     };
-    dispatch(addScheduleOverride(params.componentId, data));
+    add(data);
   };
 
   const handleCancel = () => {
@@ -106,4 +129,7 @@ export const AddOverride = () => {
       </Modal>
     </div>
   );
+};
+AddOverride.propTypes = {
+  refresh: PropTypes.func.isRequired,
 };

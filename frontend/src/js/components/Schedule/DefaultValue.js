@@ -1,20 +1,42 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { useDispatch } from "react-redux";
 import { useNav } from "./../Navigation";
 
 import { Modal, Form, Input } from "antd";
 
-import { setScheduleDefault } from "../../actions/schedule";
-
-export const DefaultValue = ({ defaultValue }) => {
-  const dispatch = useDispatch();
+export const DefaultValue = ({ defaultValue, refresh }) => {
   const { params } = useNav();
   const [value, setValue] = useState(defaultValue);
 
+  const setDefault = async () => {
+    try {
+      const response = await fetch(
+        `/components/${params.componentId}/schedule/default`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ value: parseInt(value) }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const respData = await response.json();
+      if (respData.status === "error") {
+        addNotificationError(respData.data);
+      }
+    } catch (error) {
+      console.error("Error posting data:", error);
+    } finally {
+      refresh();
+    }
+  };
+
   const handleOk = () => {
     setOpen(false);
-    dispatch(setScheduleDefault(params.componentId, value));
+    setDefault();
   };
 
   const [open, setOpen] = useState(false);
@@ -58,4 +80,5 @@ export const DefaultValue = ({ defaultValue }) => {
 };
 DefaultValue.propTypes = {
   defaultValue: PropTypes.number.isRequired,
+  refresh: PropTypes.func.isRequired,
 };

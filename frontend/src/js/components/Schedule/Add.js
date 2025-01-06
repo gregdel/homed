@@ -8,7 +8,7 @@ import { mdiCalendarPlus } from "@mdi/js";
 
 import { TimeSlotModal } from "./TimeSlotModal";
 
-export const Add = ({ day }) => {
+export const Add = ({ day, refresh }) => {
   const [open, setOpen] = useState(false);
 
   const showModal = () => {
@@ -25,10 +25,16 @@ export const Add = ({ day }) => {
       >
         <Icon path={mdiCalendarPlus} size={1} />
       </Button>
-      <TimeSlotModal day={day} open={open} setOpen={setOpen} />
+      <TimeSlotModal
+        day={day}
+        open={open}
+        setOpen={setOpen}
+        refresh={refresh}
+      />
     </div>
   );
 };
 Add.propTypes = {
   day: PropTypes.number.isRequired,
+  refresh: PropTypes.func.isRequired,
 };

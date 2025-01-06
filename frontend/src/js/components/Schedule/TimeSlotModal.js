@@ -1,17 +1,12 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { useDispatch } from "react-redux";
-import { useNav } from "./../Navigation";
+import { useNav } from "../Navigation";
+import { useNotifications } from "../NotificationsContext";
 
 import Icon from "@mdi/react";
 import { mdiCheckboxBlank, mdiCheckboxBlankOutline } from "@mdi/js";
 
 import { Modal, Form, Input, Switch, Typography, Divider } from "antd";
-
-import {
-  addScheduleTimeSlot,
-  updateScheduleTimeSlot,
-} from "../../actions/schedule";
 
 import { daysMap } from "./DailySchedule";
 
@@ -22,39 +17,34 @@ const DaysCheckboxes = ({ checked, setChecked }) => {
     setChecked(values);
   };
 
-  let items = [];
-  for (let i = 0; i < 7; i = i + 1) {
-    items.push(
-      <div
-        style={{
-          cursor: "pointer",
-          display: "flex",
-          justifyContent: "space-between",
-          marginLeft: "3em",
-          marginRight: "3em",
-        }}
-        onClick={() => handleCheck(i)}
-      >
-        <Typography.Title style={{ fontWeight: "300" }} level={3}>
-          {daysMap[i]}
-        </Typography.Title>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div>
-            <Icon
-              path={checked[i] ? mdiCheckboxBlank : mdiCheckboxBlankOutline}
-              size={2}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-  items.push(items.shift());
-
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <Divider />
-      {items}
+      {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+        <div
+          key={`days-checkbox-${day}`}
+          style={{
+            cursor: "pointer",
+            display: "flex",
+            justifyContent: "space-between",
+            marginLeft: "3em",
+            marginRight: "3em",
+          }}
+          onClick={() => handleCheck(day)}
+        >
+          <Typography.Title style={{ fontWeight: "300" }} level={3}>
+            {daysMap[day]}
+          </Typography.Title>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div>
+              <Icon
+                path={checked[day] ? mdiCheckboxBlank : mdiCheckboxBlankOutline}
+                size={2}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
@@ -69,13 +59,14 @@ export const TimeSlotModal = ({
   target: defaultTarget = 16,
   on: defaultOn = false,
   edit = false,
+  refresh,
   open,
   setOpen,
   id,
   day,
 }) => {
-  const dispatch = useDispatch();
   const { params } = useNav();
+  const { addNotificationError } = useNotifications();
 
   const [start, setStart] = useState(defaultStart);
   const [stop, setStop] = useState(defaultStop);
@@ -91,6 +82,58 @@ export const TimeSlotModal = ({
     false,
   ]);
 
+  const add = async (day, data) => {
+    try {
+      const response = await fetch(
+        `/components/${params.componentId}/schedule/daily/${day}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const respData = await response.json();
+      if (respData.status === "error") {
+        addNotificationError(respData.data);
+      }
+    } catch (error) {
+      console.error("Error posting data:", error);
+    } finally {
+      refresh();
+    }
+  };
+
+  const update = async (data) => {
+    try {
+      const response = await fetch(
+        `/components/${params.componentId}/schedule/daily/${day}/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const respData = await response.json();
+      if (respData.status === "error") {
+        addNotificationError(respData.data);
+      }
+    } catch (error) {
+      console.error("Error posting data:", error);
+    } finally {
+      refresh();
+    }
+  };
+
   const handleOk = () => {
     setOpen(false);
     const data = {
@@ -101,17 +144,17 @@ export const TimeSlotModal = ({
     };
 
     if (edit) {
-      dispatch(updateScheduleTimeSlot(params.componentId, day, data, id));
+      update(data);
     } else {
       if (day === undefined) {
         checked.map((v, day) => {
           if (v === false) {
             return;
           }
-          dispatch(addScheduleTimeSlot(params.componentId, day, data));
+          add(day, data);
         });
       } else {
-        dispatch(addScheduleTimeSlot(params.componentId, day, data));
+        add(day, data);
       }
     }
   };
@@ -187,4 +230,5 @@ TimeSlotModal.propTypes = {
   target: PropTypes.number,
   on: PropTypes.bool,
   edit: PropTypes.bool,
+  refresh: PropTypes.func.isRequired,
 };

@@ -29,7 +29,7 @@ export const NotificationsProvider = ({ children }) => {
   };
 
   const addNotificationError = (message) => {
-    addNotification(message, "error", 1);
+    addNotification(message, "error", 8);
   };
 
   const removeNotification = (id) => {
