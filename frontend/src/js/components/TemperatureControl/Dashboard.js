@@ -9,12 +9,12 @@ import { Card, Row } from "antd";
 export const Dashboard = () => {
   const { components } = useComponents();
 
-  const boiler = Object.values(components).find(
-    (c) => c.values.type === "boiler"
-  );
-  const temperatureSwitch = Object.values(components).find(
-    (c) => c.values.type === "homed_temperature_switch"
-  );
+  const findComponentByType = (type) => {
+    return Object.values(components).find((c) => c.type === type);
+  };
+
+  const boiler = findComponentByType("boiler");
+  const temperatureSwitch = findComponentByType("homed_temperature_switch");
 
   return (
     <>
