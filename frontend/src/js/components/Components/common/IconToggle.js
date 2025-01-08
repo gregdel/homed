@@ -10,6 +10,9 @@ export const IconToggle = ({ iconOn, iconOff, toggle, on, rotate = false }) => (
       justifyContent: "center",
       flexFlow: "column nowrap",
       height: "30vh",
+      WebkitTapHighlightColor: "transparent",
+      userSelect: "none",
+      outline: "none",
     }}
   >
     <Icon

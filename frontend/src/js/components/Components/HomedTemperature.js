@@ -171,6 +171,9 @@ export const HomedTemperature = ({ id }) => {
   return (
     <Card
       title={title}
+      style={{
+        userSelect: "none",
+      }}
       extra={
         <div style={{ display: "flex" }}>
           {graphURL !== "" && (
