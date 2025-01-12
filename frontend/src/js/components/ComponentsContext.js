@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import PropTypes from "prop-types";
 
 import { useNotifications } from "./NotificationsContext";
@@ -62,6 +68,20 @@ export const ComponentsProvider = ({ children }) => {
     }
   }, [setLoading, setError, setComponents, setLastUpdated]);
 
+  const useThrottle = (callback, delay) => {
+    const lastCall = useRef(0);
+    return useCallback(() => {
+      const now = Date.now();
+      if (now - lastCall.current > delay) {
+        lastCall.current = now;
+        callback();
+      }
+    }, [callback, delay]);
+  };
+
+  // Don't refresh more than one per 100ms
+  const refresh = useThrottle(fetchComponents, 100);
+
   const updateComponent = async (id, data) => {
     try {
       const body = typeof data === "string" ? data : JSON.stringify(data);
@@ -99,7 +119,7 @@ export const ComponentsProvider = ({ children }) => {
     error,
     lastUpdated,
     updateComponent,
-    refresh: fetchComponents,
+    refresh,
     getComponentById,
     replaceComponent,
   };
