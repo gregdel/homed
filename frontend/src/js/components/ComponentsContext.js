@@ -60,7 +60,7 @@ export const ComponentsProvider = ({ children }) => {
         throw new Error(message);
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.toString());
       console.error("Error fetching components:", err);
       addNotificationError("Error while fetching components");
     } finally {
