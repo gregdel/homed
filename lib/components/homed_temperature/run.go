@@ -17,7 +17,34 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventor
 
 	h.log = h.LoggerWithFields(logger)
 
-	ticker := time.NewTicker(30 * time.Second)
+	// Wait for the component to be updated by the retained data.
+	try := 0
+	tryWait := 3 * time.Second
+	ticker := time.NewTicker(tryWait)
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-h.Events.Incoming:
+			h.log.Info("homed temperature ignoring events for now")
+		case <-ticker.C:
+		}
+
+		if h.Data.Current.Load() > 0 {
+			h.log.Info("homed temperature updated from retained data")
+			break
+		}
+
+		h.log.Info("homed temperature not ready yet")
+		ticker.Reset(tryWait)
+		try++
+		if try >= 10 {
+			h.log.Warn("homed temperature doesn't have retained data")
+			break
+		}
+	}
+
+	ticker.Reset(30 * time.Second)
 
 	h.updateTemperatureMode()
 	h.updateTemperature()
