@@ -73,6 +73,7 @@ func (fh *FakeHome) Run(ctx context.Context, config *apps.Config) error {
 
 	opts := mqtt.NewClientOptions().
 		AddBroker(fh.config.MQTT.Broker).
+		SetClientID("homed_fakehome").
 		SetOnConnectHandler(fh.mqttOnConnectHandler).
 		SetConnectionLostHandler(fh.mqttOnConnectionLostHandler)
 	fh.client = mqtt.NewClient(opts)

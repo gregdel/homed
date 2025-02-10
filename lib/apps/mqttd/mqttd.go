@@ -44,6 +44,7 @@ func (m *mqttd) Init(config *config.Config) error {
 	opts := mqtt.
 		NewClientOptions().
 		AddBroker(config.MQTT.Broker).
+		SetClientID("homed").
 		SetOnConnectHandler(m.onConnectHandler).
 		SetReconnectingHandler(m.reconnectingHandler).
 		SetConnectionLostHandler(m.connectionLostHandler)
