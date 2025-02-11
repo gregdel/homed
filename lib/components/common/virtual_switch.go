@@ -34,8 +34,14 @@ func (v *VirtualSwitch) Type() components.Type {
 }
 
 // Update implements the Component interface
-func (v *VirtualSwitch) Update(_ []byte) error {
-	v.log.Debug("updated called", zap.Int("switches", len(v.switches)))
+func (v *VirtualSwitch) Update(payload []byte) error {
+	if string(payload) != "single" {
+		v.log.Debug("update with invalid payload, skipping",
+			zap.String("payload", string(payload)))
+		return nil
+	}
+
+	v.log.Debug("update called", zap.Int("switches", len(v.switches)))
 	v.Toggle()
 	v.Counter.Add(1)
 	return nil
