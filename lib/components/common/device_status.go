@@ -1,8 +1,7 @@
 package common
 
 import (
-	"fmt"
-	"strings"
+	"bytes"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
@@ -44,15 +43,8 @@ func (ds *DeviceStatus) Collectors(labels prometheus.Labels) []prometheus.Collec
 
 // Update implements the Component interface
 func (ds *DeviceStatus) Update(value []byte) error {
-	v := strings.ToLower(string(value))
-	switch v {
-	case "online":
-		ds.Online.Store(true)
-	case "offline":
-		ds.Online.Store(false)
-	default:
-		return fmt.Errorf("device status: invalid component status: %s", v)
-	}
+	online := bytes.Contains(bytes.ToLower(value), []byte("online"))
+	ds.Online.Store(online)
 
 	if ds.Device() == nil {
 		return components.ErrMissingDevice
