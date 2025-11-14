@@ -3,6 +3,7 @@ package homedhumidity
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
@@ -48,6 +49,12 @@ func (h *HomedHumidity) Update([]byte) error {
 	return nil
 }
 
+// isQuietHours returns a true during quiet hours
+func (h *HomedHumidity) isQuietHours() bool {
+	hour := time.Now().Hour()
+	return hour >= 22 || hour < 8
+}
+
 // Run implements the Component interface
 func (h *HomedHumidity) Run(ctx context.Context, logger *zap.Logger, inventory *components.Components) error {
 	if err := h.YAMLParams.Decode(&h.Params); err != nil {
@@ -87,6 +94,16 @@ func (h *HomedHumidity) Run(ctx context.Context, logger *zap.Logger, inventory *
 		case <-ctx.Done():
 			return nil
 		case <-h.Events.Incoming:
+			if h.isQuietHours() {
+				log.Info("FAN turned off during the quiet hours")
+				err = sw.TurnOff()
+				if err != nil {
+					log.Warn("failed stop the fan during quiet hours",
+						zap.Error(err))
+				}
+				continue
+			}
+
 			humidity, err := sensor.Humidity()
 			if err != nil {
 				log.Warn("failed to get humidity", zap.Error(err))
@@ -95,10 +112,15 @@ func (h *HomedHumidity) Run(ctx context.Context, logger *zap.Logger, inventory *
 
 			if humidity > h.Params.HumidityThreshold {
 				log.Info("FAN should be ON")
-				sw.TurnOn()
+				err = sw.TurnOn()
 			} else {
 				log.Info("FAN should be OFF")
-				sw.TurnOff()
+				err = sw.TurnOff()
+			}
+
+			if err != nil {
+				log.Warn("failed to change fan state", zap.Error(err))
+				continue
 			}
 		}
 	}
