@@ -5,8 +5,6 @@
   "start_url": "/",
   "background_color": "#232634",
   "theme_color": "#232634",
-  "display_override": ["fullscreen", "minimal-ui"],
-  "display": "standalone",
   "scope": "/",
   "icons": [
     {
