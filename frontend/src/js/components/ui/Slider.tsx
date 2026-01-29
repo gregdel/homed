@@ -13,7 +13,7 @@ export const Slider: React.FC<SliderProps> = ({
   min = 0,
   max = 100,
   step = 1,
-  value,
+  value = min,
   onChange,
   onChangeComplete,
 }) => {
@@ -34,18 +34,24 @@ export const Slider: React.FC<SliderProps> = ({
     }
   };
 
+  // Calculate percentage for filled track
+  const percentage = ((value - min) / (max - min)) * 100;
+
   return (
-    <input
-      type="range"
-      className="slider"
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      onChange={handleChange}
-      onMouseUp={handleMouseUp}
-      onTouchEnd={handleMouseUp}
-    />
+    <div className="slider-container">
+      <input
+        type="range"
+        className="slider"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={handleChange}
+        onMouseUp={handleMouseUp}
+        onTouchEnd={handleMouseUp}
+        style={{ "--slider-percent": `${percentage}%` } as React.CSSProperties}
+      />
+    </div>
   );
 };
 

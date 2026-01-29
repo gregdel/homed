@@ -280,20 +280,30 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
 
           <div style={{ position: "relative", marginTop: "1rem" }}>
             {target !== newTarget && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "-1.5rem",
-                  left: `${((target - 8) / 17) * 100}%`,
-                  transform: "translateX(-50%)",
-                  cursor: "pointer",
-                  fontSize: "0.85em",
-                  color: "var(--color-primary)",
-                }}
-                onClick={() => onChangeComplete(target)}
-              >
-                {target}°C
-              </div>
+              <>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "-1rem",
+                    left: `${((target - 8) / 17) * 100}%`,
+                    transform: "translateX(-50%)",
+                    cursor: "pointer",
+                    fontSize: "0.85em",
+                    color: "var(--color-primary)",
+                  }}
+                  onClick={() => onChangeComplete(target)}
+                >
+                  {target}°C
+                </div>
+                <div
+                  className="slider-mark"
+                  style={{
+                    left: `${((target - 8) / 17) * 100}%`,
+                  }}
+                  onClick={() => onChangeComplete(target)}
+                  title={`Reset to ${target}°C (auto)`}
+                />
+              </>
             )}
             <Slider
               min={8}
