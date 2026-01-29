@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 interface SwitchProps {
   checked: boolean;
@@ -9,7 +9,7 @@ export const Switch: React.FC<SwitchProps> = ({ checked, onChange }) => {
   return (
     <label className="switch">
       <input type="checkbox" checked={checked} onChange={onChange} />
-      <span className="switch-slider"></span>
+      <span className="switch-slider" />
     </label>
   );
 };

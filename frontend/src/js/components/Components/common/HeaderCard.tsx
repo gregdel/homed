@@ -1,10 +1,10 @@
-import React from "react";
-import type { ReactNode, CSSProperties } from "react";
+import type React from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { relativeTime } from "../../../utils/relativeTime";
-import { Icon } from "../../ui/Icon";
-import { Card } from "../../ui/Card";
-import { Link } from "../../Navigation";
 import { useComponents } from "../../ComponentsContext";
+import { Link } from "../../Navigation";
+import { Card } from "../../ui/Card";
+import { Icon } from "../../ui/Icon";
 
 interface HeaderCardProps {
   id: string;
@@ -23,7 +23,7 @@ export const HeaderCard: React.FC<HeaderCardProps> = ({ id, children }) => {
     updated_at: updatedAt,
     graph_url: graphURL,
     friendly_name: friendlyName,
-    device: device,
+    device,
   } = component.values;
 
   const extras: ReactNode[] = [];
@@ -32,7 +32,7 @@ export const HeaderCard: React.FC<HeaderCardProps> = ({ id, children }) => {
       {"online" in device && device.online === true
         ? relativeTime(updatedAt)
         : "offline"}
-    </div>
+    </div>,
   );
 
   if (graphURL && graphURL !== "") {
@@ -47,7 +47,7 @@ export const HeaderCard: React.FC<HeaderCardProps> = ({ id, children }) => {
         <Link to={`/components/${id}/graph`}>
           <Icon name="chartLine" style={iconStyle} size={0.8} />
         </Link>
-      </div>
+      </div>,
     );
   }
 

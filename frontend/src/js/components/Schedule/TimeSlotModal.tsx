@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { useNav } from "../Navigation";
 import { useNotifications } from "../NotificationsContext";
 
+import { apiPost, apiPut } from "../../utils/api";
 import { Icon } from "../ui/Icon";
 import { Modal } from "../ui/Modal";
 import { Switch } from "../ui/Switch";
-import { apiPost, apiPut } from "../../utils/api";
 
 import { daysMap } from "./DailySchedule";
 
@@ -103,16 +104,16 @@ export const TimeSlotModal: React.FC<TimeSlotModalProps> = ({
       stop: string | null;
       value: number;
       on: boolean;
-    }
+    },
   ) => {
     try {
       await apiPost(
         `/components/${params.componentId}/schedule/daily/${day}`,
-        data
+        data,
       );
     } catch (error: unknown) {
       addNotificationError(
-        error instanceof Error ? error.message : "Unknown error"
+        error instanceof Error ? error.message : "Unknown error",
       );
     } finally {
       refresh();
@@ -128,11 +129,11 @@ export const TimeSlotModal: React.FC<TimeSlotModalProps> = ({
     try {
       await apiPut(
         `/components/${params.componentId}/schedule/daily/${day}/${id}`,
-        data
+        data,
       );
     } catch (error: unknown) {
       addNotificationError(
-        error instanceof Error ? error.message : "Unknown error"
+        error instanceof Error ? error.message : "Unknown error",
       );
     } finally {
       refresh();

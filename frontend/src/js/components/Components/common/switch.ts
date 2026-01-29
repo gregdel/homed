@@ -1,5 +1,5 @@
-import { useComponents } from "../../ComponentsContext";
 import type { SwitchValues } from "../../../types";
+import { useComponents } from "../../ComponentsContext";
 
 export const getSwitch = (id: string) => {
   const { getComponentById, updateComponent } = useComponents();

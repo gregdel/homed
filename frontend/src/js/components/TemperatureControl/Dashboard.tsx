@@ -1,11 +1,11 @@
-import React from "react";
+import type React from "react";
 
-import { Components } from "../Components/Components";
 import { Component } from "../Components/Component";
+import { Components } from "../Components/Components";
 import { useComponents } from "../ComponentsContext";
 
-import { Card } from "../ui/Card";
 import type { ComponentJSON } from "../../types";
+import { Card } from "../ui/Card";
 
 export const Dashboard: React.FC = () => {
   const { components } = useComponents();

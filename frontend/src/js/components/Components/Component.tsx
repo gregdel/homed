@@ -1,19 +1,19 @@
-import React from "react";
+import type React from "react";
 
-import { Switch, VirtualSwitch, TemperatureSwitch } from "./Switches";
-import { PowerMeter, GenericSensor, WifiSignal, DeviceStatus } from "./Sensors";
 import {
-  BinaryLight,
   BinaryFan,
-  BinaryTRV,
+  BinaryLight,
   BinarySensor,
+  BinaryTRV,
   Boiler,
 } from "./BinaryDevices";
+import { DeviceStatus, GenericSensor, PowerMeter, WifiSignal } from "./Sensors";
+import { Switch, TemperatureSwitch, VirtualSwitch } from "./Switches";
 
-import { RollerShutter } from "./RollerShutter";
-import { HomedTemperature } from "./HomedTemperature";
-import { ZigbeeClimateSensor } from "./ZigbeeClimateSensor";
 import { EsphomeLight } from "./EsphomeLight";
+import { HomedTemperature } from "./HomedTemperature";
+import { RollerShutter } from "./RollerShutter";
+import { ZigbeeClimateSensor } from "./ZigbeeClimateSensor";
 import { HeaderCard } from "./common/HeaderCard";
 
 interface ComponentProps {

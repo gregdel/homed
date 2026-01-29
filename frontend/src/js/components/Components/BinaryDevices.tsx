@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import type { IconName } from "../ui";
 import { Icon } from "../ui";
 import { IconToggle } from "./common/IconToggle";

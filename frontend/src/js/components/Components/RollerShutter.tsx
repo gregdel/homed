@@ -1,6 +1,6 @@
-import React from "react";
-import { useComponents } from "../ComponentsContext";
+import type React from "react";
 import type { RollerShutterValues } from "../../types";
+import { useComponents } from "../ComponentsContext";
 
 import { Icon } from "../ui/Icon";
 import { IconRollerShutter } from "./common/IconRollerShutter";
@@ -24,11 +24,11 @@ export const RollerShutter: React.FC<RollerShutterProps> = ({ id }) => {
   };
 
   const msg = () => {
-    if (percentOpen == 0) {
+    if (percentOpen === 0) {
       return "Closed";
     }
 
-    if (percentOpen == 100) {
+    if (percentOpen === 100) {
       return "Opened";
     }
 

@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 // SVG paths extracted from @mdi/js (SIL Open Font License 1.1 / Apache 2.0)
 const icons = {

@@ -21,7 +21,7 @@ const DIVISIONS: Division[] = [
   { amount: 7, name: "days" },
   { amount: 4.34524, name: "weeks" },
   { amount: 12, name: "months" },
-  { amount: Infinity, name: "years" },
+  { amount: Number.POSITIVE_INFINITY, name: "years" },
 ];
 
 export function relativeTime(date: string | Date | null | undefined): string {

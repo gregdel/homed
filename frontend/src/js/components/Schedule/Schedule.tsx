@@ -1,14 +1,15 @@
-import React, { useEffect, useState, useCallback } from "react";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
 import { prettyName } from "../../utils";
 import { useNav } from "./../Navigation";
 
-import { Icon } from "../ui/Icon";
+import type { Schedule as ScheduleType } from "../../types";
 import { apiGet } from "../../utils/api";
-import { Schedule as ScheduleType } from "../../types";
+import { Icon } from "../ui/Icon";
 
+import { DailySchedule } from "./DailySchedule";
 import { DefaultValue } from "./DefaultValue";
 import { Overrides } from "./Overrides";
-import { DailySchedule } from "./DailySchedule";
 import { TimeSlotModal } from "./TimeSlotModal";
 
 interface TimeSlotData {
@@ -47,7 +48,7 @@ export const Schedule: React.FC = () => {
   const fetchSchedule = useCallback(async () => {
     try {
       const response = await apiGet<ScheduleData>(
-        `/components/${params.componentId}/schedule`
+        `/components/${params.componentId}/schedule`,
       );
       setName(response.data.schedule_name);
       setSchedule(response.data.schedule);

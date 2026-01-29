@@ -1,20 +1,20 @@
-import React from "react";
+import type React from "react";
 import { createRoot } from "react-dom/client";
 
 import { AppMenu } from "./components/Menu";
 import {
-  NavigationProvider,
-  useNav,
   ComponentsProvider,
+  NavigationProvider,
   NotificationsProvider,
+  useNav,
 } from "./components/contexts";
 
-import { DataFetcher } from "./components/DataFetcher";
-import { Notifications } from "./components/Notifications";
-import { Dashboard } from "./components/TemperatureControl/Dashboard";
 import { Components } from "./components/Components/Components";
-import { Schedule } from "./components/Schedule/Schedule";
+import { DataFetcher } from "./components/DataFetcher";
 import { Graph } from "./components/Graph";
+import { Notifications } from "./components/Notifications";
+import { Schedule } from "./components/Schedule/Schedule";
+import { Dashboard } from "./components/TemperatureControl/Dashboard";
 
 import "../assets/app.css";
 

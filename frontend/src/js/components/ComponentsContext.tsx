@@ -1,15 +1,16 @@
-import React, {
+import type React from "react";
+import {
   createContext,
-  useContext,
-  useState,
   useCallback,
-  useRef,
+  useContext,
   useMemo,
+  useRef,
+  useState,
 } from "react";
 import type { ReactNode } from "react";
-import type { ComponentJSON, ComponentCommand } from "../types";
-import { useNotifications } from "./NotificationsContext";
+import type { ComponentCommand, ComponentJSON } from "../types";
 import { apiGet, apiPut } from "../utils/api";
+import { useNotifications } from "./NotificationsContext";
 
 interface ComponentsContextType {
   components: Record<string, ComponentJSON>;
@@ -24,7 +25,7 @@ interface ComponentsContextType {
 
 // Create context
 const ComponentsContext = createContext<ComponentsContextType | undefined>(
-  undefined
+  undefined,
 );
 
 // Custom hook for using the components context
@@ -45,7 +46,7 @@ export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
 }) => {
   const { addNotificationOk, addNotificationError } = useNotifications();
   const [components, setComponents] = useState<Record<string, ComponentJSON>>(
-    {}
+    {},
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +81,6 @@ export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
       loadingRef.current = false;
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Don't refresh more than one per 100ms - use useMemo to keep it stable
@@ -120,7 +120,7 @@ export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
     (id: string): ComponentJSON | undefined => {
       return components[id];
     },
-    [components]
+    [components],
   );
 
   const replaceComponent = useCallback((component: ComponentJSON) => {

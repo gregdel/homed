@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { useNotifications } from "./NotificationsContext";
 
-import { ToastContainer, Toast } from "./ui/Toast";
+import { Toast, ToastContainer } from "./ui/Toast";
 
 export const Notifications: React.FC = () => {
   const { notifications } = useNotifications();
@@ -54,7 +55,6 @@ const Notification: React.FC<NotificationProps> = ({
   useEffect(() => {
     const t = setTimeout(close, duration * 1000);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (closed) {

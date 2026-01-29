@@ -9,7 +9,7 @@ import type { APIResponse } from "../types";
  */
 const apiRequest = async <T>(
   url: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<APIResponse<T>> => {
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -41,7 +41,7 @@ export const apiGet = async <T>(url: string): Promise<APIResponse<T>> => {
  */
 export const apiPost = async <T>(
   url: string,
-  data: unknown
+  data: unknown,
 ): Promise<APIResponse<T>> => {
   return apiRequest<T>(url, {
     method: "POST",
@@ -54,7 +54,7 @@ export const apiPost = async <T>(
  */
 export const apiPut = async <T>(
   url: string,
-  data: unknown
+  data: unknown,
 ): Promise<APIResponse<T>> => {
   return apiRequest<T>(url, {
     method: "PUT",

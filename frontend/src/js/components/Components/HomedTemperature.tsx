@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import { useComponents } from "../ComponentsContext";
 
 import { prettyName } from "../../utils";
 import { relativeTime } from "../../utils/relativeTime";
 
-import { Icon } from "../ui/Icon";
 import { Card } from "../ui/Card";
+import { Icon } from "../ui/Icon";
 import { Slider } from "../ui/Slider";
 
+import type { TemperatureMode, TemperatureValues } from "../../types";
 import { Link } from "../Navigation";
-import type { TemperatureValues, TemperatureMode } from "../../types";
 
 interface PopoverProps {
   trigger: React.ReactNode;
@@ -91,11 +92,11 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
   } = values;
 
   const [newTarget, setNewTarget] = useState(
-    mode === "auto" ? target : manualTarget ?? target
+    mode === "auto" ? target : (manualTarget ?? target),
   );
 
   useEffect(() => {
-    setNewTarget(mode === "auto" ? target : manualTarget ?? target);
+    setNewTarget(mode === "auto" ? target : (manualTarget ?? target));
   }, [mode, target, manualTarget]);
 
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -172,7 +173,7 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
           sendChange({
             mode: "duration",
             target: newTarget,
-            duration: e.target.value + "h",
+            duration: `${e.target.value}h`,
           });
         }}
         onKeyDown={(e) => {
@@ -180,7 +181,7 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
             sendChange({
               mode: "duration",
               target: newTarget,
-              duration: (e.target as HTMLInputElement).value + "h",
+              duration: `${(e.target as HTMLInputElement).value}h`,
             });
           }
         }}
@@ -260,7 +261,8 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
         <div>
           <div className="flex justify-between" style={{ fontSize: "1em" }}>
             <span>
-              Target set to {mode === "auto" ? target : manualTarget ?? target}
+              Target set to{" "}
+              {mode === "auto" ? target : (manualTarget ?? target)}
               °C
             </span>
             <Icon
@@ -340,9 +342,8 @@ const HeatingMode: React.FC<HeatingModeProps> = ({ mode, date }) => {
     case "until_next_change":
       if (date) {
         return <>Back to auto {prettyDate}</>;
-      } else {
-        return <>Manual until next programmed change</>;
       }
+      return <>Manual until next programmed change</>;
     default:
       return null;
   }
