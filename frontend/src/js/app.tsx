@@ -87,4 +87,8 @@ if (!container) {
 const root = createRoot(container);
 root.render(<App />);
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+
 export default App;

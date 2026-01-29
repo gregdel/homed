@@ -10,7 +10,8 @@ import type {
 const NavigationContext = createContext<NavContextType | undefined>(undefined);
 
 // Get path from hash, removing the '#' character
-const getPathFromHash = (): string => window.location.hash.slice(1) || "";
+const getPathFromHash = (): string =>
+  window.location.hash.slice(1) || "/temperature";
 
 // Extract parameters from path
 const getParamsFromPath = (path: string): NavigationParams => {
