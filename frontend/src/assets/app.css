@@ -54,43 +54,10 @@ body {
   transition: width 0.2s;
 }
 
-.sidebar.collapsed {
-  width: 0;
-  overflow: hidden;
-}
-
-.sidebar-toggle {
-  display: none;
-  position: fixed;
-  top: 0.5rem;
-  left: 0.5rem;
-  z-index: 1000;
-  width: 40px;
-  height: 40px;
-  background: var(--color-sidebar);
-  border: none;
-  border-radius: var(--radius);
-  color: white;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-}
-
-@media (max-width: 992px) {
+/* Sidebar hidden on mobile - uses bottom nav instead */
+@media (max-width: 991px) {
   .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    z-index: 999;
-  }
-
-  .sidebar-toggle {
-    display: flex;
-  }
-
-  .sidebar.collapsed + .content {
-    margin-left: 0;
+    display: none;
   }
 }
 
@@ -666,4 +633,122 @@ h4 { font-size: 20px; }
 
 .text-light {
   font-weight: 300;
+}
+
+/* Bottom Navigation (Mobile) */
+.bottom-nav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 8px 4px;
+  min-height: 44px;
+  min-width: 44px;
+  transition: color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-item:active {
+  background: var(--color-bg-secondary);
+}
+
+.bottom-nav-item.active {
+  color: var(--color-primary);
+}
+
+.bottom-nav-item svg {
+  flex-shrink: 0;
+}
+
+/* More Sheet Modal */
+.more-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  margin: 0;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.more-sheet::backdrop {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.more-sheet-content {
+  position: absolute;
+  bottom: calc(56px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  background: var(--color-bg);
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: var(--shadow-md);
+}
+
+.more-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+}
+
+.more-sheet-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background: var(--color-bg-secondary);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 12px;
+  cursor: pointer;
+  min-height: 72px;
+  min-width: 44px;
+  transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.more-sheet-item:active {
+  background: var(--color-border);
+}
+
+.more-sheet-item.active {
+  color: var(--color-primary);
+  background: rgba(22, 119, 255, 0.1);
+}
+
+/* Content padding for bottom nav */
+@media (max-width: 991px) {
+  .content {
+    padding-bottom: calc(56px + var(--spacing-md) + env(safe-area-inset-bottom));
+  }
 }
