@@ -42,6 +42,21 @@ export const GenericSensor: React.FC<SensorComponentProps> = ({ id }) => {
   );
 };
 
+// Power Meter Component (formatted sensor display)
+export const PowerMeter: React.FC<SensorComponentProps> = ({ id }) => {
+  const { getComponentById } = useComponents();
+  const component = getComponentById(id);
+  if (component === undefined) return null;
+
+  const values = component.values as GenericSensorValues;
+
+  return (
+    <div style={{ fontSize: "4em", fontWeight: 200 }}>
+      <span>{String(values.value)} W</span>
+    </div>
+  );
+};
+
 // WiFi Signal Component
 export const WifiSignal: React.FC<SensorComponentProps> = ({ id }) => {
   const { getComponentById } = useComponents();
