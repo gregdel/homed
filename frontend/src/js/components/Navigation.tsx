@@ -1,0 +1,113 @@
+import React, { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode, CSSProperties, MouseEvent } from "react";
+import type {
+  NavigationContext as NavContextType,
+  NavigationParams,
+} from "../types";
+
+// Navigation Context and Hook
+const NavigationContext = createContext<NavContextType | undefined>(undefined);
+
+const useNavigation = (): NavContextType => {
+  // Get path from hash, removing the '#' character
+  const getPathFromHash = (): string => window.location.hash.slice(1) || "";
+
+  // Extract parameters from path
+  const getParamsFromPath = (path: string): NavigationParams => {
+    const matches = path.match(/\/components\/([^/]+)\/(schedule|graph)/);
+    return matches && matches[1] ? { componentId: matches[1] } : {};
+  };
+
+  const initialPath = getPathFromHash();
+  const [currentPath, setCurrentPath] = useState<string>(initialPath);
+  const [params, setParams] = useState<NavigationParams>(
+    getParamsFromPath(initialPath)
+  );
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const path = getPathFromHash();
+      setCurrentPath(path);
+      setParams(getParamsFromPath(path));
+    };
+
+    window.addEventListener("hashchange", handleLocationChange);
+    return () => window.removeEventListener("hashchange", handleLocationChange);
+  }, []);
+
+  const navigate = (path: string) => {
+    window.location.hash = path;
+  };
+
+  return { currentPath, params, navigate };
+};
+
+// Navigation Provider Component
+interface NavigationProviderProps {
+  children: ReactNode;
+}
+
+export const NavigationProvider: React.FC<NavigationProviderProps> = ({
+  children,
+}) => {
+  const navigation = useNavigation();
+  return (
+    <NavigationContext.Provider value={navigation}>
+      {children}
+    </NavigationContext.Provider>
+  );
+};
+
+// Custom hook to use navigation in components
+export const useNav = (): NavContextType => {
+  const context = useContext(NavigationContext);
+  if (!context) {
+    throw new Error("useNav must be used within a NavigationProvider");
+  }
+  return context;
+};
+
+interface LinkProps {
+  to: string;
+  children: ReactNode;
+  className?: string;
+  activeClassName?: string;
+  style?: CSSProperties;
+  activeStyle?: CSSProperties;
+  onClick?: ((e: MouseEvent<HTMLAnchorElement>) => void) | null;
+}
+
+export const Link: React.FC<LinkProps> = ({
+  to,
+  children,
+  className = "",
+  activeClassName = "",
+  style = {},
+  activeStyle = {},
+  onClick = null,
+}) => {
+  const { currentPath, navigate } = useNav();
+  const isActive = currentPath === to;
+
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (onClick) onClick(e);
+    navigate(to);
+  };
+
+  return (
+    <a
+      href={`#${to}`}
+      onClick={handleClick}
+      className={`${className} ${isActive ? activeClassName : ""}`}
+      style={{
+        ...style,
+        ...(isActive ? activeStyle : {}),
+        cursor: "pointer",
+        textDecoration: "none",
+      }}
+    >
+      {children}
+    </a>
+  );
+};

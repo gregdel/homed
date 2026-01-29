@@ -34,9 +34,10 @@ for (const asset of assets) {
   }
 }
 
-// Build JavaScript with Bun's bundler
+// Build JavaScript/TypeScript with Bun's bundler
+// Bun automatically handles .ts/.tsx files
 const result = await Bun.build({
-  entrypoints: ["./src/js/app.js"],
+  entrypoints: ["./src/js/app.tsx"],
   outdir: outdir,
   minify: !isDev,
   sourcemap: isDev ? "external" : "none",

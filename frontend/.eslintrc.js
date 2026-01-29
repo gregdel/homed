@@ -24,4 +24,23 @@ module.exports = {
       version: "detect",
     },
   },
+  overrides: [
+    {
+      files: ["*.ts", "*.tsx"],
+      parser: "@typescript-eslint/parser",
+      extends: [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:import/recommended",
+        "plugin:import/typescript",
+        "plugin:react/recommended",
+        "plugin:prettier/recommended",
+      ],
+      parserOptions: {
+        project: "./tsconfig.json",
+      },
+      plugins: ["@typescript-eslint", "import", "react", "react-hooks"],
+    },
+  ],
 };
