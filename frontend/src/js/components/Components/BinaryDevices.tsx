@@ -84,6 +84,41 @@ export const BinaryTRV: React.FC<BinaryComponentProps> = ({ id }) => {
   );
 };
 
+// Boiler Component
+export const Boiler: React.FC<BinaryComponentProps> = ({ id }) => {
+  const switchData = getSwitch(id);
+  if (!switchData) return null;
+
+  const { on } = switchData;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-end",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+      }}
+    >
+      <div>
+        <h2>Boiler</h2>
+      </div>
+      <div>
+        <div>
+          <Icon
+            name="fire"
+            size={3}
+            style={{
+              color: on ? "#ff4d4f" : "#00000040",
+              transition: "color 0.3s ease-out 0s",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Generic binary device component - for internal use
 interface GenericBinaryDeviceProps {
   id: string;
