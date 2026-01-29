@@ -55,11 +55,11 @@ export const Schedule: React.FC = () => {
     } catch (err) {
       console.error("Error fetching schedule:", err);
     }
-  }, [setSchedule, params]);
+  }, [params]);
 
   useEffect(() => {
     void fetchSchedule();
-  }, [fetchSchedule, params]);
+  }, [fetchSchedule]);
 
   if (schedule === undefined) {
     return null;

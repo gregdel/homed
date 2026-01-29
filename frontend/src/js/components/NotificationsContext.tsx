@@ -1,5 +1,5 @@
 import type React from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import type { ReactNode } from "react";
 
 interface Notification {
@@ -41,32 +41,37 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({
     Record<string, Notification>
   >({});
 
-  const addNotification = (
-    message: string,
-    type: "success" | "error",
-    duration: number,
-  ) => {
-    const id = Math.random().toString(36).substring(7);
-    setNotifications((prevNotifications) => ({
-      ...prevNotifications,
-      [id]: { id, message, type, duration },
-    }));
-  };
+  const addNotification = useCallback(
+    (message: string, type: "success" | "error", duration: number) => {
+      const id = Math.random().toString(36).substring(7);
+      setNotifications((prevNotifications) => ({
+        ...prevNotifications,
+        [id]: { id, message, type, duration },
+      }));
+    },
+    [],
+  );
 
-  const addNotificationOk = (message: string) => {
-    addNotification(message, "success", 1.5);
-  };
+  const addNotificationOk = useCallback(
+    (message: string) => {
+      addNotification(message, "success", 1.5);
+    },
+    [addNotification],
+  );
 
-  const addNotificationError = (message: string) => {
-    addNotification(message, "error", 8);
-  };
+  const addNotificationError = useCallback(
+    (message: string) => {
+      addNotification(message, "error", 8);
+    },
+    [addNotification],
+  );
 
-  const removeNotification = (id: string) => {
+  const removeNotification = useCallback((id: string) => {
     setNotifications((prevNotifications) => {
       const { [id]: _, ...remainingNotifications } = prevNotifications;
       return remainingNotifications;
     });
-  };
+  }, []);
 
   const value: NotificationsContextType = {
     notifications,

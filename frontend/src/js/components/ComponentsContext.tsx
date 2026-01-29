@@ -81,7 +81,7 @@ export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
       loadingRef.current = false;
       setLoading(false);
     }
-  }, []);
+  }, [addNotificationOk, addNotificationError]);
 
   // Don't refresh more than one per 100ms - use useMemo to keep it stable
   const refresh = useMemo(() => {
