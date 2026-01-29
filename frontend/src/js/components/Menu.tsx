@@ -1,7 +1,7 @@
 import type React from "react";
 import { useEffect, useState } from "react";
+import { BottomNav } from "./BottomNav";
 import { useNav } from "./Navigation";
-
 import { Icon, type IconName } from "./ui/Icon";
 
 interface MenuItem {
@@ -43,53 +43,46 @@ const menuItems: MenuItem[] = [
   { icon: "ruler", key: "sensors", label: "Sensors", path: "/sensors" },
 ];
 
-export const AppMenu: React.FC = () => {
-  const [collapsed, setCollapsed] = useState(window.innerWidth < 992);
+const MOBILE_BREAKPOINT = 992;
+
+const Sidebar: React.FC = () => {
   const { currentPath, navigate } = useNav();
 
-  // Handle responsive collapse
+  return (
+    <nav className="sidebar">
+      <ul className="nav">
+        {menuItems.map((item) => (
+          <li
+            key={item.key}
+            className={`nav-item ${currentPath === item.path ? "active" : ""}`}
+          >
+            <button onClick={() => navigate(item.path)}>
+              <Icon name={item.icon} size={1} />
+              <span>{item.label}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+};
+
+export const AppMenu: React.FC = () => {
+  const [isMobile, setIsMobile] = useState(
+    window.innerWidth < MOBILE_BREAKPOINT,
+  );
+
   useEffect(() => {
     const handleResize = () => {
-      setCollapsed(window.innerWidth < 992);
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleItemClick = (path: string) => {
-    navigate(path);
-    // Collapse on mobile after navigation
-    if (window.innerWidth < 992) {
-      setCollapsed(true);
-    }
-  };
+  if (isMobile) {
+    return <BottomNav />;
+  }
 
-  return (
-    <>
-      <button
-        className="sidebar-toggle"
-        onClick={() => setCollapsed(!collapsed)}
-        aria-label="Toggle menu"
-      >
-        <Icon name="menu" size={1} />
-      </button>
-      <nav className={`sidebar ${collapsed ? "collapsed" : ""}`}>
-        <ul className="nav">
-          {menuItems.map((item) => (
-            <li
-              key={item.key}
-              className={`nav-item ${
-                currentPath === item.path ? "active" : ""
-              }`}
-            >
-              <button onClick={() => handleItemClick(item.path)}>
-                <Icon name={item.icon} size={1} />
-                <span>{item.label}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </>
-  );
+  return <Sidebar />;
 };
