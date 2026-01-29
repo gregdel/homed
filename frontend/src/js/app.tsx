@@ -2,9 +2,12 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 
 import { AppMenu } from "./components/Menu";
-import { NavigationProvider, useNav } from "./components/Navigation";
-import { ComponentsProvider } from "./components/ComponentsContext";
-import { NotificationsProvider } from "./components/NotificationsContext";
+import {
+  NavigationProvider,
+  useNav,
+  ComponentsProvider,
+  NotificationsProvider,
+} from "./components/contexts";
 
 import { DataFetcher } from "./components/DataFetcher";
 import { Notifications } from "./components/Notifications";
