@@ -9,16 +9,16 @@ import type {
 // Navigation Context and Hook
 const NavigationContext = createContext<NavContextType | undefined>(undefined);
 
+// Get path from hash, removing the '#' character
+const getPathFromHash = (): string => window.location.hash.slice(1) || "";
+
+// Extract parameters from path
+const getParamsFromPath = (path: string): NavigationParams => {
+  const matches = path.match(/\/components\/([^/]+)\/(schedule|graph)/);
+  return matches?.[1] ? { componentId: matches[1] } : {};
+};
+
 const useNavigation = (): NavContextType => {
-  // Get path from hash, removing the '#' character
-  const getPathFromHash = (): string => window.location.hash.slice(1) || "";
-
-  // Extract parameters from path
-  const getParamsFromPath = (path: string): NavigationParams => {
-    const matches = path.match(/\/components\/([^/]+)\/(schedule|graph)/);
-    return matches?.[1] ? { componentId: matches[1] } : {};
-  };
-
   const initialPath = getPathFromHash();
   const [currentPath, setCurrentPath] = useState<string>(initialPath);
   const [params, setParams] = useState<NavigationParams>(

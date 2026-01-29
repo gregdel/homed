@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNotifications } from "./NotificationsContext";
 
 import { Toast, ToastContainer } from "./ui/Toast";
@@ -52,10 +52,13 @@ const Notification: React.FC<NotificationProps> = ({
     }, 100);
   };
 
+  const closeRef = useRef(close);
+  closeRef.current = close;
+
   useEffect(() => {
-    const t = setTimeout(close, duration * 1000);
+    const t = setTimeout(() => closeRef.current(), duration * 1000);
     return () => clearTimeout(t);
-  }, []);
+  }, [duration]);
 
   if (closed) {
     return null;
