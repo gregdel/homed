@@ -4,7 +4,7 @@ import { Components } from "../Components/Components";
 import { Component } from "../Components/Component";
 import { useComponents } from "../ComponentsContext";
 
-import { Card, Row } from "antd";
+import { Card } from "../ui/Card";
 
 export const Dashboard = () => {
   const { components } = useComponents();
@@ -18,10 +18,9 @@ export const Dashboard = () => {
 
   return (
     <>
-      <Row
+      <div
+        className="flex-row"
         style={{
-          marginBottom: "0.5em",
-          flexDirection: "row",
           justifyContent: "space-between",
           flexWrap: "nowrap",
           alignItems: "center",
@@ -41,7 +40,7 @@ export const Dashboard = () => {
             />
           </Card>
         )}
-      </Row>
+      </div>
       <Components typesFilter={["homed_temperature"]} noCard />
     </>
   );

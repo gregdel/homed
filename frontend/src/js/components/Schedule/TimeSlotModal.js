@@ -3,10 +3,10 @@ import PropTypes from "prop-types";
 import { useNav } from "../Navigation";
 import { useNotifications } from "../NotificationsContext";
 
-import Icon from "@mdi/react";
-import { mdiCheckboxBlank, mdiCheckboxBlankOutline } from "@mdi/js";
-
-import { Modal, Form, Input, Switch, Typography, Divider } from "antd";
+import { Icon } from "../ui/Icon";
+import { Modal } from "../ui/Modal";
+import { Switch } from "../ui/Switch";
+import { apiPost, apiPut } from "../../utils/api";
 
 import { daysMap } from "./DailySchedule";
 
@@ -18,27 +18,23 @@ const DaysCheckboxes = ({ checked, setChecked }) => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <Divider />
+    <div className="flex flex-col">
+      <hr className="divider" />
       {[1, 2, 3, 4, 5, 6, 0].map((day) => (
         <div
           key={`days-checkbox-${day}`}
+          className="cursor-pointer flex justify-between"
           style={{
-            cursor: "pointer",
-            display: "flex",
-            justifyContent: "space-between",
             marginLeft: "3em",
             marginRight: "3em",
           }}
           onClick={() => handleCheck(day)}
         >
-          <Typography.Title style={{ fontWeight: "300" }} level={3}>
-            {daysMap[day]}
-          </Typography.Title>
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <h3 className="text-light">{daysMap[day]}</h3>
+          <div className="flex items-center">
             <div>
               <Icon
-                path={checked[day] ? mdiCheckboxBlank : mdiCheckboxBlankOutline}
+                name={checked[day] ? "checkboxBlank" : "checkboxBlankOutline"}
                 size={2}
               />
             </div>
@@ -84,25 +80,12 @@ export const TimeSlotModal = ({
 
   const add = async (day, data) => {
     try {
-      const response = await fetch(
+      await apiPost(
         `/components/${params.componentId}/schedule/daily/${day}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }
+        data
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const respData = await response.json();
-      if (respData.status === "error") {
-        addNotificationError(respData.data);
-      }
     } catch (error) {
-      console.error("Error posting data:", error);
+      addNotificationError(error.message);
     } finally {
       refresh();
     }
@@ -110,25 +93,12 @@ export const TimeSlotModal = ({
 
   const update = async (data) => {
     try {
-      const response = await fetch(
+      await apiPut(
         `/components/${params.componentId}/schedule/daily/${day}/${id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }
+        data
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const respData = await response.json();
-      if (respData.status === "error") {
-        addNotificationError(respData.data);
-      }
     } catch (error) {
-      console.error("Error posting data:", error);
+      addNotificationError(error.message);
     } finally {
       refresh();
     }
@@ -165,58 +135,55 @@ export const TimeSlotModal = ({
 
   const title = edit ? "Edit timeslot" : "Add in schedule";
 
-  const dayStr = day ? day : "all";
-  const formName = id
-    ? `ts-${params.componentId}-${dayStr}-modal-${id}`
-    : `ts-${params.componentId}-${dayStr}-modal`;
-
   return (
     <Modal title={title} open={open} onOk={handleOk} onCancel={handleCancel}>
-      <Form
-        labelCol={{ span: 5 }}
-        name={formName}
-        onFinish={handleOk}
-        onFinishFailed={handleOk}
-        initialValues={{
-          start: defaultStart,
-          stop: defaultStop,
-          target: defaultTarget,
-        }}
-      >
-        <Form.Item
-          label="From"
-          name="start"
-          onChange={(e) => setStart(e.target.value)}
-        >
-          <Input type="time" />
-        </Form.Item>
-
-        <Form.Item
-          label="To"
-          name="stop"
-          onChange={(e) => setStop(e.target.value)}
-        >
-          <Input type="time" />
-        </Form.Item>
-        <Form.Item
-          label="Target"
-          name="target"
-          onChange={(e) => setTarget(e.target.value)}
-        >
-          <Input type="number" step=".5" />
-        </Form.Item>
-        <Form.Item label="Opportunistic" name="on">
-          <Switch
-            onChange={() => {
-              setOn(!on);
-            }}
-            checked={on}
+      <div className="form-group">
+        <label className="form-label">From</label>
+        <div className="form-control">
+          <input
+            type="time"
+            className="input"
+            defaultValue={defaultStart}
+            onChange={(e) => setStart(e.target.value)}
           />
-        </Form.Item>
-        {day === undefined && (
-          <DaysCheckboxes checked={checked} setChecked={setChecked} />
-        )}
-      </Form>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">To</label>
+        <div className="form-control">
+          <input
+            type="time"
+            className="input"
+            defaultValue={defaultStop}
+            onChange={(e) => setStop(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Target</label>
+        <div className="form-control">
+          <input
+            type="number"
+            step=".5"
+            className="input"
+            defaultValue={defaultTarget}
+            onChange={(e) => setTarget(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Opportunistic</label>
+        <div className="form-control">
+          <Switch checked={on} onChange={() => setOn(!on)} />
+        </div>
+      </div>
+
+      {day === undefined && (
+        <DaysCheckboxes checked={checked} setChecked={setChecked} />
+      )}
     </Modal>
   );
 };

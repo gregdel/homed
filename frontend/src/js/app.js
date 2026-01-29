@@ -1,7 +1,5 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { Layout } from "antd";
-const { Content } = Layout;
 
 import { AppMenu } from "./components/Menu";
 import { NavigationProvider, useNav } from "./components/Navigation";
@@ -15,7 +13,6 @@ import { Components } from "./components/Components/Components";
 import { Schedule } from "./components/Schedule/Schedule";
 import { Graph } from "./components/Graph";
 
-import "@ant-design/cssinjs";
 import "../assets/app.css";
 
 const AppContent = () => {
@@ -57,15 +54,13 @@ const AppContent = () => {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <div className="layout">
       <AppMenu />
-      <Layout>
-        <Content style={{ padding: "1em" }}>
-          <Notifications />
-          {getComponent()}
-        </Content>
-      </Layout>
-    </Layout>
+      <main className="content">
+        <Notifications />
+        {getComponent()}
+      </main>
+    </div>
   );
 };
 

@@ -1,28 +1,64 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { useComponents } from "../ComponentsContext";
 
 import { prettyName } from "../../utils";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-dayjs.extend(relativeTime);
+import { relativeTime } from "../../utils/relativeTime";
 
-import Icon from "@mdi/react";
-import {
-  mdiInfinity,
-  mdiCalendar,
-  mdiTimerOutline,
-  mdiAutorenew,
-  mdiCalendarClock,
-  mdiChartLine,
-  mdiThermometer,
-  mdiThermometerOff,
-  mdiRadiator,
-  mdiLeaf,
-} from "@mdi/js";
+import { Icon } from "../ui/Icon";
+import { Card } from "../ui/Card";
+import { Slider } from "../ui/Slider";
 
-import { Card, Slider, Popover, DatePicker, Input, Divider } from "antd";
 import { Link } from "../Navigation";
+
+// Popover component using details/summary
+const Popover = ({ trigger, title, children }) => {
+  const detailsRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (detailsRef.current && !detailsRef.current.contains(e.target)) {
+        detailsRef.current.open = false;
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  return (
+    <details ref={detailsRef} style={{ position: "relative" }}>
+      <summary className="cursor-pointer" style={{ listStyle: "none" }}>
+        {trigger}
+      </summary>
+      <div
+        style={{
+          position: "absolute",
+          top: "100%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "#fff",
+          border: "1px solid #d9d9d9",
+          borderRadius: "6px",
+          padding: "0.5rem",
+          zIndex: 10,
+          boxShadow: "0 6px 16px rgba(0,0,0,0.08)",
+          minWidth: "180px",
+        }}
+      >
+        {title && (
+          <div style={{ fontWeight: 500, marginBottom: "0.5rem" }}>{title}</div>
+        )}
+        {children}
+      </div>
+    </details>
+  );
+};
+
+Popover.propTypes = {
+  trigger: PropTypes.node.isRequired,
+  title: PropTypes.string,
+  children: PropTypes.node.isRequired,
+};
 
 export const HomedTemperature = ({ id }) => {
   const { getComponentById, updateComponent } = useComponents();
@@ -52,7 +88,7 @@ export const HomedTemperature = ({ id }) => {
 
   useEffect(() => {
     setNewTarget(mode === "auto" ? target : manualTarget);
-  }, [mode]);
+  }, [mode, target, manualTarget]);
 
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -83,69 +119,58 @@ export const HomedTemperature = ({ id }) => {
     }
   };
 
-  var marks = {};
-  if (target !== newTarget) {
-    marks[target] = (
-      <span onClick={() => onChangeComplete(target)}>{target}°C</span>
-    );
-  }
-
   const ActionInfinity = (
     <div
       onClick={() => {
         sendChange({ mode: "fixed", target: newTarget });
       }}
     >
-      <Icon path={mdiInfinity} size={1} />
+      <Icon name="infinity" size={1} />
     </div>
   );
 
   const ActionCalendar = (
-    <Popover
-      title="Pick a date"
-      trigger={["hover", "click"]}
-      content={
-        <DatePicker
-          showTime
-          onOk={(time) => {
-            sendChange({
-              mode: "until_date",
-              target: newTarget,
-              date: time.format(),
-            });
-          }}
-        />
-      }
-    >
-      <div>
-        <Icon path={mdiCalendar} size={1} />
-      </div>
+    <Popover title="Pick a date" trigger={<Icon name="calendar" size={1} />}>
+      <input
+        type="datetime-local"
+        className="input"
+        onChange={(e) => {
+          const date = new Date(e.target.value);
+          sendChange({
+            mode: "until_date",
+            target: newTarget,
+            date: date.toISOString(),
+          });
+        }}
+      />
     </Popover>
   );
 
-  const onActionTimerEvent = (e) => {
-    sendChange({
-      mode: "duration",
-      target: newTarget,
-      duration: e.target.value + "h",
-    });
-  };
-
   const ActionTimer = (
     <Popover
-      title="Select a duration (in hours)"
-      trigger={["hover", "click"]}
-      content={
-        <Input
-          type="number"
-          onBlur={onActionTimerEvent}
-          onPressEnter={onActionTimerEvent}
-        />
-      }
+      title="Duration (hours)"
+      trigger={<Icon name="timerOutline" size={1} />}
     >
-      <div>
-        <Icon path={mdiTimerOutline} size={1} />
-      </div>
+      <input
+        type="number"
+        className="input"
+        onBlur={(e) => {
+          sendChange({
+            mode: "duration",
+            target: newTarget,
+            duration: e.target.value + "h",
+          });
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            sendChange({
+              mode: "duration",
+              target: newTarget,
+              duration: e.target.value + "h",
+            });
+          }
+        }}
+      />
     </Popover>
   );
 
@@ -155,7 +180,7 @@ export const HomedTemperature = ({ id }) => {
         sendChange({ mode: "until_next_change", target: newTarget });
       }}
     >
-      <Icon path={mdiAutorenew} size={1} />
+      <Icon name="autorenew" size={1} />
     </div>
   );
 
@@ -164,7 +189,7 @@ export const HomedTemperature = ({ id }) => {
       ? [ActionTimer, ActionCalendar, ActionUntilNext, ActionInfinity]
       : [];
 
-  const icon = opportunistic ? mdiLeaf : mdiRadiator;
+  const icon = opportunistic ? "leaf" : "radiator";
 
   const title = friendlyName !== "" ? friendlyName : prettyName(device.room);
 
@@ -175,16 +200,16 @@ export const HomedTemperature = ({ id }) => {
         userSelect: "none",
       }}
       extra={
-        <div style={{ display: "flex" }}>
+        <div className="flex items-center">
           {graphURL !== "" && (
             <>
               <Link
                 to={`/components/${id}/graph`}
                 style={{ color: "#000000d9" }}
               >
-                <Icon path={mdiChartLine} size={1} />
+                <Icon name="chartLine" size={1} />
               </Link>
-              <Divider type="vertical" style={{ height: "1.8rem" }} />
+              <span className="divider-vertical" />
             </>
           )}
           <div
@@ -193,7 +218,7 @@ export const HomedTemperature = ({ id }) => {
             }}
           >
             <Icon
-              path={on ? mdiThermometer : mdiThermometerOff}
+              name={on ? "thermometer" : "thermometerOff"}
               size={1}
               style={{
                 cursor: "pointer",
@@ -202,12 +227,12 @@ export const HomedTemperature = ({ id }) => {
               }}
             />
           </div>
-          <Divider type="vertical" style={{ height: "1.8rem" }} />
+          <span className="divider-vertical" />
           <Link
             to={`/components/${id}/schedule`}
             style={{ color: "#000000d9" }}
           >
-            <Icon path={mdiCalendarClock} size={1} />
+            <Icon name="calendarClock" size={1} />
           </Link>
         </div>
       }
@@ -219,18 +244,12 @@ export const HomedTemperature = ({ id }) => {
 
       {on && (
         <div>
-          <div
-            style={{
-              fontSize: "1em",
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
+          <div className="flex justify-between" style={{ fontSize: "1em" }}>
             <span>
               Target set to {mode === "auto" ? target : manualTarget}°C
             </span>
             <Icon
-              path={icon}
+              name={icon}
               size={1}
               style={{
                 color: heating ? "#ff00005e" : "#00000040",
@@ -242,17 +261,34 @@ export const HomedTemperature = ({ id }) => {
             <HeatingMode mode={mode} date={manualUntil} />
           </div>
 
-          <Slider
-            min={8}
-            max={25}
-            step={0.5}
-            marks={marks}
-            value={newTarget}
-            onChange={(value) => {
-              setNewTarget(value);
-            }}
-            onChangeComplete={onChangeComplete}
-          />
+          <div style={{ position: "relative", marginTop: "1rem" }}>
+            {target !== newTarget && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-1.5rem",
+                  left: `${((target - 8) / 17) * 100}%`,
+                  transform: "translateX(-50%)",
+                  cursor: "pointer",
+                  fontSize: "0.85em",
+                  color: "var(--color-primary)",
+                }}
+                onClick={() => onChangeComplete(target)}
+              >
+                {target}°C
+              </div>
+            )}
+            <Slider
+              min={8}
+              max={25}
+              step={0.5}
+              value={newTarget}
+              onChange={(value) => {
+                setNewTarget(value);
+              }}
+              onChangeComplete={onChangeComplete}
+            />
+          </div>
         </div>
       )}
       {!on && (
@@ -274,7 +310,7 @@ HomedTemperature.propTypes = {
 };
 
 const HeatingMode = ({ mode, date }) => {
-  const prettyDate = date === null ? "" : dayjs(date).fromNow();
+  const prettyDate = date === null ? "" : relativeTime(date);
 
   switch (mode) {
     case "auto":

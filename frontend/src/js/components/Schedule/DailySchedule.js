@@ -1,9 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import { Typography, Divider } from "antd";
-const { Title } = Typography;
-
 import { Add } from "./Add";
 import { Timeline } from "./Timeline";
 
@@ -11,8 +8,8 @@ export const daysMap = {
   0: "Sunday",
   1: "Monday",
   2: "Tuesday",
-  3: "Wednesay",
-  4: "Thrusday",
+  3: "Wednesday",
+  4: "Thursday",
   5: "Friday",
   6: "Saturday",
 };
@@ -27,11 +24,11 @@ export const DailySchedule = ({ day = 0, data = [], refresh }) => {
           alignItems: "baseline",
         }}
       >
-        <Title level={3}>{daysMap[day]}</Title>
+        <h3>{daysMap[day]}</h3>
         <Add day={day} refresh={refresh} />
       </div>
       <Timeline day={day} data={data} refresh={refresh} />
-      <Divider />
+      <hr className="divider" />
     </>
   );
 };

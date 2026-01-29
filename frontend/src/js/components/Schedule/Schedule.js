@@ -2,11 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { prettyName } from "../../utils";
 import { useNav } from "./../Navigation";
 
-import { Typography, Divider } from "antd";
-const { Title } = Typography;
-
-import Icon from "@mdi/react";
-import { mdiCalendarPlus } from "@mdi/js";
+import { Icon } from "../ui/Icon";
+import { apiGet } from "../../utils/api";
 
 import { DefaultValue } from "./DefaultValue";
 import { Overrides } from "./Overrides";
@@ -22,22 +19,11 @@ export const Schedule = () => {
 
   const fetchSchedule = useCallback(async () => {
     try {
-      const response = await fetch(
-        `/components/${params.componentId}/schedule`
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.status === "success") {
-        setName(data.data.schedule_name);
-        setSchedule(data.data.schedule);
-      } else {
-        throw new Error("Invalid data format received");
-      }
+      const data = await apiGet(`/components/${params.componentId}/schedule`);
+      setName(data.data.schedule_name);
+      setSchedule(data.data.schedule);
     } catch (err) {
-      console.error("Error fetching components:", err);
+      console.error("Error fetching schedule:", err);
     }
   }, [setSchedule, params]);
 
@@ -51,8 +37,8 @@ export const Schedule = () => {
 
   return (
     <>
-      <Title>Schedule: {prettyName(name)}</Title>
-      <Divider />
+      <h1>Schedule: {prettyName(name)}</h1>
+      <hr className="divider" />
       <div
         style={{
           display: "flex",
@@ -65,20 +51,20 @@ export const Schedule = () => {
           defaultValue={schedule.default_value}
           refresh={fetchSchedule}
         />
-        <Divider type="vertical" style={{ height: "5rem" }} />
+        <span className="divider-vertical" style={{ height: "5rem" }} />
         <TimeSlotModal refresh={fetchSchedule} open={open} setOpen={setOpen} />
         <div
           onClick={() => setOpen(true)}
           style={{ cursor: "pointer", alignSelf: "center" }}
         >
           <div>
-            <Icon path={mdiCalendarPlus} size={2} />
+            <Icon name="calendarPlus" size={2} />
           </div>
         </div>
       </div>
-      <Divider />
+      <hr className="divider" />
       <Overrides refresh={fetchSchedule} overrides={schedule.overrides} />
-      <Divider />
+      <hr className="divider" />
       {[1, 2, 3, 4, 5, 6, 0].map((day) => (
         <DailySchedule
           key={day}

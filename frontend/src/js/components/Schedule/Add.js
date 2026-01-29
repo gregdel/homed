@@ -1,10 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 
-import { Button } from "antd";
-
-import Icon from "@mdi/react";
-import { mdiCalendarPlus } from "@mdi/js";
+import { Icon } from "../ui/Icon";
 
 import { TimeSlotModal } from "./TimeSlotModal";
 
@@ -17,14 +14,9 @@ export const Add = ({ day, refresh }) => {
 
   return (
     <div style={{ marginTop: "0.5em" }}>
-      <Button
-        type="primary"
-        size="medium"
-        style={{ display: "flex", alignItems: "center" }}
-        onClick={showModal}
-      >
-        <Icon path={mdiCalendarPlus} size={1} />
-      </Button>
+      <button className="btn btn-primary" onClick={showModal}>
+        <Icon name="calendarPlus" size={1} />
+      </button>
       <TimeSlotModal
         day={day}
         open={open}

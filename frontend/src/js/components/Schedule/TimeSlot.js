@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useNav } from "./../Navigation";
 import PropTypes from "prop-types";
 
-import Icon from "@mdi/react";
-import { mdiPencilOutline, mdiTrashCanOutline, mdiLeaf } from "@mdi/js";
+import { Icon } from "../ui/Icon";
+import { apiDelete } from "../../utils/api";
 
 import { TimeSlotModal } from "./TimeSlotModal";
 
@@ -13,18 +13,11 @@ export const TimeSlot = ({ start, stop, value, on, id, day, refresh }) => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(
-        `/components/${params.componentId}/schedule/daily/${day}/${id}`,
-        {
-          method: "DELETE",
-        }
+      await apiDelete(
+        `/components/${params.componentId}/schedule/daily/${day}/${id}`
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
     } catch (error) {
-      console.error("Error posting data:", error);
+      console.error("Error deleting time slot:", error);
     } finally {
       refresh();
     }
@@ -49,13 +42,10 @@ export const TimeSlot = ({ start, stop, value, on, id, day, refresh }) => {
         minWidth: "8em",
         backgroundColor: color,
         padding: "0.3em",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        alignItems: "center",
         marginLeft: "0.2em",
         marginRight: "0.2em",
       }}
+      className="flex flex-col justify-between items-center"
     >
       <TimeSlotModal
         day={day}
@@ -69,24 +59,17 @@ export const TimeSlot = ({ start, stop, value, on, id, day, refresh }) => {
         refresh={refresh}
         edit
       />
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ cursor: "pointer" }} onClick={handleEdit}>
-          <Icon path={mdiPencilOutline} size={1} />
+      <div style={{ width: "100%" }} className="flex justify-between">
+        <div className="cursor-pointer" onClick={handleEdit}>
+          <Icon name="pencilOutline" size={1} />
         </div>
-        <div style={{ cursor: "pointer" }} onClick={handleDelete}>
-          <Icon path={mdiTrashCanOutline} size={1} />
+        <div className="cursor-pointer" onClick={handleDelete}>
+          <Icon name="trashCanOutline" size={1} />
         </div>
       </div>
       <div style={{ fontSize: "2.3em" }}>
         {value}°C
-        {on && <Icon style={{ marginLeft: "0.2em" }} path={mdiLeaf} size={1} />}
+        {on && <Icon style={{ marginLeft: "0.2em" }} name="leaf" size={1} />}
       </div>
       <div>
         <span>{formatTime(start)}</span>

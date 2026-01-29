@@ -1,9 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { useComponents } from "../ComponentsContext";
-import { Slider } from "antd";
-import Icon from "@mdi/react";
-import { mdiLightbulbOnOutline, mdiLightbulbOn } from "@mdi/js";
+import { Slider } from "../ui/Slider";
+import { Icon } from "../ui/Icon";
 
 // Constants
 const LIGHT_CONSTANTS = {
@@ -47,7 +46,7 @@ const calculateOpacity = (isOn, brightness) => {
 const LightIcon = ({ isOn, opacity, onClick }) => (
   <>
     <Icon
-      path={isOn ? mdiLightbulbOn : mdiLightbulbOnOutline}
+      name={isOn ? "lightbulbOn" : "lightbulbOnOutline"}
       onClick={onClick}
       style={{
         cursor: "pointer",
@@ -103,7 +102,6 @@ const BrightnessSlider = ({ brightness, onChange, isVisible }) => (
         min={LIGHT_CONSTANTS.SLIDER.MIN}
         max={LIGHT_CONSTANTS.SLIDER.MAX}
         step={LIGHT_CONSTANTS.SLIDER.STEP}
-        defaultValue={brightness}
         value={brightness}
         onChange={onChange}
       />

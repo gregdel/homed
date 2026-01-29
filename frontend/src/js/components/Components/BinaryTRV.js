@@ -1,9 +1,7 @@
 import React from "react";
-
 import PropTypes from "prop-types";
 
-import Icon from "@mdi/react";
-import { mdiRadiator } from "@mdi/js";
+import { Icon } from "../ui/Icon";
 import { getSwitch } from "./common/switch.js";
 
 export const BinaryTRV = ({ id }) => {
@@ -18,7 +16,7 @@ export const BinaryTRV = ({ id }) => {
         }}
       >
         <Icon
-          path={mdiRadiator}
+          name="radiator"
           size={3}
           style={{
             color: on ? "#ff00005e" : "#00000040",

@@ -1,8 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import { mdiLightSwitch, mdiLightSwitchOff } from "@mdi/js";
-
 import { IconToggle } from "./common/IconToggle";
 import { getSwitch } from "./common/switch.js";
 
@@ -11,8 +9,8 @@ export const VirtualSwitch = ({ id }) => {
 
   return (
     <IconToggle
-      iconOn={mdiLightSwitch}
-      iconOff={mdiLightSwitchOff}
+      iconOn="lightSwitch"
+      iconOff="lightSwitchOff"
       toggle={toggle}
       on={on}
     />
