@@ -2,12 +2,11 @@
     "name": "homed",
     "version": "0.0.1",
     "scripts": {
-        "start": "./build.sh --dev",
-        "build": "./build.sh",
-        "lint": "npx eslint src/js"
+        "start": "bun run bun-build.js --dev",
+        "build": "NODE_ENV=production bun run bun-build.js",
+        "lint": "bunx eslint src/js"
     },
     "devDependencies": {
-        "esbuild": "^0.19.12",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-import": "^2.29.1",

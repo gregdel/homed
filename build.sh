@@ -23,8 +23,8 @@ _backend_build() {
 
 _frontend_build() {
 	cd frontend || return
-	npm install || _err "npm install failed"
-	npm run-script build || _err "frondend build failed"
+	bun install || _err "bun install failed"
+	bun run build || _err "frontend build failed"
 	cd .. || return
 }
 
