@@ -1,21 +1,20 @@
 import React from "react";
 
-import { Switch } from "./Switch";
+import { Switch, VirtualSwitch } from "./Switches";
 import { PowerMeter } from "./PowerMeter";
-import { BinaryLight } from "./BinaryLight";
-import { BinaryFan } from "./BinaryFan";
-import { BinaryTRV } from "./BinaryTRV";
+import {
+  BinaryLight,
+  BinaryFan,
+  BinaryTRV,
+  BinarySensor,
+} from "./BinaryDevices";
 
 import { Boiler } from "./Boiler";
-import { DeviceStatus } from "./DeviceStatus";
+import { DeviceStatus, GenericSensor, WifiSignal } from "./Sensors";
 import { RollerShutter } from "./RollerShutter";
-import { GenericSensor } from "./GenericSensor";
-import { BinarySensor } from "./BinarySensor";
 import { HomedTemperature } from "./HomedTemperature";
 import { TemperatureSwitch } from "./TemperatureSwitch";
-import { WifiSignal } from "./WifiSignal";
 import { ZigbeeClimateSensor } from "./ZigbeeClimateSensor";
-import { VirtualSwitch } from "./VirtualSwitch";
 import { EsphomeLight } from "./EsphomeLight";
 import { HeaderCard } from "./common/HeaderCard";
 
