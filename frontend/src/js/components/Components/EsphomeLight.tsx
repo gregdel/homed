@@ -1,7 +1,7 @@
-import React from "react";
+import type React from "react";
 import { useComponents } from "../ComponentsContext";
-import { Slider } from "../ui/Slider";
 import { Icon } from "../ui/Icon";
+import { Slider } from "../ui/Slider";
 
 // Constants
 const LIGHT_CONSTANTS = {

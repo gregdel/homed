@@ -10,7 +10,6 @@
     "isolatedModules": true,
     "noEmit": true,
 
-    /* Strict Type-Checking Options */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -18,16 +17,9 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
 
-    /* Interop Constraints */
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-
-    /* Allow JavaScript files during incremental migration */
-    "allowJs": true,
-    "checkJs": false,
-
-    /* Skip type checking for node_modules */
     "skipLibCheck": true
   },
   "include": ["src/**/*"],

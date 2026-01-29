@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { useNav } from "./../Navigation";
 
-import { Icon } from "../ui/Icon";
 import { apiDelete } from "../../utils/api";
+import { Icon } from "../ui/Icon";
 
 import { TimeSlotModal } from "./TimeSlotModal";
 
@@ -31,7 +32,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
   const handleDelete = async () => {
     try {
       await apiDelete(
-        `/components/${params.componentId}/schedule/daily/${day}/${id}`
+        `/components/${params.componentId}/schedule/daily/${day}/${id}`,
       );
     } catch (error) {
       console.error("Error deleting time slot:", error);

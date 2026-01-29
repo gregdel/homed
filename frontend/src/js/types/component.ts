@@ -91,4 +91,5 @@ export const ComponentTypes = {
   VIRTUAL_SWITCH: "virtual_switch",
 } as const;
 
-export type ComponentType = typeof ComponentTypes[keyof typeof ComponentTypes];
+export type ComponentType =
+  (typeof ComponentTypes)[keyof typeof ComponentTypes];

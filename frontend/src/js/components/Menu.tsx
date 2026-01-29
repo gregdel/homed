@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { useNav } from "./Navigation";
 
-import { Icon, IconName } from "./ui/Icon";
+import { Icon, type IconName } from "./ui/Icon";
 
 interface MenuItem {
   icon: IconName;

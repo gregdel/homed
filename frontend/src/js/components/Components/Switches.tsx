@@ -1,6 +1,6 @@
-import React from "react";
-import { useComponents } from "../ComponentsContext";
+import type React from "react";
 import type { SwitchValues } from "../../types";
+import { useComponents } from "../ComponentsContext";
 import { Icon } from "../ui";
 import { IconToggle } from "./common/IconToggle";
 

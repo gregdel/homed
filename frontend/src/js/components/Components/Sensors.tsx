@@ -1,10 +1,10 @@
-import React from "react";
-import { useComponents } from "../ComponentsContext";
+import type React from "react";
 import type {
+  BinarySensorValues,
   GenericSensorValues,
   WifiSignalValues,
-  BinarySensorValues,
 } from "../../types";
+import { useComponents } from "../ComponentsContext";
 
 interface SensorComponentProps {
   id: string;

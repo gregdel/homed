@@ -4,21 +4,14 @@
     "scripts": {
         "start": "bun run bun-build.js --dev",
         "build": "NODE_ENV=production bun run bun-build.js",
-        "lint": "bunx eslint src/js"
+        "lint": "biome check src/js",
+        "lint:fix": "biome check --write src/js",
+        "typecheck": "tsc --noEmit"
     },
     "devDependencies": {
+        "@biomejs/biome": "^1.9.4",
         "@types/react": "^19.2.10",
         "@types/react-dom": "^19.2.3",
-        "@typescript-eslint/eslint-plugin": "^8.54.0",
-        "@typescript-eslint/parser": "^8.54.0",
-        "eslint": "^8.57.0",
-        "eslint-config-prettier": "^9.1.0",
-        "eslint-plugin-import": "^2.29.1",
-        "eslint-plugin-prettier": "^4.2.1",
-        "eslint-plugin-react": "^7.35.0",
-        "eslint-plugin-react-hooks": "^4.6.2",
-        "prettier": "2.3.2",
-        "prop-types": "^15.8.1",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
         "typescript": "^5.9.3"

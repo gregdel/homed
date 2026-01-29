@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from "react";
+import type React from "react";
+import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 
 interface Notification {
@@ -23,7 +24,7 @@ export const useNotifications = (): NotificationsContextType => {
   const context = useContext(NotificationsContext);
   if (!context) {
     throw new Error(
-      "useNotifications must be used within NotificationsProvider"
+      "useNotifications must be used within NotificationsProvider",
     );
   }
   return context;
@@ -43,7 +44,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({
   const addNotification = (
     message: string,
     type: "success" | "error",
-    duration: number
+    duration: number,
   ) => {
     const id = Math.random().toString(36).substring(7);
     setNotifications((prevNotifications) => ({
@@ -62,8 +63,7 @@ export const NotificationsProvider: React.FC<NotificationsProviderProps> = ({
 
   const removeNotification = (id: string) => {
     setNotifications((prevNotifications) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { [id]: _removed, ...remainingNotifications } = prevNotifications;
+      const { [id]: _, ...remainingNotifications } = prevNotifications;
       return remainingNotifications;
     });
   };

@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 interface SliderProps {
   min?: number;
@@ -18,18 +18,18 @@ export const Slider: React.FC<SliderProps> = ({
   onChangeComplete,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
+    const newValue = Number.parseFloat(e.target.value);
     if (onChange) {
       onChange(newValue);
     }
   };
 
   const handleMouseUp = (
-    e: React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>
+    e: React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>,
   ) => {
     if (onChangeComplete) {
       const target = e.target as HTMLInputElement;
-      const newValue = parseFloat(target.value);
+      const newValue = Number.parseFloat(target.value);
       onChangeComplete(newValue);
     }
   };

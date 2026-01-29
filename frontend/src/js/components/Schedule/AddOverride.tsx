@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { useNav } from "./../Navigation";
 
+import { apiPost } from "../../utils/api";
+import { Icon } from "../ui/Icon";
 import { Modal } from "../ui/Modal";
 import { Switch } from "../ui/Switch";
-import { Icon } from "../ui/Icon";
-import { apiPost } from "../../utils/api";
 
 interface AddOverrideProps {
   refresh: () => void;
@@ -32,7 +33,7 @@ export const AddOverride: React.FC<AddOverrideProps> = ({ refresh }) => {
     try {
       await apiPost(
         `/components/${params.componentId}/schedule/overrides`,
-        data
+        data,
       );
     } catch (error) {
       console.error("Error posting data:", error);

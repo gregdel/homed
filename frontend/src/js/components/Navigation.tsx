@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import type { ReactNode, CSSProperties, MouseEvent } from "react";
+import type React from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import type {
   NavigationContext as NavContextType,
   NavigationParams,
@@ -15,13 +16,13 @@ const useNavigation = (): NavContextType => {
   // Extract parameters from path
   const getParamsFromPath = (path: string): NavigationParams => {
     const matches = path.match(/\/components\/([^/]+)\/(schedule|graph)/);
-    return matches && matches[1] ? { componentId: matches[1] } : {};
+    return matches?.[1] ? { componentId: matches[1] } : {};
   };
 
   const initialPath = getPathFromHash();
   const [currentPath, setCurrentPath] = useState<string>(initialPath);
   const [params, setParams] = useState<NavigationParams>(
-    getParamsFromPath(initialPath)
+    getParamsFromPath(initialPath),
   );
 
   useEffect(() => {

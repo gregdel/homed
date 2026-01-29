@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import type React from "react";
+import { useMemo } from "react";
 import { useComponents } from "./../ComponentsContext";
 import { Component } from "./Component";
 

@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { useComponents } from "../ComponentsContext";
 
 import { Icon } from "../ui/Icon";

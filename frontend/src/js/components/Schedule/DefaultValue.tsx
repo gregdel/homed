@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { useNav } from "./../Navigation";
 
-import { Modal } from "../ui/Modal";
 import { apiPost } from "../../utils/api";
+import { Modal } from "../ui/Modal";
 
 interface DefaultValueProps {
   defaultValue: string | number;
@@ -20,7 +21,7 @@ export const DefaultValue: React.FC<DefaultValueProps> = ({
   const setDefault = async () => {
     try {
       await apiPost(`/components/${params.componentId}/schedule/default`, {
-        value: parseInt(value.toString()),
+        value: Number.parseInt(value.toString()),
       });
     } catch (error) {
       console.error("Error posting data:", error);

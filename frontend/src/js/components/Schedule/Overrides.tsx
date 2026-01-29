@@ -1,8 +1,8 @@
-import React from "react";
+import type React from "react";
 import { useNav } from "./../Navigation";
 
-import { Icon } from "../ui/Icon";
 import { apiDelete } from "../../utils/api";
+import { Icon } from "../ui/Icon";
 
 import { AddOverride } from "./AddOverride";
 
@@ -58,7 +58,7 @@ const Override: React.FC<OverrideProps> = ({
   const handleDelete = async () => {
     try {
       await apiDelete(
-        `/components/${params.componentId}/schedule/overrides/${id}`
+        `/components/${params.componentId}/schedule/overrides/${id}`,
       );
     } catch (error) {
       console.error("Error deleting override:", error);

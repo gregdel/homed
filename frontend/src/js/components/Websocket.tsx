@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ComponentJSON } from "../types";
 import { useComponents } from "./ComponentsContext";
 
@@ -20,7 +20,7 @@ export const WsHandler: React.FC = () => {
     }
 
     const type = location.protocol === "https:" ? "wss" : "ws";
-    const socket = new WebSocket(type + ":" + location.host + "/events");
+    const socket = new WebSocket(`${type}:${location.host}/events`);
 
     socket.onmessage = (event: MessageEvent) => {
       if (!event.data) {
