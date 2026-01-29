@@ -48,7 +48,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
   // Remove the seconds from the displayed time
   const formatTime = (time: string): string => time.slice(0, -3);
 
-  const color = on ? "#b7eb8f" : "#ffd666";
+  const color = on ? "var(--color-schedule-on)" : "var(--color-schedule-off)";
 
   if (!id) {
     return null;
@@ -59,6 +59,7 @@ export const TimeSlot: React.FC<TimeSlotProps> = ({
       style={{
         minWidth: "8em",
         backgroundColor: color,
+        color: "var(--color-text-on-accent)",
         padding: "0.3em",
         marginLeft: "0.2em",
         marginRight: "0.2em",

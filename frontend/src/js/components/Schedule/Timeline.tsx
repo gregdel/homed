@@ -31,7 +31,8 @@ export const Timeline: React.FC<TimelineProps> = ({
         width: "100%",
         height: "8em",
         overflow: "auto",
-        backgroundColor: "#69c0ff",
+        backgroundColor: "var(--color-schedule-bg)",
+        color: "var(--color-text-on-accent)",
         borderRadius: "0.3em",
       }}
     >

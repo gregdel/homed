@@ -10,7 +10,7 @@ interface NavItem {
 }
 
 const primaryItems: NavItem[] = [
-  { icon: "homeThermometer", label: "Temp", path: "/temperature" },
+  { icon: "homeThermometer", label: "Temperature", path: "/temperature" },
   { icon: "lightbulb", label: "Lights", path: "/lights" },
   { icon: "windowShutter", label: "Shutters", path: "/shutters" },
   { icon: "power", label: "Switches", path: "/switches" },
