@@ -52,35 +52,17 @@ const LightIcon: React.FC<LightIconProps> = ({ isOn, opacity, onClick }) => (
   <>
     <Icon
       name={isOn ? "lightbulbOn" : "lightbulbOnOutline"}
+      size={6}
       onClick={onClick}
       style={{
         cursor: "pointer",
+        alignSelf: "center",
         color: isOn ? LIGHT_CONSTANTS.COLOR.ON : LIGHT_CONSTANTS.COLOR.OFF,
         opacity,
-        userSelect: "none",
-        outline: "none",
-        WebkitTapHighlightColor: "transparent",
-        transition: `
-          color ${LIGHT_CONSTANTS.ANIMATION.DURATION} ${LIGHT_CONSTANTS.ANIMATION.EASING},
-          opacity ${LIGHT_CONSTANTS.ANIMATION.DURATION} ${LIGHT_CONSTANTS.ANIMATION.EASING},
-          transform ${LIGHT_CONSTANTS.ANIMATION.DURATION} ${LIGHT_CONSTANTS.ANIMATION.EASING}
-        `,
-        transform: `scale(${isOn ? 1.1 : 1})`,
+        transition: `color ${LIGHT_CONSTANTS.ANIMATION.DURATION} ease-out`,
       }}
     />
-    <div
-      style={{
-        alignSelf: "center",
-        opacity: isOn ? 1 : 0.7,
-        transform: `translateY(${isOn ? 0 : "-2px"})`,
-        transition: `
-          opacity ${LIGHT_CONSTANTS.ANIMATION.DURATION} ${LIGHT_CONSTANTS.ANIMATION.EASING},
-          transform ${LIGHT_CONSTANTS.ANIMATION.DURATION} ${LIGHT_CONSTANTS.ANIMATION.EASING}
-        `,
-      }}
-    >
-      {isOn ? "On" : "Off"}
-    </div>
+    <div style={{ alignSelf: "center" }}>{isOn ? "On" : "Off"}</div>
   </>
 );
 
@@ -97,24 +79,19 @@ const BrightnessSlider: React.FC<BrightnessSliderProps> = ({
 }) => (
   <div
     style={{
-      display: "grid",
-      gridTemplateRows: isVisible ? "1fr" : "0fr",
       opacity: isVisible ? 1 : 0,
-      transition: `
-        grid-template-rows ${LIGHT_CONSTANTS.ANIMATION.DURATION} ${LIGHT_CONSTANTS.ANIMATION.EASING},
-        opacity ${LIGHT_CONSTANTS.ANIMATION.DURATION} ${LIGHT_CONSTANTS.ANIMATION.EASING},
-      `,
+      visibility: isVisible ? "visible" : "hidden",
+      transition: `opacity ${LIGHT_CONSTANTS.ANIMATION.DURATION} ${LIGHT_CONSTANTS.ANIMATION.EASING}`,
+      marginTop: "1rem",
     }}
   >
-    <div style={{ overflow: "hidden", minHeight: 0 }}>
-      <Slider
-        min={LIGHT_CONSTANTS.SLIDER.MIN}
-        max={LIGHT_CONSTANTS.SLIDER.MAX}
-        step={LIGHT_CONSTANTS.SLIDER.STEP}
-        value={brightness}
-        onChange={onChange}
-      />
-    </div>
+    <Slider
+      min={LIGHT_CONSTANTS.SLIDER.MIN}
+      max={LIGHT_CONSTANTS.SLIDER.MAX}
+      step={LIGHT_CONSTANTS.SLIDER.STEP}
+      value={brightness}
+      onChange={onChange}
+    />
   </div>
 );
 
