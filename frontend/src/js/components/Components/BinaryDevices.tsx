@@ -72,7 +72,7 @@ export const BinaryTRV: React.FC<BinaryComponentProps> = ({ id }) => {
           name="radiator"
           size={3}
           style={{
-            color: on ? "#ff00005e" : "#00000040",
+            color: on ? "var(--color-heating)" : "var(--color-icon-inactive)",
             transition: "color 0.3s ease-out 0s",
           }}
         />
@@ -109,7 +109,7 @@ export const Boiler: React.FC<BinaryComponentProps> = ({ id }) => {
             name="fire"
             size={3}
             style={{
-              color: on ? "#ff4d4f" : "#00000040",
+              color: on ? "var(--color-heating)" : "var(--color-icon-inactive)",
               transition: "color 0.3s ease-out 0s",
             }}
           />

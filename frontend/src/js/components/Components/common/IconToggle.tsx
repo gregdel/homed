@@ -30,7 +30,7 @@ export const IconToggle: React.FC<IconToggleProps> = ({
 
   const iconStyle: CSSProperties = {
     cursor: "pointer",
-    color: on ? "#ffec3d" : "#00000040",
+    color: on ? "var(--color-light-on)" : "var(--color-icon-inactive)",
     transition: "color 0.3s ease-out 0s",
     alignSelf: "center",
   };

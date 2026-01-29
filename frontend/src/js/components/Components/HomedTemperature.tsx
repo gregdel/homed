@@ -18,7 +18,6 @@ interface PopoverProps {
   children: React.ReactNode;
 }
 
-// Popover component using details/summary
 const Popover: React.FC<PopoverProps> = ({ trigger, title, children }) => {
   const detailsRef = useRef<HTMLDetailsElement>(null);
 
@@ -36,25 +35,11 @@ const Popover: React.FC<PopoverProps> = ({ trigger, title, children }) => {
   }, []);
 
   return (
-    <details ref={detailsRef} style={{ position: "relative" }}>
+    <details ref={detailsRef} className="popover">
       <summary className="cursor-pointer" style={{ listStyle: "none" }}>
         {trigger}
       </summary>
-      <div
-        style={{
-          position: "absolute",
-          top: "100%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: "#fff",
-          border: "1px solid #d9d9d9",
-          borderRadius: "6px",
-          padding: "0.5rem",
-          zIndex: 10,
-          boxShadow: "0 6px 16px rgba(0,0,0,0.08)",
-          minWidth: "180px",
-        }}
-      >
+      <div className="popover-content">
         {title && (
           <div style={{ fontWeight: 500, marginBottom: "0.5rem" }}>{title}</div>
         )}
@@ -204,23 +189,21 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
       ? [ActionTimer, ActionCalendar, ActionUntilNext, ActionInfinity]
       : [];
 
-  const icon = opportunistic ? "leaf" : "radiator";
-
+  const heatingIcon = opportunistic ? "leaf" : "radiator";
   const title = friendlyName !== "" ? friendlyName : prettyName(device.room);
+  const effectiveTarget = mode === "auto" ? target : (manualTarget ?? target);
 
   return (
     <Card
       title={title}
-      style={{
-        userSelect: "none",
-      }}
+      style={{ userSelect: "none" }}
       extra={
         <div className="flex items-center">
           {graphURL !== "" && (
             <>
               <Link
                 to={`/components/${id}/graph`}
-                style={{ color: "#000000d9" }}
+                style={{ color: "var(--color-text)" }}
               >
                 <Icon name="chartLine" size={1} />
               </Link>
@@ -237,7 +220,7 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
               size={1}
               style={{
                 cursor: "pointer",
-                color: on ? "#000000" : "#00000040",
+                color: on ? "var(--color-text)" : "var(--color-icon-inactive)",
                 transition: "color 0.3s ease-out 0s",
               }}
             />
@@ -245,7 +228,7 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
           <span className="divider-vertical" />
           <Link
             to={`/components/${id}/schedule`}
-            style={{ color: "#000000d9" }}
+            style={{ color: "var(--color-text)" }}
           >
             <Icon name="calendarClock" size={1} />
           </Link>
@@ -253,53 +236,57 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
       }
       actions={actions}
     >
-      <div style={{ fontSize: "4em" }}>
-        <span>{current.toFixed(1)}°C</span>
-      </div>
+      {on ? (
+        <div className="temp-card-body">
+          {/* Temperature display */}
+          <div className="temp-row">
+            <div className="temp-main">
+              <div className="temp-current">{current.toFixed(1)}°</div>
+              <div
+                className={`temp-target-label ${mode === "auto" ? "temp-target-auto" : "temp-target-override"}`}
+              >
+                Target {effectiveTarget}°
+              </div>
+            </div>
+            <div className="temp-heating">
+              <Icon
+                name={heatingIcon}
+                size={1.5}
+                style={{
+                  color: heating
+                    ? "var(--color-heating)"
+                    : "var(--color-icon-inactive)",
+                  transition: "color 0.3s ease-out",
+                }}
+              />
+            </div>
+          </div>
 
-      {on && (
-        <div>
-          <div className="flex justify-between" style={{ fontSize: "1em" }}>
-            <span>
-              Target set to{" "}
-              {mode === "auto" ? target : (manualTarget ?? target)}
-              °C
-            </span>
-            <Icon
-              name={icon}
-              size={1}
-              style={{
-                color: heating ? "#ff00005e" : "#00000040",
-              }}
+          {/* Mode indicator - clickable only when manual (to return to auto) */}
+          <div className="temp-mode">
+            <HeatingMode
+              mode={mode}
+              date={manualUntil}
+              {...(mode !== "auto" && {
+                onToggle: () => sendChange({ mode: "auto", target }),
+              })}
             />
           </div>
 
-          <div style={{ fontSize: "1em" }}>
-            <HeatingMode mode={mode} date={manualUntil} />
-          </div>
-
-          <div style={{ position: "relative", marginTop: "1rem" }}>
+          {/* Slider with labels */}
+          <div className="temp-slider-container">
             {target !== newTarget && (
               <>
                 <div
-                  style={{
-                    position: "absolute",
-                    top: "-1rem",
-                    left: `${((target - 8) / 17) * 100}%`,
-                    transform: "translateX(-50%)",
-                    cursor: "pointer",
-                    fontSize: "0.85em",
-                    color: "var(--color-primary)",
-                  }}
+                  className="temp-slider-mark-label"
+                  style={{ left: `${((target - 8) / 17) * 100}%` }}
                   onClick={() => onChangeComplete(target)}
                 >
-                  {target}°C
+                  {target}°
                 </div>
                 <div
                   className="slider-mark"
-                  style={{
-                    left: `${((target - 8) / 17) * 100}%`,
-                  }}
+                  style={{ left: `${((target - 8) / 17) * 100}%` }}
                   onClick={() => onChangeComplete(target)}
                   title={`Reset to ${target}°C (auto)`}
                 />
@@ -314,19 +301,20 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
                 setNewTarget(value);
               }}
               onChangeComplete={onChangeComplete}
+              formatTooltip={(v) => `${v}°C`}
             />
+            <div className="temp-slider-labels">
+              <span>8°</span>
+              <span>25°</span>
+            </div>
           </div>
         </div>
-      )}
-      {!on && (
-        <div
-          style={{
-            fontSize: "2em",
-            marginTop: "0px",
-            marginBottom: "0px",
-          }}
-        >
-          OFF
+      ) : (
+        <div className="temp-card-body">
+          <div className="temp-row">
+            <div className="temp-current">{current.toFixed(1)}°</div>
+            <div className="temp-off-badge">OFF</div>
+          </div>
         </div>
       )}
     </Card>
@@ -336,24 +324,42 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
 interface HeatingModeProps {
   mode: TemperatureMode;
   date: string | null | undefined;
+  onToggle?: () => void;
 }
 
-const HeatingMode: React.FC<HeatingModeProps> = ({ mode, date }) => {
+const HeatingMode: React.FC<HeatingModeProps> = ({ mode, date, onToggle }) => {
   const prettyDate = date ? relativeTime(date) : "";
+  const manualClass = "temp-mode-chip temp-mode-manual cursor-pointer";
 
   switch (mode) {
     case "auto":
-      return <>Mode auto</>;
+      return <span className="temp-mode-chip">auto</span>;
     case "fixed":
-      return <>Manual until stopped</>;
+      return (
+        <span className={manualClass} onClick={onToggle}>
+          Manual until stopped
+        </span>
+      );
     case "until_date":
     case "duration":
-      return <>Back to auto {prettyDate}</>;
+      return (
+        <span className={manualClass} onClick={onToggle}>
+          Back to auto {prettyDate}
+        </span>
+      );
     case "until_next_change":
       if (date) {
-        return <>Back to auto {prettyDate}</>;
+        return (
+          <span className={manualClass} onClick={onToggle}>
+            Back to auto {prettyDate}
+          </span>
+        );
       }
-      return <>Manual until next programmed change</>;
+      return (
+        <span className={manualClass} onClick={onToggle}>
+          Manual until next change
+        </span>
+      );
     default:
       return null;
   }

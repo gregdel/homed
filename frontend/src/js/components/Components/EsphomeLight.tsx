@@ -13,8 +13,8 @@ const LIGHT_CONSTANTS = {
     STEP: 10,
   },
   COLOR: {
-    ON: "#ffec3d",
-    OFF: "#00000040",
+    ON: "var(--color-light-on)",
+    OFF: "var(--color-icon-inactive)",
   },
   STATES: {
     ON: "ON",
