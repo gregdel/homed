@@ -1,0 +1,94 @@
+// Core component types
+
+export interface Device {
+  name: string;
+  room: string;
+}
+
+export interface ComponentValues {
+  id: string;
+  friendly_name: string;
+  hide: boolean;
+  device: Device;
+  updated_at: string; // ISO timestamp
+  graph_url?: string;
+  [key: string]: unknown; // Type-specific fields
+}
+
+export interface ComponentJSON {
+  type: string;
+  read_only: boolean;
+  values: ComponentValues;
+}
+
+// Specific component types
+
+export interface SwitchValues extends ComponentValues {
+  on: boolean;
+}
+
+export interface BinarySensorValues extends ComponentValues {
+  on: boolean;
+}
+
+export interface GenericSensorValues extends ComponentValues {
+  value: unknown;
+}
+
+export interface PowerMeterValues extends ComponentValues {
+  power: number;
+  energy: number;
+}
+
+export interface RollerShutterValues extends ComponentValues {
+  value: number; // 0-100 percent open
+}
+
+export type TemperatureMode =
+  | "auto"
+  | "fixed"
+  | "duration"
+  | "until_date"
+  | "until_next_change"
+  | "on_off";
+
+export interface TemperatureValues extends ComponentValues {
+  current: number;
+  target: number;
+  mode: TemperatureMode;
+  manual_target?: number;
+  manual_until?: string | null; // ISO timestamp
+  heating: boolean;
+  opportunistic: boolean;
+  on: boolean;
+}
+
+export interface WifiSignalValues extends ComponentValues {
+  value: number; // signal strength
+}
+
+export interface DeviceStatusValues extends ComponentValues {
+  value: string; // status text
+}
+
+// Component type registry
+export const ComponentTypes = {
+  GENERIC_SENSOR: "generic_sensor",
+  BINARY_SENSOR: "binary_sensor",
+  SWITCH: "switch",
+  HOMED_TEMPERATURE: "homed_temperature",
+  HOMED_TEMPERATURE_SWITCH: "homed_temperature_switch",
+  ROLLER_SHUTTER: "roller_shutter",
+  POWER_METER: "power_meter",
+  ESPHOME_LIGHT: "esphome_light",
+  BOILER: "boiler",
+  BINARY_LIGHT: "binary_light",
+  BINARY_FAN: "binary_fan",
+  BINARY_TRV: "binary_trv",
+  ZIGBEE_CLIMATE_SENSOR: "zigbee_climate_sensor",
+  DEVICE_STATUS: "device_status",
+  WIFI_SIGNAL: "wifi_signal",
+  VIRTUAL_SWITCH: "virtual_switch",
+} as const;
+
+export type ComponentType = typeof ComponentTypes[keyof typeof ComponentTypes];
