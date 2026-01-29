@@ -1,121 +1,87 @@
-import React, { useState } from "react";
-import { Layout, Menu } from "antd";
+import React, { useState, useEffect } from "react";
 import { useNav } from "./Navigation";
 
-import Icon from "@mdi/react";
-import {
-  mdiHomeThermometer,
-  mdiLightbulb,
-  mdiLightningBolt,
-  mdiPower,
-  mdiRadiator,
-  mdiRuler,
-  mdiThermometer,
-  mdiWindowShutter,
-  mdiFan,
-} from "@mdi/js";
+import { Icon } from "./ui/Icon";
 
-const { Sider } = Layout;
+const menuItems = [
+  {
+    icon: "homeThermometer",
+    key: "temperature",
+    label: "Temperature",
+    path: "/temperature",
+  },
+  { icon: "radiator", key: "trv", label: "Thermostatic valves", path: "/trv" },
+  {
+    icon: "thermometer",
+    key: "climate_sensors",
+    label: "Temperature sensors",
+    path: "/climate_sensors",
+  },
+  { icon: "lightbulb", key: "lights", label: "Lights", path: "/lights" },
+  {
+    icon: "lightningBolt",
+    key: "power_consumption",
+    label: "Power consumption",
+    path: "/power",
+  },
+  { icon: "power", key: "switches", label: "Switches", path: "/switches" },
+  { icon: "fan", key: "fans", label: "Fans", path: "/fans" },
+  {
+    icon: "windowShutter",
+    key: "shutters",
+    label: "Roller shutters",
+    path: "/shutters",
+  },
+  { icon: "ruler", key: "sensors", label: "Sensors", path: "/sensors" },
+];
 
 export const AppMenu = () => {
-  const [collapsed, setCollapsed] = useState(false);
-  const [collapsedType, setCollapsedType] = useState(null);
+  const [collapsed, setCollapsed] = useState(window.innerWidth < 992);
   const { currentPath, navigate } = useNav();
 
-  const onCollapse = (collapsed, type) => {
-    setCollapsed(collapsed);
-    setCollapsedType(type);
-  };
+  // Handle responsive collapse
+  useEffect(() => {
+    const handleResize = () => {
+      setCollapsed(window.innerWidth < 992);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  const onClick = () => {
-    if (collapsedType !== "clickTrigger") {
-      return;
+  const handleItemClick = (path) => {
+    navigate(path);
+    // Collapse on mobile after navigation
+    if (window.innerWidth < 992) {
+      setCollapsed(true);
     }
-
-    setCollapsed(true);
-  };
-
-  const icon = (path) => <Icon path={path} size={1} />;
-
-  const items = [
-    {
-      icon: icon(mdiHomeThermometer),
-      key: "temperature",
-      label: "Temperature",
-      onClick: () => navigate("/temperature"),
-    },
-    {
-      icon: icon(mdiRadiator),
-      key: "trv",
-      label: "Thermostatic valves",
-      onClick: () => navigate("/trv"),
-    },
-    {
-      icon: icon(mdiThermometer),
-      key: "climate_sensors",
-      label: "Temperature sensors",
-      onClick: () => navigate("/climate_sensors"),
-    },
-    {
-      icon: icon(mdiLightbulb),
-      key: "lights",
-      label: "Lights",
-      onClick: () => navigate("/lights"),
-    },
-    {
-      icon: icon(mdiLightningBolt),
-      key: "power_consumption",
-      label: "Power consumption",
-      onClick: () => navigate("/power"),
-    },
-    {
-      icon: icon(mdiPower),
-      key: "switches",
-      label: "Switches",
-      onClick: () => navigate("/switches"),
-    },
-    {
-      icon: icon(mdiFan),
-      key: "fans",
-      label: "Fans",
-      onClick: () => navigate("/fans"),
-    },
-    {
-      icon: icon(mdiWindowShutter),
-      key: "shutters",
-      label: "Roller shutters",
-      onClick: () => navigate("/shutters"),
-    },
-    {
-      icon: icon(mdiRuler),
-      key: "sensors",
-      label: "Sensors",
-      onClick: () => navigate("/sensors"),
-    },
-  ];
-
-  const getSelectedKeys = () => {
-    const item = items.find(
-      (item) => currentPath === item.onClick.toString().match(/"([^"]+)"/)[1]
-    );
-    return item ? [item.key] : [];
   };
 
   return (
-    <Sider
-      breakpoint="lg"
-      collapsedWidth="0"
-      collapsed={collapsed}
-      onCollapse={onCollapse}
-    >
-      <Menu
-        theme="dark"
-        mode="inline"
-        style={{ paddingTop: "1em" }}
-        onClick={onClick}
-        selectedKeys={getSelectedKeys()}
-        items={items}
-      />
-    </Sider>
+    <>
+      <button
+        className="sidebar-toggle"
+        onClick={() => setCollapsed(!collapsed)}
+        aria-label="Toggle menu"
+      >
+        <Icon name="menu" size={1} />
+      </button>
+      <nav className={`sidebar ${collapsed ? "collapsed" : ""}`}>
+        <ul className="nav">
+          {menuItems.map((item) => (
+            <li
+              key={item.key}
+              className={`nav-item ${
+                currentPath === item.path ? "active" : ""
+              }`}
+            >
+              <button onClick={() => handleItemClick(item.path)}>
+                <Icon name={item.icon} size={1} />
+                <span>{item.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </>
   );
 };

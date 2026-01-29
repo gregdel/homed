@@ -3,14 +3,7 @@ import { useComponents } from "../ComponentsContext";
 
 import PropTypes from "prop-types";
 
-import {
-  mdiArrowUpBoldCircleOutline,
-  mdiStopCircleOutline,
-  mdiArrowDownBoldCircleOutline,
-} from "@mdi/js";
-
-import Icon from "@mdi/react";
-
+import { Icon } from "../ui/Icon";
 import { IconRollerShutter } from "./common/IconRollerShutter";
 
 export const RollerShutter = ({ id }) => {
@@ -41,42 +34,31 @@ export const RollerShutter = ({ id }) => {
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "center" }}>
+      <div className="flex justify-center">
         <IconRollerShutter percentOpen={percentOpen} />
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
+        <div className="flex flex-col justify-center">
           <Icon
-            path={mdiArrowUpBoldCircleOutline}
+            name="arrowUpBoldCircleOutline"
             onClick={() => handleClick("open")}
-            style={{ cursor: "pointer" }}
+            className="cursor-pointer"
             size={2}
           />
           <Icon
-            path={mdiStopCircleOutline}
+            name="stopCircleOutline"
             onClick={() => handleClick("stop")}
-            style={{ cursor: "pointer" }}
+            className="cursor-pointer"
             size={2}
           />
           <Icon
-            path={mdiArrowDownBoldCircleOutline}
+            name="arrowDownBoldCircleOutline"
             onClick={() => handleClick("close")}
-            style={{ cursor: "pointer" }}
+            className="cursor-pointer"
             size={2}
           />
         </div>
       </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
+      <div className="flex justify-center">
         <span>{msg()}</span>
       </div>
     </>

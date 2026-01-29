@@ -2,8 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useComponents } from "../ComponentsContext";
 
-import Icon from "@mdi/react";
-import { mdiThermometer, mdiThermometerOff } from "@mdi/js";
+import { Icon } from "../ui/Icon";
 
 export const TemperatureSwitch = ({ id }) => {
   const { getComponentById, updateComponent } = useComponents();
@@ -22,7 +21,7 @@ export const TemperatureSwitch = ({ id }) => {
   return (
     <div onClick={toggle}>
       <Icon
-        path={on ? mdiThermometer : mdiThermometerOff}
+        name={on ? "thermometer" : "thermometerOff"}
         size={3}
         style={{
           cursor: "pointer",

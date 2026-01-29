@@ -1,13 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-dayjs.extend(relativeTime);
+import { relativeTime } from "../../../utils/relativeTime";
 
-import Icon from "@mdi/react";
-import { mdiChartLine } from "@mdi/js";
-
-import { Card } from "antd";
+import { Icon } from "../../ui/Icon";
+import { Card } from "../../ui/Card";
 
 import { Link } from "../../Navigation";
 import { useComponents } from "../../ComponentsContext";
@@ -31,7 +27,7 @@ export const HeaderCard = ({ id, children }) => {
   var extras = [];
   extras.push(
     <div key="status">
-      {device.online === true ? dayjs(updatedAt).fromNow() : "offline"}
+      {device.online === true ? relativeTime(updatedAt) : "offline"}
     </div>
   );
 
@@ -39,7 +35,7 @@ export const HeaderCard = ({ id, children }) => {
     extras.push(
       <div key="graphIcon" style={{ marginRight: "-1em", marginLeft: "0.3em" }}>
         <Link to={`/components/${id}/graph`}>
-          <Icon path={mdiChartLine} style={{ color: "#000000d9" }} size={0.8} />
+          <Icon name="chartLine" style={{ color: "#000000d9" }} size={0.8} />
         </Link>
       </div>
     );

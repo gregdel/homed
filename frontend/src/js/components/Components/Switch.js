@@ -2,8 +2,6 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useComponents } from "../ComponentsContext";
 
-import { mdiPower } from "@mdi/js";
-
 import { IconToggle } from "./common/IconToggle";
 
 export const Switch = ({ id }) => {
@@ -20,9 +18,7 @@ export const Switch = ({ id }) => {
     updateComponent(id, on ? "OFF" : "ON");
   };
 
-  return (
-    <IconToggle iconOn={mdiPower} iconOff={mdiPower} toggle={toggle} on={on} />
-  );
+  return <IconToggle iconOn="power" iconOff="power" toggle={toggle} on={on} />;
 };
 
 Switch.propTypes = {

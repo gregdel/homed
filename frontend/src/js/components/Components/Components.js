@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
-import { Row, Col } from "antd";
 import { useComponents } from "./../ComponentsContext";
 import { Component } from "./Component";
 
@@ -49,32 +48,26 @@ export const Components = ({ typesFilter = [], noCard = false }) => {
 
   if (loading) {
     return (
-      <Row gutter={[10, 10]}>
-        <Col xs={24}>
-          <div>Loading components...</div>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-1 grid-cols-sm-2 grid-cols-lg-3">
+        <div>Loading components...</div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Row gutter={[10, 10]}>
-        <Col xs={24}>
-          <div>Error loading components: {error}</div>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-1 grid-cols-sm-2 grid-cols-lg-3">
+        <div>Error loading components: {error}</div>
+      </div>
     );
   }
 
   return (
-    <Row gutter={[10, 10]}>
+    <div className="grid grid-cols-1 grid-cols-sm-2 grid-cols-lg-3">
       {filteredAndSortedComponents.map(({ id, type }) => (
-        <Col key={id} xs={24} sm={12} lg={8}>
-          <Component id={id} type={type} noCard={noCard} />
-        </Col>
+        <Component key={id} id={id} type={type} noCard={noCard} />
       ))}
-    </Row>
+    </div>
   );
 };
 

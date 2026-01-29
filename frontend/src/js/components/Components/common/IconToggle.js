@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import Icon from "@mdi/react";
+import { Icon } from "../../ui/Icon";
 
 export const IconToggle = ({ iconOn, iconOff, toggle, on, rotate = false }) => (
   <div
@@ -16,13 +16,15 @@ export const IconToggle = ({ iconOn, iconOff, toggle, on, rotate = false }) => (
     }}
   >
     <Icon
-      path={on ? iconOn : iconOff}
+      name={on ? iconOn : iconOff}
+      size={6}
       onClick={toggle}
       className={rotate ? "rotating" : "rotating paused"}
       style={{
         cursor: "pointer",
         color: on ? "#ffec3d" : "#00000040",
         transition: "color 0.3s ease-out 0s",
+        alignSelf: "center",
       }}
     />
     <div

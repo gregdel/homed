@@ -2,8 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useComponents } from "../ComponentsContext";
 
-import Icon from "@mdi/react";
-import { mdiThermometer, mdiWaterPercent, mdiGauge } from "@mdi/js";
+import { Icon } from "../ui/Icon";
 
 export const ZigbeeClimateSensor = ({ id }) => {
   const { getComponentById } = useComponents();
@@ -19,16 +18,16 @@ export const ZigbeeClimateSensor = ({ id }) => {
   return (
     <div>
       <div style={{ display: "flex", marginBottom: "0.3em" }}>
-        <Icon path={mdiThermometer} size={1} />
+        <Icon name="thermometer" size={1} />
         Temperature: {prettyTemperature(temperature)}°C
       </div>
       <div style={{ display: "flex", marginBottom: "0.3em" }}>
-        <Icon path={mdiWaterPercent} size={1} />
+        <Icon name="waterPercent" size={1} />
         Humidity: {humidity}%
       </div>
       {pressure !== 0 && (
         <div style={{ display: "flex" }}>
-          <Icon path={mdiGauge} size={1} />
+          <Icon name="gauge" size={1} />
           Pressure: {pressure}hPa
         </div>
       )}

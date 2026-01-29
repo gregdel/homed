@@ -3,33 +3,24 @@ import { useNav } from "./../Navigation";
 
 import PropTypes from "prop-types";
 
-import { Typography, List } from "antd";
-const { Title } = Typography;
-
-import Icon from "@mdi/react";
-import { mdiTrashCanOutline, mdiLeaf } from "@mdi/js";
+import { Icon } from "../ui/Icon";
+import { apiDelete } from "../../utils/api";
 
 import { AddOverride } from "./AddOverride";
 
 export const Overrides = ({ refresh, overrides = [] }) => {
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-        }}
-      >
-        <Title level={3}>Overrides</Title>
+      <div className="flex justify-between items-baseline">
+        <h3>Overrides</h3>
         <AddOverride refresh={refresh} />
       </div>
       {overrides.length !== 0 && (
-        <List
-          bordered
-          dataSource={overrides}
-          renderItem={(v) => <Override refresh={refresh} {...v} />}
-        />
+        <div className="list">
+          {overrides.map((v) => (
+            <Override key={v.id} refresh={refresh} {...v} />
+          ))}
+        </div>
       )}
       {overrides.length === 0 && <div>No override defined</div>}
     </>
@@ -45,18 +36,11 @@ const Override = ({ id, start, stop, value, on, refresh }) => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(
-        `/components/${params.componentId}/schedule/overrides/${id}`,
-        {
-          method: "DELETE",
-        }
+      await apiDelete(
+        `/components/${params.componentId}/schedule/overrides/${id}`
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
     } catch (error) {
-      console.error("Error posting data:", error);
+      console.error("Error deleting override:", error);
     } finally {
       refresh();
     }
@@ -68,21 +52,20 @@ const Override = ({ id, start, stop, value, on, refresh }) => {
   };
 
   return (
-    <List.Item style={{ flexWrap: "nowrap" }}>
+    <div className="list-item">
       <div>
-        <Typography.Text>
-          {on && <Icon path={mdiLeaf} size={0.5} />}
-          <strong>{value}°C</strong> from <strong>{formatDate(start)}</strong>{" "}
-          to <strong>{formatDate(stop)}</strong>
-        </Typography.Text>
+        {on && <Icon name="leaf" size={0.5} />}
+        <strong>{value}°C</strong> from <strong>{formatDate(start)}</strong> to{" "}
+        <strong>{formatDate(stop)}</strong>
       </div>
       <div
-        style={{ cursor: "pointer", alignSelf: "flex-end" }}
+        className="cursor-pointer"
+        style={{ alignSelf: "flex-end" }}
         onClick={handleDelete}
       >
-        <Icon path={mdiTrashCanOutline} size={1} />
+        <Icon name="trashCanOutline" size={1} />
       </div>
-    </List.Item>
+    </div>
   );
 };
 Override.propTypes = {

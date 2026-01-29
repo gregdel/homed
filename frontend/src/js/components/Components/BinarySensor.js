@@ -1,9 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import { mdiToggleSwitchOffOutline, mdiToggleSwitch } from "@mdi/js";
-import Icon from "@mdi/react";
-
+import { Icon } from "../ui/Icon";
 import { getSwitch } from "./common/switch.js";
 
 export const BinarySensor = ({ id }) => {
@@ -11,7 +9,7 @@ export const BinarySensor = ({ id }) => {
 
   return (
     <div style={{ display: "flex", justifyContent: "space-evenly" }}>
-      <Icon path={on ? mdiToggleSwitch : mdiToggleSwitchOffOutline} size={2} />
+      <Icon name={on ? "toggleSwitch" : "toggleSwitchOffOutline"} size={2} />
       <div style={{ fontSize: "2em", fontWeight: 200 }}>
         <span>{on ? "ON" : "OFF"}</span>
       </div>

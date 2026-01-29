@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNotifications } from "./NotificationsContext";
 
-import { message } from "antd";
+import { ToastContainer, Toast } from "./ui/Toast";
 
 export const Notifications = () => {
   const { notifications } = useNotifications();
@@ -11,7 +11,7 @@ export const Notifications = () => {
   }
 
   return (
-    <>
+    <ToastContainer>
       {Object.values(notifications).map((value) => (
         <Notification
           key={value.id}
@@ -21,13 +21,12 @@ export const Notifications = () => {
           duration={value.duration}
         />
       ))}
-    </>
+    </ToastContainer>
   );
 };
 
 const Notification = ({ id, type, content, duration }) => {
   const { removeNotification } = useNotifications();
-  const [delay, setDelay] = useState(0);
   const [closed, setClosed] = useState(false);
 
   const close = () => {
@@ -36,10 +35,9 @@ const Notification = ({ id, type, content, duration }) => {
     }
 
     setClosed(true);
-    setDelay(0.1);
     setTimeout(() => {
       removeNotification(id);
-    }, 1000);
+    }, 100);
   };
 
   useEffect(() => {
@@ -47,32 +45,11 @@ const Notification = ({ id, type, content, duration }) => {
     return () => clearTimeout(t);
   }, []);
 
-  const config = {
-    key: id,
-    content,
-    duration: delay,
-    onClose: close,
-    onClick: close,
-    style: {
-      cursor: "pointer",
-    },
-  };
+  if (closed) {
+    return null;
+  }
 
-  useEffect(() => {
-    switch (type) {
-      case "error":
-        message.error(config);
-        break;
-      case "success":
-        message.success(config);
-        break;
-      default:
-        message.info(config);
-        break;
-    }
-  }, [config]);
-
-  return <></>;
+  return <Toast type={type} content={content} onClick={close} />;
 };
 Notification.propTypes = {
   id: PropTypes.string.isRequired,

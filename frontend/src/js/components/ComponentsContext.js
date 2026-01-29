@@ -8,6 +8,7 @@ import React, {
 import PropTypes from "prop-types";
 
 import { useNotifications } from "./NotificationsContext";
+import { apiGet, apiPut } from "../utils/api";
 
 // Create context
 const ComponentsContext = createContext();
@@ -37,28 +38,15 @@ export const ComponentsProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("/components");
-      if (!response.ok) {
-        const message = `HTTP error! status: ${response.status}`;
-        addNotificationError(message);
-        throw new Error(message);
+      const data = await apiGet("/components");
+      let c = {};
+      for (const component of data.data) {
+        c[component.values.id] = component;
       }
 
-      const data = await response.json();
-      if (data.status === "success" && Array.isArray(data.data)) {
-        let c = {};
-        for (const component of data.data) {
-          c[component.values.id] = component;
-        }
-
-        setComponents(c);
-        setLastUpdated(new Date());
-        addNotificationOk("Components updated");
-      } else {
-        const message = "Invalid data format received";
-        addNotificationError(message);
-        throw new Error(message);
-      }
+      setComponents(c);
+      setLastUpdated(new Date());
+      addNotificationOk("Components updated");
     } catch (err) {
       setError(err.toString());
       console.error("Error fetching components:", err);
@@ -84,18 +72,22 @@ export const ComponentsProvider = ({ children }) => {
 
   const updateComponent = async (id, data) => {
     try {
-      const body = typeof data === "string" ? data : JSON.stringify(data);
-      const response = await fetch(`/components/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: body,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // If data is already a string, send it as-is, otherwise it's an object that needs JSON.stringify
+      if (typeof data === "string") {
+        await fetch(`/components/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: data,
+        }).then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+        });
+      } else {
+        await apiPut(`/components/${id}`, data);
       }
     } catch (error) {
-      console.error("Error posting data:", error);
+      console.error("Error updating component:", error);
     }
   };
 

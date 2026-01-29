@@ -1,10 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import Icon from "@mdi/react";
-import { mdiFire } from "@mdi/js";
-
-import { Typography } from "antd";
+import { Icon } from "../ui/Icon";
 import { getSwitch } from "./common/switch.js";
 
 export const Boiler = ({ id }) => {
@@ -20,12 +17,12 @@ export const Boiler = ({ id }) => {
       }}
     >
       <div>
-        <Typography.Title level={2}>Boiler</Typography.Title>
+        <h2>Boiler</h2>
       </div>
       <div>
         <div>
           <Icon
-            path={mdiFire}
+            name="fire"
             size={3}
             style={{
               color: on ? "#ff4d4f" : "#00000040",
