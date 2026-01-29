@@ -67,7 +67,7 @@ export const TemperatureSwitch: React.FC<SwitchComponentProps> = ({ id }) => {
         size={3}
         style={{
           cursor: "pointer",
-          color: on ? "#000000" : "#00000040",
+          color: on ? "var(--color-text)" : "var(--color-icon-inactive)",
           transition: "color 0.3s ease-out 0s",
         }}
       />

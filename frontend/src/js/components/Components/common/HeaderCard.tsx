@@ -40,7 +40,7 @@ export const HeaderCard: React.FC<HeaderCardProps> = ({ id, children }) => {
       marginRight: "-1em",
       marginLeft: "0.3em",
     };
-    const iconStyle: CSSProperties = { color: "#000000d9" };
+    const iconStyle: CSSProperties = { color: "var(--color-text)" };
 
     extras.push(
       <div key="graphIcon" style={graphIconStyle}>
