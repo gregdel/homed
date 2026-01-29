@@ -71,7 +71,7 @@ export const IconRollerShutter: React.FC<IconRollerShutterProps> = ({
           width={500}
           y={42}
           x={SVG_CONFIG.padding}
-          fill="#000000"
+          fill="currentColor"
         />
         {/* Left frame */}
         <rect
@@ -80,7 +80,7 @@ export const IconRollerShutter: React.FC<IconRollerShutterProps> = ({
           width={SVG_CONFIG.frameThickness}
           y={150}
           x={75}
-          fill="#000000"
+          fill="currentColor"
         />
         {/* Right frame */}
         <rect
@@ -89,7 +89,7 @@ export const IconRollerShutter: React.FC<IconRollerShutterProps> = ({
           width={SVG_CONFIG.frameThickness}
           y={150}
           x={465}
-          fill="#000000"
+          fill="currentColor"
         />
       </g>
 
@@ -103,7 +103,7 @@ export const IconRollerShutter: React.FC<IconRollerShutterProps> = ({
             width={SHUTTER_CONFIG.width}
             y={y}
             x={150}
-            fill="#000000"
+            fill="currentColor"
             style={{
               transform: `scaleY(${scale})`,
               transformOrigin: `150px ${y}px`,

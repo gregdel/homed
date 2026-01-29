@@ -33,7 +33,7 @@ export const Dashboard: React.FC = () => {
           </Card>
         )}
         {temperatureSwitch !== undefined && (
-          <Card style={{ marginLeft: "1rem", flex: "0 0 auto" }}>
+          <Card style={{ marginLeft: "0.5rem", flex: "0 0 auto" }}>
             <Component
               type="homed_temperature_switch"
               id={temperatureSwitch.values.id}
