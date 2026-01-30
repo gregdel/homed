@@ -4,6 +4,7 @@
 // Or use the package.json script which sets it automatically
 
 import { copyFileSync, mkdirSync, rmSync, existsSync } from "fs";
+import { execSync } from "child_process";
 import { join } from "path";
 
 const args = process.argv.slice(2);
@@ -19,7 +20,6 @@ mkdirSync(outdir, { recursive: true });
 // Copy static assets
 const assets = [
   "app.css",
-  "icon.png",
   "icon.svg",
   "index.html",
   "manifest.json",
@@ -33,6 +33,16 @@ for (const asset of assets) {
     copyFileSync(srcPath, destPath);
   }
 }
+
+// Generate icon.png from icon.svg via ImageMagick
+execSync([
+  "magick -density 1200 -background none",
+  join(outdir, "icon.svg"),
+  "-trim +repage -resize 350x350",
+  '-gravity center -background "#eceff4" -extent 512x512',
+  "-flatten",
+  join(outdir, "icon.png"),
+].join(" "));
 
 // Build JavaScript/TypeScript with Bun's bundler
 // Bun automatically handles .ts/.tsx files
