@@ -3,8 +3,8 @@
   "short_name": "homed",
   "display": "standalone",
   "start_url": "/",
-  "background_color": "#232634",
-  "theme_color": "#232634",
+  "background_color": "#eceff4",
+  "theme_color": "#eceff4",
   "scope": "/",
   "icons": [
     {

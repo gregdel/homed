@@ -1,40 +1,40 @@
 /* CSS Variables */
 :root {
-  --color-primary: #8caaee;
-  --color-primary-hover: #babbf1;
-  --color-success: #a6d189;
-  --color-error: #e78284;
-  --color-warning: #e5c890;
-  --color-text: #c6d0f5;
-  --color-text-secondary: #b5bfe2;
-  --color-text-tertiary: #a5adce;
-  --color-text-disabled: #737994;
-  --color-border: #51576d;
-  --color-bg: #303446;
-  --color-bg-secondary: #232634;
-  --color-heating: #e78284;
-  --color-light-on: #e5c890;
-  --color-icon-inactive: #737994;
-  --color-sidebar: #232634;
-  --color-sidebar-hover: #8caaee;
-  --color-text-on-accent: #232634;
-  --color-surface: #414559;
-  --color-primary-subtle: rgba(140, 170, 238, 0.15);
-  --color-warning-subtle: rgba(229, 200, 144, 0.15);
-  --color-schedule-bg: #85c1dc;
-  --color-schedule-on: #a6d189;
-  --color-schedule-off: #ef9f76;
+  --color-primary: #5e81ac;
+  --color-primary-hover: #81a1c1;
+  --color-success: #a3be8c;
+  --color-error: #bf616a;
+  --color-warning: #d08770;
+  --color-text: #2e3440;
+  --color-text-secondary: #3b4252;
+  --color-text-tertiary: #4c566a;
+  --color-text-disabled: #9da5b4;
+  --color-border: #d8dee9;
+  --color-bg: #ffffff;
+  --color-bg-secondary: #eceff4;
+  --color-heating: #bf616a;
+  --color-light-on: #ebcb8b;
+  --color-icon-inactive: #9da5b4;
+  --color-sidebar: #ffffff;
+  --color-sidebar-hover: #5e81ac;
+  --color-text-on-accent: #eceff4;
+  --color-surface: #ffffff;
+  --color-primary-subtle: rgba(94, 129, 172, 0.12);
+  --color-warning-subtle: rgba(208, 135, 112, 0.15);
+  --color-schedule-bg: #5e81ac;
+  --color-schedule-on: #6e8f5d;
+  --color-schedule-off: #b87060;
   --radius: 6px;
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
-  --shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.12),
-    0 1px 6px -1px rgba(0, 0, 0, 0.08),
-    0 2px 4px 0 rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 6px 16px 0 rgba(0, 0, 0, 0.2),
-    0 3px 6px -4px rgba(0, 0, 0, 0.24),
-    0 9px 28px 8px rgba(0, 0, 0, 0.15);
+  --shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+    0 1px 6px -1px rgba(0, 0, 0, 0.04),
+    0 2px 4px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 6px 16px 0 rgba(0, 0, 0, 0.08),
+    0 3px 6px -4px rgba(0, 0, 0, 0.1),
+    0 9px 28px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* Reset */
@@ -110,7 +110,7 @@ body {
 .nav-item button:hover,
 .nav-item.active a,
 .nav-item.active button {
-  color: var(--color-text);
+  color: var(--color-text-on-accent);
   background: var(--color-sidebar-hover);
 }
 
@@ -478,7 +478,7 @@ dialog::backdrop {
 /* Toast notifications */
 .toast-container {
   position: fixed;
-  top: var(--spacing-md);
+  top: var(--spacing-sm);
   left: 50%;
   transform: translateX(-50%);
   z-index: 1100;
@@ -491,7 +491,9 @@ dialog::backdrop {
 .toast {
   padding: 0.5rem 1rem;
   border-radius: var(--radius);
-  background: var(--color-bg);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-md);
   cursor: pointer;
   pointer-events: auto;
@@ -503,7 +505,7 @@ dialog::backdrop {
 }
 
 .toast-success {
-  color: var(--color-success);
+  color: var(--color-primary);
 }
 
 .toast-info {
@@ -876,7 +878,7 @@ h4 { font-size: 20px; }
 }
 
 .temp-mode-chip.temp-mode-manual:hover {
-  background: rgba(229, 200, 144, 0.25);
+  background: rgba(208, 135, 112, 0.25);
 }
 
 .temp-slider-container {
