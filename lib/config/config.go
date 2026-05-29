@@ -59,6 +59,5 @@ type TemperatureControl struct {
 // RollerShutter represents the configuration for the automatic roller shutter
 // daemon.
 type RollerShutter struct {
-	Enabled     bool `yaml:"enabled"`
-	RandomDelay int  `yaml:"random_delay"`
+	Enabled bool `yaml:"enabled"`
 }
