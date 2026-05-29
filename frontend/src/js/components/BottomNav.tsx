@@ -1,5 +1,5 @@
 import type React from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNav } from "./Navigation";
 import { Icon, type IconName } from "./ui/Icon";
 
@@ -26,35 +26,52 @@ const moreItems: NavItem[] = [
 
 export const BottomNav: React.FC = () => {
   const [moreOpen, setMoreOpen] = useState(false);
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const morePanelRef = useRef<HTMLElement>(null);
   const { currentPath, navigate } = useNav();
+
+  useEffect(() => {
+    if (!moreOpen) return;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (
+        morePanelRef.current?.contains(target) ||
+        moreButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setMoreOpen(false);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMoreOpen(false);
+        moreButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [moreOpen]);
+
+  useEffect(() => {
+    if (currentPath !== "") {
+      setMoreOpen(false);
+    }
+  }, [currentPath]);
 
   const handleNavClick = (path: string) => {
     navigate(path);
     setMoreOpen(false);
-    dialogRef.current?.close();
   };
 
   const handleMoreClick = () => {
-    if (moreOpen) {
-      dialogRef.current?.close();
-      setMoreOpen(false);
-    } else {
-      dialogRef.current?.showModal();
-      setMoreOpen(true);
-    }
-  };
-
-  const handleDialogClose = () => {
-    setMoreOpen(false);
-  };
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
-    // Close if clicking the backdrop (the dialog element itself, not its children)
-    if (e.target === dialogRef.current) {
-      dialogRef.current?.close();
-      setMoreOpen(false);
-    }
+    setMoreOpen((open) => !open);
   };
 
   const isMoreActive = moreItems.some((item) => currentPath === item.path);
@@ -67,41 +84,50 @@ export const BottomNav: React.FC = () => {
             key={item.path}
             className={`bottom-nav-item ${currentPath === item.path ? "active" : ""}`}
             onClick={() => handleNavClick(item.path)}
+            type="button"
           >
             <Icon name={item.icon} size={1} />
             <span>{item.label}</span>
           </button>
         ))}
         <button
+          ref={moreButtonRef}
+          aria-controls="mobile-more-nav"
+          aria-expanded={moreOpen}
           className={`bottom-nav-item ${isMoreActive || moreOpen ? "active" : ""}`}
           onClick={handleMoreClick}
+          type="button"
         >
           <Icon name="dotsHorizontal" size={1} />
           <span>More</span>
         </button>
       </nav>
 
-      <dialog
-        ref={dialogRef}
-        className="more-sheet"
-        onClose={handleDialogClose}
-        onClick={handleBackdropClick}
-      >
-        <div className="more-sheet-content">
-          <div className="more-sheet-grid">
-            {moreItems.map((item) => (
-              <button
-                key={item.path}
-                className={`more-sheet-item ${currentPath === item.path ? "active" : ""}`}
-                onClick={() => handleNavClick(item.path)}
-              >
-                <Icon name={item.icon} size={1.5} />
-                <span>{item.label}</span>
-              </button>
-            ))}
+      {moreOpen && (
+        <nav
+          ref={morePanelRef}
+          aria-label="More navigation"
+          className="more-sheet"
+          id="mobile-more-nav"
+        >
+          <div className="more-sheet-content">
+            <div className="more-sheet-grid">
+              {moreItems.map((item) => (
+                <button
+                  key={item.path}
+                  aria-current={currentPath === item.path ? "page" : undefined}
+                  className={`more-sheet-item ${currentPath === item.path ? "active" : ""}`}
+                  onClick={() => handleNavClick(item.path)}
+                  type="button"
+                >
+                  <Icon name={item.icon} size={1.5} />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </dialog>
+        </nav>
+      )}
     </>
   );
 };
