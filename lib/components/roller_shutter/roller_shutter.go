@@ -15,15 +15,20 @@ func init() {
 // Params represents the roller shutter params
 type Params struct {
 	Enabled     bool            `yaml:"enabled"`
-	RandomDelay int             `yaml:"random_delay"`
 	Location    config.Location `yaml:"location"`
+	OpenAfter   string          `yaml:"open_after"`
+	OpenBefore  string          `yaml:"open_before"`
+	CloseAfter  string          `yaml:"close_after"`
+	CloseBefore string          `yaml:"close_before"`
 }
 
 // RollerShutter represents a generic roller shutter
 type RollerShutter struct {
 	common.GenericSensor
-	Params Params
-	logger *zap.Logger
+	Params      Params
+	openWindow  dailyWindow
+	closeWindow dailyWindow
+	logger      *zap.Logger
 }
 
 // NewRollerShutter returns a new cover component

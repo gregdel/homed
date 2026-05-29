@@ -17,8 +17,11 @@ location: &location
 roller_shutter: &roller_shutter
   location: *location
   enabled: true
-  # Random delay to be added to the sunrise / sunset times
-  random_delay: 20
+  # Optional local-time bounds keep automation out of quiet hours.
+  open_after: "07:00"
+  open_before: "09:00"
+  close_after: "18:00"
+  close_before: "22:30"
 
 devices:
 - name: homed_temperature_switch
