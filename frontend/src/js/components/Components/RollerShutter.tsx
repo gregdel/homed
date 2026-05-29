@@ -13,26 +13,32 @@ export const RollerShutter: React.FC<RollerShutterProps> = ({ id }) => {
   const { getComponentById, updateComponent } = useComponents();
 
   const component = getComponentById(id);
+  const percentOpen =
+    component === undefined
+      ? 0
+      : (component.values as RollerShutterValues).value;
+  const roundedPercentOpen = Math.round(
+    Math.max(0, Math.min(100, percentOpen)),
+  );
+
   if (component === undefined) {
     return null;
   }
-
-  const { value: percentOpen } = component.values as RollerShutterValues;
 
   const handleClick = (action: string) => {
     void updateComponent(id, action);
   };
 
-  const msg = () => {
-    if (percentOpen === 0) {
+  const statusLabel = () => {
+    if (roundedPercentOpen === 0) {
       return "Closed";
     }
 
-    if (percentOpen === 100) {
-      return "Opened";
+    if (roundedPercentOpen === 100) {
+      return "Open";
     }
 
-    return `Opened at ${percentOpen}%`;
+    return `Open at ${roundedPercentOpen}%`;
   };
 
   return (
@@ -61,8 +67,8 @@ export const RollerShutter: React.FC<RollerShutterProps> = ({ id }) => {
           />
         </div>
       </div>
-      <div className="flex justify-center">
-        <span>{msg()}</span>
+      <div className="flex justify-center mt-sm text-secondary">
+        <span>{statusLabel()}</span>
       </div>
     </>
   );
