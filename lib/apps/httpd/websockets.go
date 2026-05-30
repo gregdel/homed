@@ -47,7 +47,7 @@ func (h *httpd) publishToWebsocket(id string) {
 	h.mu.RUnlock()
 
 	var wg sync.WaitGroup
-	data := components.NewComponentJSON(component)
+	data := components.NewComponentJSON(component, h.components.HasGraph(id))
 	for ws, remote := range conns {
 		wg.Add(1)
 		go func(ws *websocket.Conn, remote string) {

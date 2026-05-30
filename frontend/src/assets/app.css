@@ -145,6 +145,13 @@ body {
   gap: var(--spacing-sm);
 }
 
+.card-header-extra a {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs);
+  color: var(--color-text);
+}
+
 .card-body {
   padding: var(--spacing-md);
 }
@@ -168,6 +175,41 @@ body {
 
 .card-actions > div:hover {
   color: var(--color-primary);
+}
+
+/* Graph */
+.graph-state {
+  padding: var(--spacing-lg);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.graph-error {
+  color: var(--color-error);
+}
+
+.graph-chart {
+  min-width: 0;
+}
+
+.graph-chart-title {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.graph-chart-range {
+  color: var(--color-text-tertiary);
+  font-weight: 400;
+}
+
+.graph-chart-frame {
+  width: 100%;
+  height: 260px;
+  padding: var(--spacing-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
 /* Grid */
@@ -224,6 +266,12 @@ body {
   background: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
   color: var(--color-text-on-accent);
+}
+
+.btn-icon {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
 }
 
 /* Form elements */

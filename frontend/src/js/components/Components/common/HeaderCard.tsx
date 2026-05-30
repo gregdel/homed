@@ -1,5 +1,5 @@
 import type React from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { relativeTime } from "../../../utils/relativeTime";
 import { useComponents } from "../../ComponentsContext";
 import { Link } from "../../Navigation";
@@ -21,7 +21,6 @@ export const HeaderCard: React.FC<HeaderCardProps> = ({ id, children }) => {
 
   const {
     updated_at: updatedAt,
-    graph_url: graphURL,
     friendly_name: friendlyName,
     device,
   } = component.values;
@@ -35,19 +34,11 @@ export const HeaderCard: React.FC<HeaderCardProps> = ({ id, children }) => {
     </div>,
   );
 
-  if (graphURL && graphURL !== "") {
-    const graphIconStyle: CSSProperties = {
-      marginRight: "-1em",
-      marginLeft: "0.3em",
-    };
-    const iconStyle: CSSProperties = { color: "var(--color-text)" };
-
+  if (component.has_graph) {
     extras.push(
-      <div key="graphIcon" style={graphIconStyle}>
-        <Link to={`/components/${id}/graph`}>
-          <Icon name="chartLine" style={iconStyle} size={0.8} />
-        </Link>
-      </div>,
+      <Link key="graphIcon" to={`/components/${id}/graph`}>
+        <Icon name="chartLine" size={0.8} />
+      </Link>,
     );
   }
 
@@ -57,10 +48,8 @@ export const HeaderCard: React.FC<HeaderCardProps> = ({ id, children }) => {
       ? friendlyName
       : `${String(roomName)} - ${component.type} - ${device.name}`;
 
-  const extraContainerStyle: CSSProperties = { display: "flex" };
-
   return (
-    <Card title={title} extra={<div style={extraContainerStyle}>{extras}</div>}>
+    <Card title={title} extra={extras}>
       {children}
     </Card>
   );

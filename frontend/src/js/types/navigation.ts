@@ -8,4 +8,5 @@ export interface NavigationContext {
   currentPath: string;
   params: NavigationParams;
   navigate: (path: string) => void;
+  goBack: (fallbackPath?: string) => void;
 }
