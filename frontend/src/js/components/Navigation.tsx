@@ -1,5 +1,5 @@
 import type React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import type {
   NavigationContext as NavContextType,
@@ -25,10 +25,16 @@ const useNavigation = (): NavContextType => {
   const [params, setParams] = useState<NavigationParams>(
     getParamsFromPath(initialPath),
   );
+  const currentPathRef = useRef(initialPath);
+  const previousPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     const handleLocationChange = () => {
       const path = getPathFromHash();
+      if (path !== currentPathRef.current) {
+        previousPathRef.current = currentPathRef.current;
+        currentPathRef.current = path;
+      }
       setCurrentPath(path);
       setParams(getParamsFromPath(path));
     };
@@ -38,10 +44,22 @@ const useNavigation = (): NavContextType => {
   }, []);
 
   const navigate = (path: string) => {
+    if (path === currentPathRef.current) {
+      return;
+    }
     window.location.hash = path;
   };
 
-  return { currentPath, params, navigate };
+  const goBack = (fallbackPath = "/temperature") => {
+    if (previousPathRef.current) {
+      window.history.back();
+      return;
+    }
+
+    navigate(fallbackPath);
+  };
+
+  return { currentPath, params, navigate, goBack };
 };
 
 // Navigation Provider Component

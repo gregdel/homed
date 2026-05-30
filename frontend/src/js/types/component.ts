@@ -11,13 +11,13 @@ export interface ComponentValues {
   hide: boolean;
   device: Device;
   updated_at: string; // ISO timestamp
-  graph_url?: string;
   [key: string]: unknown; // Type-specific fields
 }
 
 export interface ComponentJSON {
   type: string;
   read_only: boolean;
+  has_graph: boolean;
   values: ComponentValues;
 }
 

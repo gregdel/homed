@@ -23,10 +23,12 @@ func init() {
 }
 
 type httpd struct {
-	logger     *zap.Logger
-	httpServer *http.Server
-	components *components.Components
-	render     *render.Render
+	logger        *zap.Logger
+	httpServer    *http.Server
+	httpClient    *http.Client
+	components    *components.Components
+	render        *render.Render
+	prometheusURL string
 
 	mu         sync.RWMutex
 	websockets map[*websocket.Conn]string
@@ -47,6 +49,7 @@ func (h *httpd) Init(config *config.Config) error {
 
 	router.GET("/components", h.httpComponentList)
 	router.PUT("/components/:id", h.updateComponent)
+	router.GET("/components/:id/graph", h.getComponentGraph)
 	router.GET("/components/:id/schedule", h.getSchedule)
 	router.POST("/components/:id/schedule/default", h.updateScheduleDefault)
 	router.POST("/components/:id/schedule/overrides", h.getScheduleOverrides)
@@ -72,6 +75,8 @@ func (h *httpd) Init(config *config.Config) error {
 		Addr:    config.HTTP.Addr,
 		Handler: router,
 	}
+	h.httpClient = &http.Client{Timeout: 10 * time.Second}
+	h.prometheusURL = config.Prometheus.URL
 	h.exiting.Store(false)
 
 	return nil

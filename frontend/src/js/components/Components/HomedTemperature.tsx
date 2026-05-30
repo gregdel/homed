@@ -65,7 +65,6 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
   const {
     current,
     friendly_name: friendlyName,
-    graph_url: graphURL,
     target,
     mode,
     device,
@@ -199,7 +198,7 @@ export const HomedTemperature: React.FC<HomedTemperatureProps> = ({ id }) => {
       style={{ userSelect: "none" }}
       extra={
         <div className="flex items-center">
-          {graphURL !== "" && (
+          {component.has_graph && (
             <>
               <Link
                 to={`/components/${id}/graph`}

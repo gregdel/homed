@@ -19,6 +19,7 @@ type Components struct {
 
 	byID   map[string]Component
 	byRoom map[string][]string
+	graphs map[string]bool
 
 	schedules map[string]*schedule.Schedule
 	devices   map[string]*Device
@@ -30,6 +31,7 @@ func New(dataPath string) *Components {
 		dataPath: dataPath,
 		byID:     map[string]Component{},
 		byRoom:   map[string][]string{},
+		graphs:   map[string]bool{},
 
 		schedules: map[string]*schedule.Schedule{},
 		devices:   map[string]*Device{},
@@ -41,25 +43,38 @@ type ComponentJSON struct {
 	Component `json:"values"`
 	Type      string `json:"type"`
 	ReadOnly  bool   `json:"read_only"`
+	HasGraph  bool   `json:"has_graph"`
 }
 
 // NewComponentJSON returns a ComponentJSON from a Component
-func NewComponentJSON(c Component) *ComponentJSON {
+func NewComponentJSON(c Component, hasGraph bool) *ComponentJSON {
 	return &ComponentJSON{
 		Component: c,
 		Type:      string(c.Type()),
 		ReadOnly:  c.ReadOnly(),
+		HasGraph:  hasGraph,
 	}
 }
 
 // MarshalJSON implements the json.Marshaler interface
 func (c *Components) MarshalJSON() ([]byte, error) {
 	components := []*ComponentJSON{}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	for _, component := range c.byID {
-		components = append(components, NewComponentJSON(component))
+		components = append(components, NewComponentJSON(component, c.graphs[component.ID()]))
 	}
 
 	return json.Marshal(components)
+}
+
+// HasGraph tells if a component has Prometheus metrics available for graphing.
+func (c *Components) HasGraph(id string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.graphs[id]
 }
 
 // Get gets a component by its id
@@ -181,9 +196,19 @@ func (c *Components) Add(cfg config.Component, logger *zap.Logger, roomName, dev
 		sc.SetSchedule(schedule, schedulePath, cfg.ScheduleName)
 	}
 
+	labels := prometheus.Labels{
+		"friendly_name":  component.FriendlyName(),
+		"component_type": string(component.Type()),
+		"device":         deviceName,
+		"room":           roomName,
+		"id":             id,
+	}
+	collectors := component.Collectors(labels)
+
 	c.mu.Lock()
 
 	c.byID[id] = component
+	c.graphs[id] = len(collectors) > 0
 
 	if len(c.byRoom[roomName]) == 0 {
 		c.byRoom[roomName] = []string{}
@@ -192,15 +217,6 @@ func (c *Components) Add(cfg config.Component, logger *zap.Logger, roomName, dev
 
 	c.mu.Unlock()
 
-	labels := prometheus.Labels{
-		"friendly_name":  component.FriendlyName(),
-		"component_type": string(component.Type()),
-		"device":         deviceName,
-		"room":           roomName,
-		"id":             id,
-	}
-
-	collectors := component.Collectors(labels)
 	for _, c := range collectors {
 		if err := prometheus.Register(c); err != nil {
 			return nil, err
