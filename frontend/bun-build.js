@@ -34,13 +34,14 @@ for (const asset of assets) {
   }
 }
 
-// Generate icon.png from icon.svg via ImageMagick
+// Generate icon.png from icon.svg via ImageMagick.
+// Force librsvg instead of the Inkscape delegate to avoid headless build warnings.
 execSync([
   "magick -density 1200 -background none",
-  join(outdir, "icon.svg"),
+  `RSVG:${join(outdir, "icon.svg")}`,
   "-trim +repage -resize 350x350",
   '-gravity center -background "#eceff4" -extent 512x512',
-  "-flatten",
+  "-flatten -depth 8",
   join(outdir, "icon.png"),
 ].join(" "));
 
