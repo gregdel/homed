@@ -103,7 +103,7 @@ func (h *httpd) Run(ctx context.Context, config *apps.Config) error {
 	}()
 
 	go func() {
-		events := make(chan components.Event)
+		events := components.NewEventChannel()
 		for _, c := range config.Components.List() {
 			c.Subscribe(h.Name(), events)
 		}
