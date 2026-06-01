@@ -3,6 +3,7 @@ package homed
 import (
 	"context"
 	"embed"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -72,11 +73,24 @@ func (h *Homed) Run() error {
 	}()
 
 	var wg sync.WaitGroup
+	errCh := make(chan error, len(h.components.List()))
 	for _, component := range h.components.List() {
 		wg.Add(1)
 		go func(c components.Component) {
 			defer wg.Done()
-			c.Run(ctx, h.logger, h.components)
+			if err := c.Run(ctx, h.logger, h.components); err != nil {
+				wrapped := fmt.Errorf("component %s (%s) failed: %w", c.ID(), c.Type(), err)
+				h.logger.Error("component run failed",
+					slog.String("component_id", c.ID()),
+					slog.String("component_type", string(c.Type())),
+					slog.Any("error", err),
+				)
+				select {
+				case errCh <- wrapped:
+				default:
+				}
+				cancel()
+			}
 		}(component)
 	}
 
@@ -92,5 +106,10 @@ func (h *Homed) Run() error {
 	// Wait for the components
 	wg.Wait()
 
-	return nil
+	select {
+	case err := <-errCh:
+		return err
+	default:
+		return nil
+	}
 }
