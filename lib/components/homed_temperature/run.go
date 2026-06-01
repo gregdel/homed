@@ -68,7 +68,7 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *slog.Logger, invento
 }
 
 func (h *HomedTemperature) setup(inventory *components.Components) error {
-	h.Events.Incoming = make(chan components.Event)
+	h.Events.Incoming = components.NewEventChannel()
 
 	if err := h.YAMLParams.Decode(&h.Params); err != nil {
 		return err

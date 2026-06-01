@@ -9,7 +9,7 @@ import (
 
 // Run implements the Component interface
 func (b *Boiler) Run(ctx context.Context, logger *slog.Logger, inventory *components.Components) error {
-	b.Events.Incoming = make(chan components.Event)
+	b.Events.Incoming = components.NewEventChannel()
 
 	log := logger.With(slog.String("device", "boiler"))
 

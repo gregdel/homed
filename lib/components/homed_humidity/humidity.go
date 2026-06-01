@@ -86,7 +86,7 @@ func (h *HomedHumidity) Run(ctx context.Context, logger *slog.Logger, inventory 
 		return fmt.Errorf("component %q is not a switch", h.Params.Switch)
 	}
 
-	h.Events.Incoming = make(chan components.Event)
+	h.Events.Incoming = components.NewEventChannel()
 	sensor.Subscribe(h.ID(), h.Events.Incoming)
 
 	for {

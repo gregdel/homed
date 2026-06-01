@@ -2,7 +2,10 @@ package components
 
 import "sync"
 
-// Event represents and event
+// EventChannelBufferSize is the size of component event subscriber channels.
+const EventChannelBufferSize = 16
+
+// Event represents an event.
 type Event struct {
 	ID string
 }
@@ -12,6 +15,11 @@ type EventHandler struct {
 	mu          sync.RWMutex
 	Incoming    chan Event
 	subscribers map[string]chan Event
+}
+
+// NewEventChannel returns a bounded channel for component event subscribers.
+func NewEventChannel() chan Event {
+	return make(chan Event, EventChannelBufferSize)
 }
 
 // Subscribe is a function to handle subscribers
@@ -29,13 +37,21 @@ func (e *EventHandler) Subscribe(id string, ch chan Event) {
 // Notify is a function to notify subscribers
 func (e *EventHandler) Notify(event Event) {
 	e.mu.RLock()
-	defer e.mu.RUnlock()
-
 	if e.subscribers == nil {
+		e.mu.RUnlock()
 		return
 	}
 
+	subscribers := make([]chan Event, 0, len(e.subscribers))
 	for _, ch := range e.subscribers {
-		ch <- event
+		subscribers = append(subscribers, ch)
+	}
+	e.mu.RUnlock()
+
+	for _, ch := range subscribers {
+		select {
+		case ch <- event:
+		default:
+		}
 	}
 }

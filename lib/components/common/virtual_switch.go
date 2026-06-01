@@ -106,7 +106,7 @@ func (v *VirtualSwitch) WriteCommand(data []byte) error {
 // Run implements the Component interface
 func (v *VirtualSwitch) Run(ctx context.Context, logger *slog.Logger,
 	inventory *components.Components) error {
-	v.Events.Incoming = make(chan components.Event)
+	v.Events.Incoming = components.NewEventChannel()
 
 	v.log = v.LoggerWithFields(logger)
 
