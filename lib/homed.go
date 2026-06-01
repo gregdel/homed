@@ -75,10 +75,15 @@ func (h *Homed) Run() error {
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(h.components.List()))
 	for _, component := range h.components.List() {
+		runnable, ok := component.(components.RunnableComponent)
+		if !ok {
+			continue
+		}
+
 		wg.Add(1)
-		go func(c components.Component) {
+		go func(c components.Component, r components.RunnableComponent) {
 			defer wg.Done()
-			if err := c.Run(ctx, h.logger, h.components); err != nil {
+			if err := r.Run(ctx, h.logger, h.components); err != nil {
 				wrapped := fmt.Errorf("component %s (%s) failed: %w", c.ID(), c.Type(), err)
 				h.logger.Error("component run failed",
 					slog.String("component_id", c.ID()),
@@ -91,7 +96,7 @@ func (h *Homed) Run() error {
 				}
 				cancel()
 			}
-		}(component)
+		}(component, runnable)
 	}
 
 	runConfig := &apps.Config{
