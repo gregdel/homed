@@ -20,6 +20,7 @@ type graphRange struct {
 }
 
 var graphRanges = map[string]graphRange{
+	"1h":  {duration: time.Hour, step: time.Minute},
 	"6h":  {duration: 6 * time.Hour, step: time.Minute},
 	"24h": {duration: 24 * time.Hour, step: 5 * time.Minute},
 	"7d":  {duration: 7 * 24 * time.Hour, step: 30 * time.Minute},
