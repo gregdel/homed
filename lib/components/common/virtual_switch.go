@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
-	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
@@ -31,13 +30,9 @@ type VirtualSwitch struct {
 }
 
 type VirtualSwitchSnapshot struct {
-	ID           string             `json:"id"`
-	UpdatedAt    *time.Time         `json:"updated_at"`
-	FriendlyName string             `json:"friendly_name"`
-	Hide         bool               `json:"hide"`
-	Device       *components.Device `json:"device"`
-	On           bool               `json:"on"`
-	Counter      float64            `json:"counter"`
+	SnapshotBase
+	On      bool    `json:"on"`
+	Counter float64 `json:"counter"`
 }
 
 // Type implements the Component interface
@@ -190,13 +185,9 @@ func (v *VirtualSwitch) incrementCounter() {
 	v.counter++
 }
 
-func (v *VirtualSwitch) Snapshot() any {
+func (v *VirtualSwitch) ValuesSnapshot() any {
 	return VirtualSwitchSnapshot{
-		ID:           v.ID(),
-		UpdatedAt:    v.UpdatedAt.Load(),
-		FriendlyName: v.FriendlyName(),
-		Hide:         v.Hide,
-		Device:       v.Device(),
+		SnapshotBase: v.SnapshotBase(),
 		On:           v.IsOn(),
 		Counter:      v.CounterValue(),
 	}

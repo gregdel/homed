@@ -38,7 +38,7 @@ func TestLightUpdateAndSnapshot(t *testing.T) {
 	assertJSONValue(t, values, "friendly_name", "Light")
 	assertJSONValue(t, values, "on", true)
 	assertJSONValue(t, values, "brightness", float64(42))
-	assertJSONValue(t, values, "color_mode", "")
+	assertJSONValue(t, values, "color_mode", "rgb")
 	assertJSONValue(t, values, "cold_white", float64(10))
 	assertJSONValue(t, values, "warm_white", float64(20))
 	assertJSONValue(t, values, "red", float64(30))

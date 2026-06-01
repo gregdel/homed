@@ -36,6 +36,39 @@ type Component struct {
 	YAMLParams yaml.Node `json:"-"`
 }
 
+// SnapshotBase represents the common HTTP and websocket JSON fields shared by
+// all components.
+type SnapshotBase struct {
+	ID           string             `json:"id"`
+	UpdatedAt    *time.Time         `json:"updated_at"`
+	FriendlyName string             `json:"friendly_name"`
+	Hide         bool               `json:"hide"`
+	Device       *components.Device `json:"device"`
+}
+
+// SnapshotBase returns a concurrency-safe copy of the common component fields.
+func (c *Component) SnapshotBase() SnapshotBase {
+	c.mu.RLock()
+	id := c.Cid
+	friendlyName := c.Name
+	hide := c.Hide
+	device := c.Dev
+	c.mu.RUnlock()
+
+	return SnapshotBase{
+		ID:           id,
+		UpdatedAt:    c.UpdatedAt.Load(),
+		FriendlyName: friendlyName,
+		Hide:         hide,
+		Device:       device,
+	}
+}
+
+// ValuesSnapshot returns the default HTTP and websocket JSON values shape.
+func (c *Component) ValuesSnapshot() any {
+	return c.SnapshotBase()
+}
+
 // PostUpdate implements the Component interface
 func (c *Component) PostUpdate() error {
 	now := time.Now()
@@ -88,6 +121,9 @@ func (c *Component) Config() *config.Component {
 
 // SetConfig implements the Component interface
 func (c *Component) SetConfig(config *config.Component) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.config = config
 	c.Hide = config.Hide
 	c.IsInternal = config.Internal
@@ -99,16 +135,25 @@ func (c *Component) SetConfig(config *config.Component) {
 
 // SetID implements the Component interface
 func (c *Component) SetID(id string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.Cid = id
 }
 
 // ID implements the Component interface
 func (c *Component) ID() string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	return c.Cid
 }
 
 // Internal implements the Component interface
 func (c *Component) Internal() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	return c.IsInternal
 }
 
@@ -122,6 +167,9 @@ func (c *Component) Device() *components.Device {
 
 // SetDevice implements the Component interface
 func (c *Component) SetDevice(d *components.Device) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.Dev = d
 }
 
@@ -135,12 +183,16 @@ func (c *Component) FriendlyName() string {
 
 // SetFriendlyName implements the Component interface
 func (c *Component) SetFriendlyName(n string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.Name = n
 }
 
 // WriteCommand implements the Component interface
 func (c *Component) WriteCommand(data []byte) error {
-	if c.MQTTClient() == nil {
+	client := c.MQTTClient()
+	if client == nil {
 		return components.ErrMissingMQTTClient
 	}
 
@@ -153,11 +205,15 @@ func (c *Component) WriteCommand(data []byte) error {
 		return components.ErrMissingDevice
 	}
 
-	if !c.IsInternal && !device.IsOnline() {
+	if !c.Internal() && !device.IsOnline() {
 		return components.ErrDeviceOffline
 	}
 
-	token := c.mqttClient.Publish(c.CommandTopic, 0, false, data)
+	c.mu.RLock()
+	commandTopic := c.CommandTopic
+	c.mu.RUnlock()
+
+	token := client.Publish(commandTopic, 0, false, data)
 	if !token.WaitTimeout(publishTimeout) {
 		return fmt.Errorf("timeout reached while publishing")
 	}
@@ -174,7 +230,7 @@ func (c *Component) ExecCommand(data []byte) error {
 		return components.ErrMissingMQTTClient
 	}
 
-	if !c.IsInternal {
+	if !c.Internal() {
 		return components.ErrExecNotInternal
 	}
 
@@ -188,7 +244,11 @@ func (c *Component) PublishToStateTopic(data []byte) error {
 		return components.ErrMQTTClientNotConnected
 	}
 
-	token := client.Publish(c.StateTopic, 0, true, data)
+	c.mu.RLock()
+	stateTopic := c.StateTopic
+	c.mu.RUnlock()
+
+	token := client.Publish(stateTopic, 0, true, data)
 	if !token.WaitTimeout(publishTimeout) {
 		return fmt.Errorf("timeout reached while publishing")
 	}

@@ -20,13 +20,9 @@ func init() {
 }
 
 type Snapshot struct {
-	ID              string             `json:"id"`
-	UpdatedAt       *time.Time         `json:"updated_at"`
-	FriendlyName    string             `json:"friendly_name"`
-	Hide            bool               `json:"hide"`
-	Device          *components.Device `json:"device"`
-	On              bool               `json:"on"`
-	LastStateChange *time.Time         `json:"last_state_change"`
+	common.SnapshotBase
+	On              bool       `json:"on"`
+	LastStateChange *time.Time `json:"last_state_change"`
 }
 
 // Boiler is a component that controls the boiler
@@ -67,13 +63,9 @@ func (b *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	}
 }
 
-func (b *Boiler) Snapshot() any {
+func (b *Boiler) ValuesSnapshot() any {
 	return Snapshot{
-		ID:              b.ID(),
-		UpdatedAt:       b.UpdatedAt.Load(),
-		FriendlyName:    b.FriendlyName(),
-		Hide:            b.Hide,
-		Device:          b.Device(),
+		SnapshotBase:    b.SnapshotBase(),
 		On:              b.IsOn(),
 		LastStateChange: b.lastStateChangePtr(),
 	}

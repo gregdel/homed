@@ -3,7 +3,6 @@ package sensor
 import (
 	"encoding/json"
 	"sync"
-	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
@@ -25,11 +24,7 @@ type Data struct {
 }
 
 type Snapshot struct {
-	ID           string             `json:"id"`
-	UpdatedAt    *time.Time         `json:"updated_at"`
-	FriendlyName string             `json:"friendly_name"`
-	Hide         bool               `json:"hide"`
-	Device       *components.Device `json:"device"`
+	common.SnapshotBase
 	Data
 }
 
@@ -89,17 +84,14 @@ func (s *Sensor) Humidity() (float64, error) {
 	return s.HumidityV, nil
 }
 
-func (s *Sensor) Snapshot() any {
+func (s *Sensor) ValuesSnapshot() any {
 	s.mu.RLock()
-	defer s.mu.RUnlock()
+	data := s.Data
+	s.mu.RUnlock()
 
 	return Snapshot{
-		ID:           s.ID(),
-		UpdatedAt:    s.UpdatedAt.Load(),
-		FriendlyName: s.FriendlyName(),
-		Hide:         s.Hide,
-		Device:       s.Device(),
-		Data:         s.Data,
+		SnapshotBase: s.SnapshotBase(),
+		Data:         data,
 	}
 }
 
