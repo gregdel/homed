@@ -1,20 +1,25 @@
 package components
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
-
-	"go.uber.org/atomic"
 )
 
 // Device represents a device
 type Device struct {
 	mu sync.Mutex
 
-	Name       string               `json:"name"`
-	Room       string               `json:"room"`
-	Online     atomic.Bool          `json:"online"`
+	Name       string `json:"name"`
+	Room       string `json:"room"`
+	online     bool
 	Components map[string]Component `json:"-"`
+}
+
+type deviceJSON struct {
+	Name   string `json:"name"`
+	Room   string `json:"room"`
+	Online bool   `json:"online"`
 }
 
 // NewDevice returns a new device
@@ -41,5 +46,26 @@ func (d *Device) AddComponent(c Component) error {
 
 // IsOnline tells if the device is online or not
 func (d *Device) IsOnline() bool {
-	return d.Online.Load()
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	return d.online
+}
+
+func (d *Device) SetOnline(online bool) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.online = online
+}
+
+func (d *Device) MarshalJSON() ([]byte, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	return json.Marshal(deviceJSON{
+		Name:   d.Name,
+		Room:   d.Room,
+		Online: d.online,
+	})
 }

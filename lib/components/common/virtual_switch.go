@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sync"
+	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/atomic"
 )
 
 func init() {
@@ -22,10 +23,21 @@ func NewVirtualSwitch() components.Component {
 // VirtualSwitch represents a virtual button that can trigger multiple switches
 type VirtualSwitch struct {
 	BinarySensor
-	Counter atomic.Float64 `json:"counter"`
+	counterMu sync.RWMutex
+	counter   float64
 
 	log      *slog.Logger
 	switches []components.Switch
+}
+
+type VirtualSwitchSnapshot struct {
+	ID           string             `json:"id"`
+	UpdatedAt    *time.Time         `json:"updated_at"`
+	FriendlyName string             `json:"friendly_name"`
+	Hide         bool               `json:"hide"`
+	Device       *components.Device `json:"device"`
+	On           bool               `json:"on"`
+	Counter      float64            `json:"counter"`
 }
 
 // Type implements the Component interface
@@ -43,7 +55,7 @@ func (v *VirtualSwitch) Update(payload []byte) error {
 
 	v.log.Debug("update called", slog.Int("switches", len(v.switches)))
 	v.Toggle()
-	v.Counter.Add(1)
+	v.incrementCounter()
 	return nil
 }
 
@@ -53,7 +65,7 @@ func (v *VirtualSwitch) TurnOn() error {
 		sw.TurnOn()
 	}
 
-	v.On.Store(true)
+	v.SetOn(true)
 	return v.PostUpdate()
 }
 
@@ -63,7 +75,7 @@ func (v *VirtualSwitch) TurnOff() error {
 		sw.TurnOff()
 	}
 
-	v.On.Store(false)
+	v.SetOn(false)
 	return v.PostUpdate()
 }
 
@@ -90,7 +102,7 @@ func (v *VirtualSwitch) updateState() {
 	}
 
 	v.log.Debug("updating state", slog.Bool("new_state", isOn))
-	v.On.Store(isOn)
+	v.SetOn(isOn)
 	if err := v.PostUpdate(); err != nil {
 		v.log.Error("failed to update state", slog.Any("error", err))
 	}
@@ -154,7 +166,33 @@ func (v *VirtualSwitch) Collectors(labels prometheus.Labels) []prometheus.Collec
 			return 0
 		}),
 		components.CounterCollector("virtual_switch_counter", labels,
-			func() float64 { return v.Counter.Load() },
+			func() float64 { return v.CounterValue() },
 		),
+	}
+}
+
+func (v *VirtualSwitch) CounterValue() float64 {
+	v.counterMu.RLock()
+	defer v.counterMu.RUnlock()
+
+	return v.counter
+}
+
+func (v *VirtualSwitch) incrementCounter() {
+	v.counterMu.Lock()
+	defer v.counterMu.Unlock()
+
+	v.counter++
+}
+
+func (v *VirtualSwitch) Snapshot() any {
+	return VirtualSwitchSnapshot{
+		ID:           v.ID(),
+		UpdatedAt:    v.UpdatedAt.Load(),
+		FriendlyName: v.FriendlyName(),
+		Hide:         v.Hide,
+		Device:       v.Device(),
+		On:           v.IsOn(),
+		Counter:      v.CounterValue(),
 	}
 }

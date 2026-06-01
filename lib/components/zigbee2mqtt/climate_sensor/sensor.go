@@ -2,11 +2,12 @@ package sensor
 
 import (
 	"encoding/json"
+	"sync"
+	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/atomic"
 )
 
 func init() {
@@ -15,17 +16,28 @@ func init() {
 
 // Data represents the data of the sensor
 type Data struct {
-	Battery      atomic.Float64 `json:"battery"`
-	HumidityV    atomic.Float64 `json:"humidity"`
-	LinkQuality  atomic.Float64 `json:"linkquality"`
-	Pressure     atomic.Float64 `json:"pressure"`
-	TemperatureV atomic.Float64 `json:"temperature"`
-	Voltage      atomic.Float64 `json:"voltage"`
+	Battery      float64 `json:"battery"`
+	HumidityV    float64 `json:"humidity"`
+	LinkQuality  float64 `json:"linkquality"`
+	Pressure     float64 `json:"pressure"`
+	TemperatureV float64 `json:"temperature"`
+	Voltage      float64 `json:"voltage"`
+}
+
+type Snapshot struct {
+	ID           string             `json:"id"`
+	UpdatedAt    *time.Time         `json:"updated_at"`
+	FriendlyName string             `json:"friendly_name"`
+	Hide         bool               `json:"hide"`
+	Device       *components.Device `json:"device"`
+	Data
 }
 
 // Sensor reprensents a zigbee climate sensor
 type Sensor struct {
 	common.Component
+
+	mu sync.RWMutex
 	Data
 }
 
@@ -41,7 +53,16 @@ func (s *Sensor) Type() components.Type {
 
 // Update implements the Component interface
 func (s *Sensor) Update(value []byte) error {
-	return json.Unmarshal(value, &s.Data)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	data := s.Data
+	if err := json.Unmarshal(value, &data); err != nil {
+		return err
+	}
+
+	s.Data = data
+	return nil
 }
 
 // Temperature implements the TemperatureGetter interface
@@ -50,7 +71,10 @@ func (s *Sensor) Temperature() (float64, error) {
 		return 0, components.ErrDeviceOffline
 	}
 
-	return s.TemperatureV.Load(), nil
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.TemperatureV, nil
 }
 
 // Humidity implements the HumidityGetter interface
@@ -59,20 +83,56 @@ func (s *Sensor) Humidity() (float64, error) {
 		return 0, components.ErrDeviceOffline
 	}
 
-	return s.HumidityV.Load(), nil
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.HumidityV, nil
+}
+
+func (s *Sensor) Snapshot() any {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return Snapshot{
+		ID:           s.ID(),
+		UpdatedAt:    s.UpdatedAt.Load(),
+		FriendlyName: s.FriendlyName(),
+		Hide:         s.Hide,
+		Device:       s.Device(),
+		Data:         s.Data,
+	}
+}
+
+func (s *Sensor) DataSnapshot() Data {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.Data
 }
 
 // Collectors implements the Component interface
 func (s *Sensor) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		components.GaugeCollector("temperature", labels,
-			func() float64 { return s.TemperatureV.Load() },
+			func() float64 {
+				s.mu.RLock()
+				defer s.mu.RUnlock()
+				return s.TemperatureV
+			},
 		),
 		components.GaugeCollector("pressure", labels,
-			func() float64 { return s.Pressure.Load() },
+			func() float64 {
+				s.mu.RLock()
+				defer s.mu.RUnlock()
+				return s.Pressure
+			},
 		),
 		components.GaugeCollector("humidity", labels,
-			func() float64 { return s.HumidityV.Load() },
+			func() float64 {
+				s.mu.RLock()
+				defer s.mu.RUnlock()
+				return s.HumidityV
+			},
 		),
 	}
 }
