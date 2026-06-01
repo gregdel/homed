@@ -3,10 +3,10 @@ package common
 import (
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/atomic"
 )
 
 func init() {
@@ -17,7 +17,8 @@ func init() {
 type BinaryTRV struct {
 	Switch
 
-	currentSetPoint atomic.Float64
+	mu              sync.RWMutex
+	currentSetPoint float64
 	OnTemperature   int
 	OffTemperature  int
 }
@@ -38,8 +39,8 @@ func (b *BinaryTRV) Update(value []byte) error {
 		return fmt.Errorf("binary_trv: invalid payload: %s", value)
 	}
 
-	b.On.Store(v == float64(b.OnTemperature))
-	b.currentSetPoint.Store(v)
+	b.SetOn(v == float64(b.OnTemperature))
+	b.setCurrentSetPoint(v)
 	return nil
 }
 
@@ -54,11 +55,25 @@ func (b *BinaryTRV) TurnOn() error {
 
 // TurnOff implements the switch interface
 func (b *BinaryTRV) TurnOff() error {
-	if b.currentSetPoint.Load() == float64(b.OffTemperature) {
+	if b.currentSetPointValue() == float64(b.OffTemperature) {
 		return nil
 	}
 
 	return b.WriteCommand([]byte(strconv.Itoa(b.OffTemperature)))
+}
+
+func (b *BinaryTRV) currentSetPointValue() float64 {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	return b.currentSetPoint
+}
+
+func (b *BinaryTRV) setCurrentSetPoint(value float64) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.currentSetPoint = value
 }
 
 // Type implements the Component interface

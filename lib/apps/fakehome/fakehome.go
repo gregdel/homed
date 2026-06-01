@@ -186,7 +186,7 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 					if value > 100 {
 						value = 100
 					}
-					x.Value.Store(value)
+					x.SetSensorValue(value)
 
 					valueStr := fmt.Sprintf("%.02f", value)
 					if err := x.PublishToStateTopic([]byte(valueStr)); err != nil {
@@ -247,15 +247,17 @@ func (fh *FakeHome) fakeSensor(c *zClimate.Sensor) {
 		factor = 1
 	}
 
-	humidity := c.HumidityV.Load()
+	data := c.DataSnapshot()
+
+	humidity := data.HumidityV
 	if humidity < 60 || humidity > 70 {
 		humidity = 60
 	} else {
 		humidity += 2
 	}
-	c.HumidityV.Store(humidity)
+	data.HumidityV = humidity
 
-	temp := c.TemperatureV.Load()
+	temp := data.TemperatureV
 	if temp == 0 {
 		temp = 15
 	} else if temp < 10 {
@@ -265,9 +267,18 @@ func (fh *FakeHome) fakeSensor(c *zClimate.Sensor) {
 	} else {
 		temp = temp + (factor * 0.1)
 	}
-	c.TemperatureV.Store(temp)
+	data.TemperatureV = temp
 
-	c.Pressure.Store(1000)
+	data.Pressure = 1000
+
+	payload, err := json.Marshal(data)
+	if err != nil {
+		fh.logger.Warn("failed to marshal fake sensor data", slog.Any("error", err))
+		return
+	}
+	if err := c.Update(payload); err != nil {
+		fh.logger.Warn("failed to update fake sensor data", slog.Any("error", err))
+	}
 }
 
 func (fh *FakeHome) updateLastSeen() {

@@ -32,7 +32,7 @@ func (sw *TemperatureSwitch) Type() components.Type {
 // Run implements the Component interface
 func (sw *TemperatureSwitch) Run(ctx context.Context, logger *slog.Logger,
 	inventory *components.Components) error {
-	sw.Device().Online.Store(true)
+	sw.Device().SetOnline(true)
 	return sw.VirtualSwitch.Run(ctx, logger, inventory)
 }
 
@@ -40,7 +40,7 @@ func (sw *TemperatureSwitch) Run(ctx context.Context, logger *slog.Logger,
 func (sw *TemperatureSwitch) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		components.CounterCollector("temperature_switch", labels,
-			func() float64 { return sw.Counter.Load() },
+			func() float64 { return sw.CounterValue() },
 		),
 	}
 }

@@ -106,7 +106,7 @@ func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 
 	h.registerWebsocket(ws, net.JoinHostPort(host, port))
 	for {
-		if h.exiting.Load() {
+		if h.isExiting() {
 			break
 		}
 

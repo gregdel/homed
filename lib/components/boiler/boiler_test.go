@@ -122,7 +122,7 @@ func testBoiler() (*Boiler, *fakeMQTTClient) {
 		CommandTopic: "boiler/set",
 	})
 	device := components.NewDevice("boiler", "utility")
-	device.Online.Store(true)
+	device.SetOnline(true)
 	b.SetDevice(device)
 	b.SetMQTTClient(client)
 	return b, client

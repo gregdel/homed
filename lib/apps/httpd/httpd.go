@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -32,7 +31,7 @@ type httpd struct {
 
 	mu         sync.RWMutex
 	websockets map[*websocket.Conn]string
-	exiting    atomic.Bool
+	exiting    bool
 }
 
 func app() *httpd {
@@ -77,7 +76,7 @@ func (h *httpd) Init(config *config.Config) error {
 	}
 	h.httpClient = &http.Client{Timeout: 10 * time.Second}
 	h.prometheusURL = config.Prometheus.URL
-	h.exiting.Store(false)
+	h.setExiting(false)
 
 	return nil
 }
@@ -92,7 +91,7 @@ func (h *httpd) Run(ctx context.Context, config *apps.Config) error {
 
 	go func() {
 		<-ctx.Done()
-		h.exiting.Store(true)
+		h.setExiting(true)
 
 		timeout, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
@@ -123,4 +122,18 @@ func (h *httpd) Run(ctx context.Context, config *apps.Config) error {
 	}
 
 	return nil
+}
+
+func (h *httpd) setExiting(exiting bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	h.exiting = exiting
+}
+
+func (h *httpd) isExiting() bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	return h.exiting
 }

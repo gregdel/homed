@@ -2,11 +2,12 @@ package esphome
 
 import (
 	"encoding/json"
+	"sync"
+	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/atomic"
 )
 
 func init() {
@@ -16,16 +17,34 @@ func init() {
 // Light represents a esphome light.
 type Light struct {
 	common.Component
-	On atomic.Bool `json:"on"`
 
-	Brightness atomic.Uint32 `json:"brightness"`
-	ColorMode  atomic.String `json:"color_mode"`
+	mu sync.RWMutex
 
-	ColdWhite atomic.Uint32 `json:"cold_white"`
-	WarmWhite atomic.Uint32 `json:"warm_white"`
-	Red       atomic.Uint32 `json:"red"`
-	Green     atomic.Uint32 `json:"green"`
-	Blue      atomic.Uint32 `json:"blue"`
+	on         bool
+	brightness uint32
+	colorMode  string
+
+	coldWhite uint32
+	warmWhite uint32
+	red       uint32
+	green     uint32
+	blue      uint32
+}
+
+type Snapshot struct {
+	ID           string             `json:"id"`
+	UpdatedAt    *time.Time         `json:"updated_at"`
+	FriendlyName string             `json:"friendly_name"`
+	Hide         bool               `json:"hide"`
+	Device       *components.Device `json:"device"`
+	On           bool               `json:"on"`
+	Brightness   uint32             `json:"brightness"`
+	ColorMode    string             `json:"color_mode"`
+	ColdWhite    uint32             `json:"cold_white"`
+	WarmWhite    uint32             `json:"warm_white"`
+	Red          uint32             `json:"red"`
+	Green        uint32             `json:"green"`
+	Blue         uint32             `json:"blue"`
 }
 
 // NewLight returns a new light
@@ -50,15 +69,17 @@ type payload struct {
 
 // TurnOn implements the switch interface
 func (l *Light) updateState(s string) error {
+	l.mu.RLock()
 	data := payload{
 		State:      s,
-		Brightness: uint8(l.Brightness.Load()),
-		ColorMode:  l.ColorMode.Load(),
+		Brightness: uint8(l.brightness),
+		ColorMode:  l.colorMode,
 		Color: color{
-			C: uint8(l.ColdWhite.Load()),
-			W: uint8(l.WarmWhite.Load()),
+			C: uint8(l.coldWhite),
+			W: uint8(l.warmWhite),
 		},
 	}
+	l.mu.RUnlock()
 
 	payload, err := json.Marshal(data)
 	if err != nil {
@@ -70,7 +91,10 @@ func (l *Light) updateState(s string) error {
 
 // IsOn implements the BinarySensor interface
 func (l *Light) IsOn() bool {
-	return l.On.Load()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+
+	return l.on
 }
 
 // TurnOn implements the switch interface
@@ -104,20 +128,44 @@ func (l *Light) Update(value []byte) error {
 		return err
 	}
 
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	if data.State != "" {
-		l.On.Store(data.State == "ON")
+		l.on = data.State == "ON"
 	} else {
-		l.On.Store(false)
+		l.on = false
 	}
 
-	l.Brightness.Store(uint32(data.Brightness))
-	l.WarmWhite.Store(uint32(data.Color.W))
-	l.ColdWhite.Store(uint32(data.Color.C))
-	l.Red.Store(uint32(data.Color.R))
-	l.Green.Store(uint32(data.Color.G))
-	l.Blue.Store(uint32(data.Color.B))
+	l.brightness = uint32(data.Brightness)
+	l.warmWhite = uint32(data.Color.W)
+	l.coldWhite = uint32(data.Color.C)
+	l.red = uint32(data.Color.R)
+	l.green = uint32(data.Color.G)
+	l.blue = uint32(data.Color.B)
 
 	return nil
+}
+
+func (l *Light) Snapshot() any {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+
+	return Snapshot{
+		ID:           l.ID(),
+		UpdatedAt:    l.UpdatedAt.Load(),
+		FriendlyName: l.FriendlyName(),
+		Hide:         l.Hide,
+		Device:       l.Device(),
+		On:           l.on,
+		Brightness:   l.brightness,
+		ColorMode:    l.colorMode,
+		ColdWhite:    l.coldWhite,
+		WarmWhite:    l.warmWhite,
+		Red:          l.red,
+		Green:        l.green,
+		Blue:         l.blue,
+	}
 }
 
 // Collectors implements the Component interface
