@@ -10,10 +10,10 @@ import {
 import { DeviceStatus, GenericSensor, PowerMeter, WifiSignal } from "./Sensors";
 import { Switch, TemperatureSwitch, VirtualSwitch } from "./Switches";
 
+import { ClimateSensor } from "./ClimateSensor";
 import { EsphomeLight } from "./EsphomeLight";
 import { HomedTemperature } from "./HomedTemperature";
 import { RollerShutter } from "./RollerShutter";
-import { ZigbeeClimateSensor } from "./ZigbeeClimateSensor";
 import { HeaderCard } from "./common/HeaderCard";
 
 interface ComponentProps {
@@ -66,7 +66,7 @@ export const Component: React.FC<ComponentProps> = ({
       typedComponent = <BinaryTRV id={id} />;
       break;
     case "zigbee_climate_sensor":
-      typedComponent = <ZigbeeClimateSensor id={id} />;
+      typedComponent = <ClimateSensor id={id} />;
       break;
     case "device_status":
       typedComponent = <DeviceStatus id={id} />;
@@ -76,6 +76,9 @@ export const Component: React.FC<ComponentProps> = ({
       break;
     case "virtual_switch":
       typedComponent = <VirtualSwitch id={id} />;
+      break;
+    case "weather":
+      typedComponent = <ClimateSensor id={id} />;
       break;
     default:
       return <h3>Unknown component type: {type}</h3>;

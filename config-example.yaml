@@ -29,6 +29,15 @@ roller_shutter: &roller_shutter
   close_before: "22:30"
 
 devices:
+- name: weather
+  room: outside
+  components:
+  - type: weather
+    friendly_name: Outside
+    params:
+      location: *location
+      interval: 1h
+
 - name: homed_temperature_switch
   room: none
   components:
