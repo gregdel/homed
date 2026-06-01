@@ -1,30 +1,44 @@
 package boiler
 
 import (
-	"fmt"
+	"errors"
+	"sync"
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
 	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/atomic"
 )
 
 const cooldownDuration = 5 * time.Minute
 
+var ErrBoilerCooldown = errors.New("components: boiler: last change is too recent")
+
 func init() {
 	components.Register("boiler", NewBoiler)
+}
+
+type Snapshot struct {
+	ID              string             `json:"id"`
+	UpdatedAt       *time.Time         `json:"updated_at"`
+	FriendlyName    string             `json:"friendly_name"`
+	Hide            bool               `json:"hide"`
+	Device          *components.Device `json:"device"`
+	On              bool               `json:"on"`
+	LastStateChange *time.Time         `json:"last_state_change"`
 }
 
 // Boiler is a component that controls the boiler
 type Boiler struct {
 	common.Switch
 
+	mu sync.RWMutex
+
 	Params      config.TemperatureControl
 	controllers []components.TemperatureControllerInternal
 
-	LastStateChange atomic.Time `json:"last_state_change"`
+	lastStateChange time.Time
 }
 
 // NewBoiler returns a new status component
@@ -53,13 +67,46 @@ func (b *Boiler) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	}
 }
 
+func (b *Boiler) Snapshot() any {
+	return Snapshot{
+		ID:              b.ID(),
+		UpdatedAt:       b.UpdatedAt.Load(),
+		FriendlyName:    b.FriendlyName(),
+		Hide:            b.Hide,
+		Device:          b.Device(),
+		On:              b.IsOn(),
+		LastStateChange: b.lastStateChangePtr(),
+	}
+}
+
+func (b *Boiler) lastStateChangePtr() *time.Time {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	if b.lastStateChange.IsZero() {
+		return nil
+	}
+
+	t := b.lastStateChange
+	return &t
+}
+
+func (b *Boiler) reserveStateChange(now time.Time) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if !b.lastStateChange.IsZero() && now.Before(b.lastStateChange.Add(cooldownDuration)) {
+		return ErrBoilerCooldown
+	}
+
+	b.lastStateChange = now
+	return nil
+}
+
 // WriteCommand implements the Component interface
 func (b *Boiler) WriteCommand(data []byte) error {
-	now := time.Now()
-	if b.LastStateChange.Load().IsZero() {
-		b.LastStateChange.Store(time.Now())
-	} else if b.LastStateChange.Load().Add(cooldownDuration).Before(now) {
-		return fmt.Errorf("components: boiler: last change is to recent")
+	if err := b.reserveStateChange(time.Now()); err != nil {
+		return err
 	}
 
 	return b.Switch.WriteCommand(data)
