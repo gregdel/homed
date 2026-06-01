@@ -3,13 +3,13 @@ package httpd
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
-	"go.uber.org/zap"
 )
 
 // Time allowed to read the next pong message from the client
@@ -67,7 +67,7 @@ func (h *httpd) updateComponent(w http.ResponseWriter, r *http.Request, ps httpr
 
 	err = component.WriteCommand(data)
 	if err != nil {
-		h.logger.Warn("failed to write mqtt command", zap.Error(err))
+		h.logger.Warn("failed to write mqtt command", slog.Any("error", err))
 		h.httpError(w, fmt.Sprintf("failed to write mqtt command: %s", err))
 		return
 	}

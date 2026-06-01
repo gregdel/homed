@@ -3,13 +3,13 @@ package common
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/config"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
@@ -54,13 +54,13 @@ func (c *Component) ReadOnly() bool {
 }
 
 // LoggerWithFields implements the Component interface
-func (c *Component) LoggerWithFields(logger *zap.Logger) *zap.Logger {
-	log := logger.With(zap.String("device", c.Device().Name))
+func (c *Component) LoggerWithFields(logger *slog.Logger) *slog.Logger {
+	log := logger.With(slog.String("device", c.Device().Name))
 
 	if c.FriendlyName() != "" {
-		log = log.With(zap.String("friendly_name", c.FriendlyName()))
+		log = log.With(slog.String("friendly_name", c.FriendlyName()))
 	} else {
-		log = log.With(zap.String("id", c.ID()))
+		log = log.With(slog.String("id", c.ID()))
 	}
 
 	return log
@@ -212,6 +212,6 @@ func (c *Component) Notify() {
 }
 
 // Run runs a goroutine for a component
-func (c *Component) Run(context.Context, *zap.Logger, *components.Components) error {
+func (c *Component) Run(context.Context, *slog.Logger, *components.Components) error {
 	return nil
 }

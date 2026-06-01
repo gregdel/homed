@@ -1,12 +1,12 @@
 package httpd
 
 import (
+	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/gregdel/homed/lib/components"
-	"go.uber.org/zap"
 )
 
 func (h *httpd) registerWebsocket(ws *websocket.Conn, remote string) {
@@ -14,7 +14,7 @@ func (h *httpd) registerWebsocket(ws *websocket.Conn, remote string) {
 	h.websockets[ws] = remote
 	h.mu.Unlock()
 
-	h.logger.Info("new websocket registered", zap.String("remote", remote))
+	h.logger.Info("new websocket registered", slog.String("remote", remote))
 }
 
 func (h *httpd) unregisterWebsocket(ws *websocket.Conn) {
@@ -28,14 +28,14 @@ func (h *httpd) unregisterWebsocket(ws *websocket.Conn) {
 
 	ws.Close()
 	delete(h.websockets, ws)
-	h.logger.Info("websocket unregistered", zap.String("remote", remote))
+	h.logger.Info("websocket unregistered", slog.String("remote", remote))
 }
 
 func (h *httpd) publishToWebsocket(id string) {
 	component, err := h.components.Get(id)
 	if err != nil {
 		h.logger.Error("failed to get component",
-			zap.String("id", id))
+			slog.String("id", id))
 		return
 	}
 
@@ -58,9 +58,9 @@ func (h *httpd) publishToWebsocket(id string) {
 			if err != nil {
 				h.logger.Info(
 					"failed to publish to websocket",
-					zap.String("remote", remote),
-					zap.String("event_id", id),
-					zap.Error(err),
+					slog.String("remote", remote),
+					slog.String("event_id", id),
+					slog.Any("error", err),
 				)
 				h.unregisterWebsocket(ws)
 			}

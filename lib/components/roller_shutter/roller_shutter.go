@@ -1,11 +1,12 @@
 package rollershutter
 
 import (
+	"log/slog"
+
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
 	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -28,7 +29,7 @@ type RollerShutter struct {
 	Params      Params
 	openWindow  dailyWindow
 	closeWindow dailyWindow
-	logger      *zap.Logger
+	logger      *slog.Logger
 }
 
 // NewRollerShutter returns a new cover component

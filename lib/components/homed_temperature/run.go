@@ -2,15 +2,15 @@ package homedtemperature
 
 import (
 	"context"
+	"log/slog"
 	"math"
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
-	"go.uber.org/zap"
 )
 
 // Run implements the Component interface
-func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventory *components.Components) error {
+func (h *HomedTemperature) Run(ctx context.Context, logger *slog.Logger, inventory *components.Components) error {
 	if err := h.setup(inventory); err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *zap.Logger, inventor
 		h.updateTemperature()
 		h.handleBinaryTRV()
 		if err := h.PublishState(); err != nil {
-			h.log.Warn("failed to publish state", zap.Error(err))
+			h.log.Warn("failed to publish state", slog.Any("error", err))
 		}
 	}
 }
@@ -108,7 +108,7 @@ func (h *HomedTemperature) updateTemperature() {
 	for _, sensor := range h.sensors {
 		t, err := sensor.Temperature()
 		if err != nil {
-			h.log.Error("failed to get temperature", zap.Error(err))
+			h.log.Error("failed to get temperature", slog.Any("error", err))
 			continue
 		}
 		temperature += t

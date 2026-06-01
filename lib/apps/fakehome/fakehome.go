@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"sync"
 	"time"
@@ -18,7 +19,6 @@ import (
 	rollershutter "github.com/gregdel/homed/lib/components/roller_shutter"
 	zClimate "github.com/gregdel/homed/lib/components/zigbee2mqtt/climate_sensor"
 	"github.com/gregdel/homed/lib/config"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -30,7 +30,7 @@ func init() {
 type FakeHome struct {
 	enabled bool
 
-	logger     *zap.Logger
+	logger     *slog.Logger
 	components *components.Components
 	config     *config.Config
 
@@ -61,7 +61,7 @@ func (fh *FakeHome) Init(c *config.Config) error {
 
 // Run implements the App interface
 func (fh *FakeHome) Run(ctx context.Context, config *apps.Config) error {
-	logger := config.Logger.With(zap.String("app", fh.Name()))
+	logger := config.Logger.With(slog.String("app", fh.Name()))
 
 	if !fh.enabled {
 		logger.Info("app is disabled")
@@ -118,7 +118,7 @@ func (fh *FakeHome) mqttOnConnectHandler(c mqtt.Client) {
 	token := fh.client.SubscribeMultiple(topics, fh.commandHandler)
 	if token.Wait() && token.Error() != nil {
 		fh.logger.Error("failed to subscribe to all the command topic",
-			zap.Error(token.Error()),
+			slog.Any("error", token.Error()),
 		)
 	}
 }
@@ -132,7 +132,7 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	component, ok := fh.cmdTopics[msg.Topic()]
 	fh.mu.RUnlock()
 	if !ok {
-		fh.logger.Warn("topic not found", zap.String("topic", msg.Topic()))
+		fh.logger.Warn("topic not found", slog.String("topic", msg.Topic()))
 		return
 	}
 
@@ -220,15 +220,15 @@ func (fh *FakeHome) commandHandler(c mqtt.Client, msg mqtt.Message) {
 	if errUpdate != nil {
 		fh.logger.Warn(
 			"failed to update component",
-			zap.String("topic", msg.Topic()),
-			zap.Error(errUpdate))
+			slog.String("topic", msg.Topic()),
+			slog.Any("error", errUpdate))
 	}
 
 	if errPublish != nil {
 		fh.logger.Warn(
 			"failed to publish component state",
-			zap.String("topic", msg.Topic()),
-			zap.Error(errPublish),
+			slog.String("topic", msg.Topic()),
+			slog.Any("error", errPublish),
 		)
 	}
 }
@@ -284,7 +284,7 @@ func (fh *FakeHome) updateLastSeen() {
 
 		err := c.PublishToStateTopic([]byte("online"))
 		if err != nil {
-			fh.logger.Warn("failed to set device online", zap.Error(err))
+			fh.logger.Warn("failed to set device online", slog.Any("error", err))
 		}
 	}
 }
@@ -313,8 +313,8 @@ func (fh *FakeHome) updateStates() {
 
 		if err != nil {
 			fh.logger.Warn("failed to publish state",
-				zap.String("function", "updateStates"),
-				zap.Error(err))
+				slog.String("function", "updateStates"),
+				slog.Any("error", err))
 		}
 
 		err = nil

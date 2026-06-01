@@ -3,16 +3,16 @@ package rollershutter
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
-	"go.uber.org/zap"
 )
 
 const failedActionRetryDelay = 30 * time.Second
 
 // Run implements the component interface
-func (rs *RollerShutter) Run(ctx context.Context, logger *zap.Logger, _ *components.Components) error {
+func (rs *RollerShutter) Run(ctx context.Context, logger *slog.Logger, _ *components.Components) error {
 	if err := rs.YAMLParams.Decode(&rs.Params); err != nil {
 		return err
 	}
@@ -20,7 +20,7 @@ func (rs *RollerShutter) Run(ctx context.Context, logger *zap.Logger, _ *compone
 		return err
 	}
 
-	log := logger.With(zap.String("component_id", rs.ID()))
+	log := logger.With(slog.String("component_id", rs.ID()))
 	rs.logger = log
 
 	if !rs.Params.Enabled {
@@ -39,9 +39,9 @@ func (rs *RollerShutter) Run(ctx context.Context, logger *zap.Logger, _ *compone
 		sleepDuration := time.Until(runAt)
 
 		log.Info("setting next roller shutter action",
-			zap.Time("run_at", runAt),
-			zap.String("action", nextAction.String()),
-			zap.Duration("sleep_duration", sleepDuration),
+			slog.Time("run_at", runAt),
+			slog.String("action", nextAction.String()),
+			slog.Duration("sleep_duration", sleepDuration),
 		)
 
 		select {
@@ -54,16 +54,16 @@ func (rs *RollerShutter) Run(ctx context.Context, logger *zap.Logger, _ *compone
 
 			if err != nil {
 				log.Info("failed to run roller shutter action",
-					zap.String("action", completedAction.String()),
-					zap.Error(err),
+					slog.String("action", completedAction.String()),
+					slog.Any("error", err),
 				)
 			}
 
 			nextAction, retryAt = rs.nextActionAfterAttemptAt(time.Now(), completedAction, err)
 			if err != nil && !retryAt.IsZero() {
 				log.Info("retrying roller shutter action",
-					zap.String("action", nextAction.String()),
-					zap.Time("retry_at", retryAt),
+					slog.String("action", nextAction.String()),
+					slog.Time("retry_at", retryAt),
 				)
 			}
 		}

@@ -3,12 +3,12 @@ package homedhumidity
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -56,19 +56,19 @@ func (h *HomedHumidity) isQuietHours() bool {
 }
 
 // Run implements the Component interface
-func (h *HomedHumidity) Run(ctx context.Context, logger *zap.Logger, inventory *components.Components) error {
+func (h *HomedHumidity) Run(ctx context.Context, logger *slog.Logger, inventory *components.Components) error {
 	if err := h.YAMLParams.Decode(&h.Params); err != nil {
 		return err
 	}
 
 	log := logger.With(
-		zap.String("type", "humidity_controller"),
-		zap.String("room", h.Device().Room),
+		slog.String("type", "humidity_controller"),
+		slog.String("room", h.Device().Room),
 	)
 
 	sensorComponent, err := inventory.Get(h.Params.Sensor)
 	if err != nil {
-		log.Error("failed to get sensor", zap.Error(err))
+		log.Error("failed to get sensor", slog.Any("error", err))
 	}
 
 	sensor, ok := (sensorComponent).(components.HumidityGetter)
@@ -78,7 +78,7 @@ func (h *HomedHumidity) Run(ctx context.Context, logger *zap.Logger, inventory *
 
 	swComponent, err := inventory.Get(h.Params.Switch)
 	if err != nil {
-		log.Error("failed to get switch", zap.Error(err))
+		log.Error("failed to get switch", slog.Any("error", err))
 	}
 
 	sw, ok := (swComponent).(components.Switch)
@@ -99,14 +99,14 @@ func (h *HomedHumidity) Run(ctx context.Context, logger *zap.Logger, inventory *
 				err = sw.TurnOff()
 				if err != nil {
 					log.Warn("failed stop the fan during quiet hours",
-						zap.Error(err))
+						slog.Any("error", err))
 				}
 				continue
 			}
 
 			humidity, err := sensor.Humidity()
 			if err != nil {
-				log.Warn("failed to get humidity", zap.Error(err))
+				log.Warn("failed to get humidity", slog.Any("error", err))
 				continue
 			}
 
@@ -119,7 +119,7 @@ func (h *HomedHumidity) Run(ctx context.Context, logger *zap.Logger, inventory *
 			}
 
 			if err != nil {
-				log.Warn("failed to change fan state", zap.Error(err))
+				log.Warn("failed to change fan state", slog.Any("error", err))
 				continue
 			}
 		}

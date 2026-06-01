@@ -2,11 +2,11 @@ package components
 
 import (
 	"context"
+	"log/slog"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
 )
 
 // Type reprensents a component type
@@ -55,7 +55,7 @@ type Component interface {
 	SetConfig(*config.Component)
 
 	// Logger
-	LoggerWithFields(*zap.Logger) *zap.Logger
+	LoggerWithFields(*slog.Logger) *slog.Logger
 
 	// Update is called every time a new mqtt payload is received on the state
 	// topic
@@ -83,7 +83,7 @@ type Component interface {
 	MQTTClient() mqtt.Client
 
 	// Run runs a goroutine for a component
-	Run(context.Context, *zap.Logger, *Components) error
+	Run(context.Context, *slog.Logger, *Components) error
 
 	// ID
 	ID() string

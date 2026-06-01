@@ -3,6 +3,7 @@ package homedtemperature
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/atomic"
-	"go.uber.org/zap"
 )
 
 // Make sure that the module is a temperature controller
@@ -37,7 +37,7 @@ type Data struct {
 type HomedTemperature struct {
 	common.ScheduledComponent
 	Params config.TemperatureControl
-	log    *zap.Logger
+	log    *slog.Logger
 
 	sensors map[string]components.TemperatureGetter
 	binTRVs map[string]components.Switch
