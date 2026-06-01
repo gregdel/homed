@@ -1,6 +1,6 @@
 package homedtemperature
 
-import "go.uber.org/zap"
+import "log/slog"
 
 func (h *HomedTemperature) handleBinaryTRV() {
 	if len(h.binTRVs) == 0 {
@@ -17,7 +17,7 @@ func (h *HomedTemperature) handleBinaryTRV() {
 	current := h.Current.Load()
 	target, err := h.TemperatureTarget()
 	if err != nil {
-		h.log.Warn("failed to get temperature target", zap.Error(err))
+		h.log.Warn("failed to get temperature target", slog.Any("error", err))
 		return
 	}
 

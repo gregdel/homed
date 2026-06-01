@@ -3,6 +3,7 @@ package httpd
 import (
 	"context"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -15,7 +16,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/unrolled/render"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -23,7 +23,7 @@ func init() {
 }
 
 type httpd struct {
-	logger        *zap.Logger
+	logger        *slog.Logger
 	httpServer    *http.Server
 	httpClient    *http.Client
 	components    *components.Components
@@ -87,7 +87,7 @@ func (h *httpd) Name() string {
 }
 
 func (h *httpd) Run(ctx context.Context, config *apps.Config) error {
-	h.logger = config.Logger.With(zap.String("app", h.Name()))
+	h.logger = config.Logger.With(slog.String("app", h.Name()))
 	h.components = config.Components
 
 	go func() {
@@ -98,7 +98,7 @@ func (h *httpd) Run(ctx context.Context, config *apps.Config) error {
 		defer cancel()
 
 		if err := h.httpServer.Shutdown(timeout); err != nil {
-			h.logger.Error("failed to shutdown server", zap.Error(err))
+			h.logger.Error("failed to shutdown server", slog.Any("error", err))
 		}
 	}()
 

@@ -2,13 +2,13 @@ package mqttd
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gregdel/homed/lib/apps"
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/config"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -16,7 +16,7 @@ func init() {
 }
 
 type mqttd struct {
-	logger     *zap.Logger
+	logger     *slog.Logger
 	components *components.Components
 	config     *config.Config
 
@@ -67,7 +67,7 @@ func (m *mqttd) onConnectHandler(mqtt.Client) {
 	token := m.client.SubscribeMultiple(topics, m.handleMessage)
 	if token.Wait() && token.Error() != nil {
 		m.logger.Error("failed to subscribe to the state topics",
-			zap.Error(token.Error()),
+			slog.Any("error", token.Error()),
 		)
 		m.errChan <- token.Error()
 		return
@@ -84,7 +84,7 @@ func (m *mqttd) onConnectHandler(mqtt.Client) {
 	token = m.client.SubscribeMultiple(topics, m.handleCommand)
 	if token.Wait() && token.Error() != nil {
 		m.logger.Error("failed to subscribe to the command topics",
-			zap.Error(token.Error()),
+			slog.Any("error", token.Error()),
 		)
 		m.errChan <- token.Error()
 		return
@@ -96,12 +96,12 @@ func (m *mqttd) reconnectingHandler(mqtt.Client, *mqtt.ClientOptions) {
 }
 
 func (m *mqttd) connectionLostHandler(_ mqtt.Client, err error) {
-	m.logger.Warn("connection to the mqtt broker is lost", zap.Error(err))
+	m.logger.Warn("connection to the mqtt broker is lost", slog.Any("error", err))
 }
 
 func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
 	m.mu.Lock()
-	m.logger = config.Logger.With(zap.String("app", m.Name()))
+	m.logger = config.Logger.With(slog.String("app", m.Name()))
 	m.components = config.Components
 	m.errChan = make(chan error)
 
@@ -129,7 +129,7 @@ func (m *mqttd) Run(ctx context.Context, config *apps.Config) error {
 		// Nothing to do
 	case err = <-m.errChan:
 		// Error
-		m.logger.Warn("MQTT client returned error", zap.Error(err))
+		m.logger.Warn("MQTT client returned error", slog.Any("error", err))
 	}
 
 	m.logger.Info("disconnecting from the MQTT broker")
@@ -143,7 +143,7 @@ func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {
 	component, ok := m.stateTopics[msg.Topic()]
 	m.mu.Unlock()
 	if !ok {
-		m.logger.Warn("topic not found", zap.String("topic", msg.Topic()))
+		m.logger.Warn("topic not found", slog.String("topic", msg.Topic()))
 		return
 	}
 
@@ -154,12 +154,12 @@ func (m *mqttd) handleMessage(c mqtt.Client, msg mqtt.Message) {
 	}
 
 	if err := component.Update(msg.Payload()); err != nil {
-		logger.Warn("failed to update component", zap.Error(err))
+		logger.Warn("failed to update component", slog.Any("error", err))
 		return
 	}
 
 	if err := component.PostUpdate(); err != nil {
-		logger.Warn("failed to run the component post update", zap.Error(err))
+		logger.Warn("failed to run the component post update", slog.Any("error", err))
 		return
 	}
 }
@@ -169,14 +169,14 @@ func (m *mqttd) handleCommand(c mqtt.Client, msg mqtt.Message) {
 	component, ok := m.cmdTopics[msg.Topic()]
 	m.mu.Unlock()
 	if !ok {
-		m.logger.Warn("topic not found", zap.String("topic", msg.Topic()))
+		m.logger.Warn("topic not found", slog.String("topic", msg.Topic()))
 		return
 	}
 
 	logger := component.LoggerWithFields(m.logger)
 
 	if err := component.ExecCommand(msg.Payload()); err != nil {
-		logger.Warn("failed to write component command", zap.Error(err))
+		logger.Warn("failed to write component command", slog.Any("error", err))
 		return
 	}
 }

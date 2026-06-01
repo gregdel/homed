@@ -3,11 +3,11 @@ package common
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/atomic"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -24,7 +24,7 @@ type VirtualSwitch struct {
 	BinarySensor
 	Counter atomic.Float64 `json:"counter"`
 
-	log      *zap.Logger
+	log      *slog.Logger
 	switches []components.Switch
 }
 
@@ -37,11 +37,11 @@ func (v *VirtualSwitch) Type() components.Type {
 func (v *VirtualSwitch) Update(payload []byte) error {
 	if string(payload) != "single" {
 		v.log.Debug("update with invalid payload, skipping",
-			zap.String("payload", string(payload)))
+			slog.String("payload", string(payload)))
 		return nil
 	}
 
-	v.log.Debug("update called", zap.Int("switches", len(v.switches)))
+	v.log.Debug("update called", slog.Int("switches", len(v.switches)))
 	v.Toggle()
 	v.Counter.Add(1)
 	return nil
@@ -89,10 +89,10 @@ func (v *VirtualSwitch) updateState() {
 		return
 	}
 
-	v.log.Debug("updating state", zap.Bool("new_state", isOn))
+	v.log.Debug("updating state", slog.Bool("new_state", isOn))
 	v.On.Store(isOn)
 	if err := v.PostUpdate(); err != nil {
-		v.log.Error("failed to update state", zap.Error(err))
+		v.log.Error("failed to update state", slog.Any("error", err))
 	}
 }
 
@@ -104,7 +104,7 @@ func (v *VirtualSwitch) WriteCommand(data []byte) error {
 }
 
 // Run implements the Component interface
-func (v *VirtualSwitch) Run(ctx context.Context, logger *zap.Logger,
+func (v *VirtualSwitch) Run(ctx context.Context, logger *slog.Logger,
 	inventory *components.Components) error {
 	v.Events.Incoming = make(chan components.Event)
 
@@ -121,7 +121,7 @@ func (v *VirtualSwitch) Run(ctx context.Context, logger *zap.Logger,
 	for _, id := range params.Switches {
 		swComponent, err := inventory.Get(id)
 		if err != nil {
-			v.log.Error("failed to get switch", zap.Error(err))
+			v.log.Error("failed to get switch", slog.Any("error", err))
 		}
 
 		sw, ok := (swComponent).(components.Switch)

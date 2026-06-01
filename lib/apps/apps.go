@@ -3,11 +3,11 @@ package apps
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/config"
-	"go.uber.org/zap"
 )
 
 var applications map[string]App
@@ -25,7 +25,7 @@ type App interface {
 
 // Config reprensents the running config of an app
 type Config struct {
-	Logger     *zap.Logger
+	Logger     *slog.Logger
 	Components *components.Components
 }
 
@@ -75,15 +75,15 @@ func (a *Apps) Run(parentCtx context.Context, config *Config) {
 		go func(app App, cancel context.CancelFunc) {
 			defer a.wg.Done()
 
-			z := zap.String("app_name", app.Name())
+			appName := slog.String("app_name", app.Name())
 
-			config.Logger.Info("starting app", z)
+			config.Logger.Info("starting app", appName)
 			if err := app.Run(ctx, config); err != nil {
-				config.Logger.Error("run failed", z, zap.Error(err))
+				config.Logger.Error("run failed", appName, slog.Any("error", err))
 				cancel()
 				return
 			}
-			config.Logger.Info("app stopped", z)
+			config.Logger.Info("app stopped", appName)
 		}(app, cancel)
 	}
 

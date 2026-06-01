@@ -8,7 +8,6 @@ import (
 	"github.com/gregdel/homed/lib/config"
 	"github.com/gregdel/homed/lib/schedule"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
 )
 
 // Components is a type that holds the components
@@ -127,7 +126,7 @@ func (c *Components) ListByRoom(room string) []Component {
 }
 
 // Add adds a component to the component slice
-func (c *Components) Add(cfg config.Component, logger *zap.Logger, roomName, deviceName string) (Component, error) {
+func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Component, error) {
 	device, ok := c.devices[deviceName]
 	if !ok {
 		device = NewDevice(deviceName, roomName)

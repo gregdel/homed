@@ -2,16 +2,16 @@ package boiler
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/gregdel/homed/lib/components"
-	"go.uber.org/zap"
 )
 
 // Run implements the Component interface
-func (b *Boiler) Run(ctx context.Context, logger *zap.Logger, inventory *components.Components) error {
+func (b *Boiler) Run(ctx context.Context, logger *slog.Logger, inventory *components.Components) error {
 	b.Events.Incoming = make(chan components.Event)
 
-	log := logger.With(zap.String("device", "boiler"))
+	log := logger.With(slog.String("device", "boiler"))
 
 	if err := b.YAMLParams.Decode(&b.Params); err != nil {
 		return err
@@ -33,18 +33,18 @@ func (b *Boiler) Run(ctx context.Context, logger *zap.Logger, inventory *compone
 		case <-ctx.Done():
 			return nil
 		case e := <-b.Events.Incoming:
-			b.checkState(log.With(zap.String("event_id", e.ID)))
+			b.checkState(log.With(slog.String("event_id", e.ID)))
 		}
 	}
 }
 
-func (b *Boiler) checkState(log *zap.Logger) {
+func (b *Boiler) checkState(log *slog.Logger) {
 	shouldTurnOn := false
 	for _, controller := range b.controllers {
 		shouldTurnOn = shouldTurnOn || controller.IsHeating()
 	}
 
-	logger := log.With(zap.Bool("state", shouldTurnOn))
+	logger := log.With(slog.Bool("state", shouldTurnOn))
 
 	if b.IsOn() == shouldTurnOn {
 		return
@@ -59,6 +59,6 @@ func (b *Boiler) checkState(log *zap.Logger) {
 		err = b.TurnOff()
 	}
 	if err != nil {
-		logger.Warn("failed to set state", zap.Error(err))
+		logger.Warn("failed to set state", slog.Any("error", err))
 	}
 }

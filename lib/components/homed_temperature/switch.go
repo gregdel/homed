@@ -2,11 +2,11 @@ package homedtemperature
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -30,7 +30,7 @@ func (sw *TemperatureSwitch) Type() components.Type {
 }
 
 // Run implements the Component interface
-func (sw *TemperatureSwitch) Run(ctx context.Context, logger *zap.Logger,
+func (sw *TemperatureSwitch) Run(ctx context.Context, logger *slog.Logger,
 	inventory *components.Components) error {
 	sw.Device().Online.Store(true)
 	return sw.VirtualSwitch.Run(ctx, logger, inventory)

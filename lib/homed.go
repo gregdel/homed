@@ -3,6 +3,7 @@ package homed
 import (
 	"context"
 	"embed"
+	"log/slog"
 	"os"
 	"os/signal"
 	"sync"
@@ -11,15 +12,12 @@ import (
 	"github.com/gregdel/homed/lib/apps"
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/config"
-	"github.com/mattn/go-colorable"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 // Homed needs to be used to load data efficiently
 type Homed struct {
 	config     *config.Config
-	logger     *zap.Logger
+	logger     *slog.Logger
 	components *components.Components
 }
 
@@ -37,25 +35,17 @@ func New(configPath string, embedFS *embed.FS) (*Homed, error) {
 
 	homed.components = components.New(config.DataPath)
 
-	var err error
+	level := slog.LevelInfo
 	if config.Debug {
-		zapEncoder := zap.NewDevelopmentEncoderConfig()
-		zapEncoder.EncodeLevel = zapcore.CapitalColorLevelEncoder
-		homed.logger = zap.New(zapcore.NewCore(
-			zapcore.NewConsoleEncoder(zapEncoder),
-			zapcore.AddSync(colorable.NewColorableStdout()),
-			zapcore.DebugLevel,
-		))
-	} else {
-		homed.logger, err = zap.NewProduction()
+		level = slog.LevelDebug
 	}
-	if err != nil {
-		return nil, err
-	}
+	homed.logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: level,
+	}))
 
 	for _, d := range config.Devices {
 		for _, cfg := range d.Components {
-			_, err := homed.components.Add(cfg, homed.logger, d.Room, d.Name)
+			_, err := homed.components.Add(cfg, d.Room, d.Name)
 			if err != nil {
 				return nil, err
 			}
