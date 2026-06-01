@@ -33,6 +33,28 @@ type Data struct {
 	On            atomic.Bool    `json:"on"`
 }
 
+// StateSnapshot represents the MQTT state JSON for HomedTemperature.
+type StateSnapshot struct {
+	Current       float64    `json:"current"`
+	Target        float64    `json:"target"`
+	Mode          string     `json:"mode"`
+	ManualTarget  float64    `json:"manual_target"`
+	ManualUntil   *time.Time `json:"manual_until"`
+	Heating       bool       `json:"heating"`
+	Opportunistic bool       `json:"opportunistic"`
+	On            bool       `json:"on"`
+}
+
+// Snapshot represents the HTTP and websocket JSON values for HomedTemperature.
+type Snapshot struct {
+	ID           string             `json:"id"`
+	UpdatedAt    *time.Time         `json:"updated_at"`
+	FriendlyName string             `json:"friendly_name"`
+	Hide         bool               `json:"hide"`
+	Device       *components.Device `json:"device"`
+	StateSnapshot
+}
+
 // HomedTemperature is a component that handles temperatures
 type HomedTemperature struct {
 	common.ScheduledComponent
@@ -55,6 +77,32 @@ func New() components.Component {
 	h.Mode.Store(string(components.TemperatureModeAuto))
 	h.Heating.Store(false)
 	return h
+}
+
+// StateSnapshot returns the current MQTT state JSON shape.
+func (h *HomedTemperature) StateSnapshot() StateSnapshot {
+	return StateSnapshot{
+		Current:       h.Current.Load(),
+		Target:        h.Target.Load(),
+		Mode:          h.Mode.Load(),
+		ManualTarget:  h.ManualTarget.Load(),
+		ManualUntil:   h.ManualUntil.Load(),
+		Heating:       h.Heating.Load(),
+		Opportunistic: h.Opportunistic.Load(),
+		On:            h.On.Load(),
+	}
+}
+
+// Snapshot returns the current HTTP and websocket JSON values shape.
+func (h *HomedTemperature) Snapshot() any {
+	return Snapshot{
+		ID:            h.ID(),
+		UpdatedAt:     h.UpdatedAt.Load(),
+		FriendlyName:  h.FriendlyName(),
+		Hide:          h.Hide,
+		Device:        h.Device(),
+		StateSnapshot: h.StateSnapshot(),
+	}
 }
 
 // Type implements the Component interface
@@ -146,7 +194,7 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 
 // PublishState publishes the mqtt state of the component
 func (h *HomedTemperature) PublishState() error {
-	data, err := json.Marshal(&h.Data)
+	data, err := json.Marshal(h.StateSnapshot())
 	if err != nil {
 		return err
 	}
