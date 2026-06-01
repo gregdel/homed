@@ -36,13 +36,7 @@ func New(configPath string, embedFS *embed.FS) (*Homed, error) {
 
 	homed.components = components.New(config.DataPath)
 
-	level := slog.LevelInfo
-	if config.Debug {
-		level = slog.LevelDebug
-	}
-	homed.logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: level,
-	}))
+	homed.logger = newLogger(config, os.Stdout)
 
 	for _, d := range config.Devices {
 		for _, cfg := range d.Components {

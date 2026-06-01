@@ -2,6 +2,9 @@ debug: true
 dev: true
 fake_home: true
 data_path: ./data
+logging:
+  # Optional. Defaults to true in debug mode and false otherwise.
+  timestamps: false
 mqtt:
   broker: tcp://127.0.0.1:1883
 http:

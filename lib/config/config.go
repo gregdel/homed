@@ -19,6 +19,7 @@ type Config struct {
 	DataPath           string             `yaml:"data_path"`
 	FakeHome           bool               `yaml:"fake_home"`
 	Dev                bool               `yaml:"dev"`
+	Logging            Logging            `yaml:"logging"`
 	TemperatureControl TemperatureControl `yaml:"temperature_control"`
 	RollerShutter      RollerShutter      `yaml:"roller_shutter"`
 	Location           Location           `yaml:"location"`
@@ -37,6 +38,11 @@ type Config struct {
 		Components []Component `yaml:"components"`
 	} `yaml:"devices"`
 	EmbedFS *embed.FS `yaml:"-"`
+}
+
+// Logging represents the logging configuration.
+type Logging struct {
+	Timestamps *bool `yaml:"timestamps"`
 }
 
 // Component represents the configuration of a component.
