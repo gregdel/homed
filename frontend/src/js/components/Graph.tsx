@@ -15,7 +15,7 @@ import { useNav } from "./Navigation";
 import { Card } from "./ui/Card";
 import { Icon } from "./ui/Icon";
 
-type GraphRange = "6h" | "24h" | "7d";
+type GraphRange = "1h" | "6h" | "24h" | "7d";
 
 interface GraphPoint {
   timestamp: number;
@@ -35,7 +35,7 @@ interface GraphData {
   series: GraphSeries[];
 }
 
-const ranges: GraphRange[] = ["6h", "24h", "7d"];
+const ranges: GraphRange[] = ["1h", "6h", "24h", "7d"];
 
 const colors = ["#5e81ac", "#a3be8c", "#bf616a", "#d08770", "#8fbcbb"];
 
@@ -111,12 +111,17 @@ export const Graph: React.FC = () => {
         </div>
       }
       extra={
-        <div className="flex gap-sm">
+        <div
+          role="group"
+          className="button-group button-group-sm graph-range-selector"
+          aria-label="Graph time range"
+        >
           {ranges.map((item) => (
             <button
               key={item}
               type="button"
-              className={`btn ${range === item ? "btn-primary" : ""}`}
+              className="button-group-item"
+              aria-pressed={range === item}
               onClick={() => setRange(item)}
             >
               {item}
