@@ -82,9 +82,6 @@ type Component interface {
 	SetMQTTClient(mqtt.Client)
 	MQTTClient() mqtt.Client
 
-	// Run runs a goroutine for a component
-	Run(context.Context, *slog.Logger, *Components) error
-
 	// ID
 	ID() string
 	SetID(id string)
@@ -92,4 +89,9 @@ type Component interface {
 	// Subscribe
 	Subscribe(string, chan Event)
 	Notify()
+}
+
+// RunnableComponent is implemented by components that need background work.
+type RunnableComponent interface {
+	Run(context.Context, *slog.Logger, *Components) error
 }

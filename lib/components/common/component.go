@@ -1,7 +1,6 @@
 package common
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -209,9 +208,4 @@ func (c *Component) Subscribe(id string, ch chan components.Event) {
 func (c *Component) Notify() {
 	event := components.Event{ID: c.ID()}
 	c.Events.Notify(event)
-}
-
-// Run runs a goroutine for a component
-func (c *Component) Run(context.Context, *slog.Logger, *components.Components) error {
-	return nil
 }
