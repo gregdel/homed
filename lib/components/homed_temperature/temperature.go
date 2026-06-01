@@ -11,7 +11,6 @@ import (
 	"github.com/gregdel/homed/lib/components/common"
 	"github.com/gregdel/homed/lib/config"
 	"github.com/prometheus/client_golang/prometheus"
-	"go.uber.org/atomic"
 )
 
 // Make sure that the module is a temperature controller
@@ -23,14 +22,14 @@ func init() {
 
 // Data represents the data of HomedTemperature
 type Data struct {
-	Current       atomic.Float64 `json:"current"`
-	Target        atomic.Float64 `json:"target"`
-	Mode          atomic.String  `json:"mode"`
-	ManualTarget  atomic.Float64 `json:"manual_target"`
-	ManualUntil   common.Time    `json:"manual_until,omitempty"`
-	Heating       atomic.Bool    `json:"heating"`
-	Opportunistic atomic.Bool    `json:"opportunistic"`
-	On            atomic.Bool    `json:"on"`
+	Current       float64    `json:"current"`
+	Target        float64    `json:"target"`
+	Mode          string     `json:"mode"`
+	ManualTarget  float64    `json:"manual_target"`
+	ManualUntil   *time.Time `json:"manual_until"`
+	Heating       bool       `json:"heating"`
+	Opportunistic bool       `json:"opportunistic"`
+	On            bool       `json:"on"`
 }
 
 // StateSnapshot represents the MQTT state JSON for HomedTemperature.
@@ -74,22 +73,29 @@ func New() components.Component {
 		sensors: map[string]components.TemperatureGetter{},
 		binTRVs: map[string]components.Switch{},
 	}
-	h.Mode.Store(string(components.TemperatureModeAuto))
-	h.Heating.Store(false)
+	h.Mode = string(components.TemperatureModeAuto)
+	h.Heating = false
 	return h
 }
 
 // StateSnapshot returns the current MQTT state JSON shape.
 func (h *HomedTemperature) StateSnapshot() StateSnapshot {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	return h.stateSnapshotLocked()
+}
+
+func (h *HomedTemperature) stateSnapshotLocked() StateSnapshot {
 	return StateSnapshot{
-		Current:       h.Current.Load(),
-		Target:        h.Target.Load(),
-		Mode:          h.Mode.Load(),
-		ManualTarget:  h.ManualTarget.Load(),
-		ManualUntil:   h.ManualUntil.Load(),
-		Heating:       h.Heating.Load(),
-		Opportunistic: h.Opportunistic.Load(),
-		On:            h.On.Load(),
+		Current:       h.Current,
+		Target:        h.Target,
+		Mode:          h.Mode,
+		ManualTarget:  h.ManualTarget,
+		ManualUntil:   copyTimePtr(h.ManualUntil),
+		Heating:       h.Heating,
+		Opportunistic: h.Opportunistic,
+		On:            h.On,
 	}
 }
 
@@ -105,6 +111,27 @@ func (h *HomedTemperature) Snapshot() any {
 	}
 }
 
+func copyTimePtr(t *time.Time) *time.Time {
+	if t == nil {
+		return nil
+	}
+
+	copied := *t
+	return &copied
+}
+
+func (h *HomedTemperature) setManualUntilLocked(t *time.Time) {
+	h.ManualUntil = copyTimePtr(t)
+}
+
+func (h *HomedTemperature) temperatureTargetLocked() float64 {
+	if h.Mode == string(components.TemperatureModeAuto) {
+		return h.Target
+	}
+
+	return h.ManualTarget
+}
+
 // Type implements the Component interface
 func (h *HomedTemperature) Type() components.Type {
 	return components.TypeHomedTemperature
@@ -114,7 +141,11 @@ func (h *HomedTemperature) Type() components.Type {
 func (h *HomedTemperature) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{
 		components.GaugeCollector("temperature_control_current", labels,
-			func() float64 { return h.Current.Load() },
+			func() float64 {
+				h.mu.RLock()
+				defer h.mu.RUnlock()
+				return h.Current
+			},
 		),
 		components.GaugeCollector("temperature_control_target", labels,
 			func() float64 {
@@ -155,38 +186,43 @@ func (h *HomedTemperature) ExecCommand(cmd []byte) error {
 		return fmt.Errorf("components: homed_temperature: date is in the past")
 	}
 
+	h.mu.Lock()
 	switch data.Mode {
 	case components.TemperatureModeOnOff:
-		h.On.Store(data.On)
+		h.On = data.On
 	case components.TemperatureModeAuto:
-		h.ManualUntil.Store(nil)
+		h.setManualUntilLocked(nil)
 	case components.TemperatureModeFixed:
-		h.ManualUntil.Store(nil)
-		h.ManualTarget.Store(data.ManualTarget)
+		h.setManualUntilLocked(nil)
+		h.ManualTarget = data.ManualTarget
 	case components.TemperatureModeDuration:
 		d, err := time.ParseDuration(data.ManualDuration)
 		if err != nil {
+			h.mu.Unlock()
 			return err
 		}
 		t := time.Now().Add(d)
-		h.ManualUntil.Store(&t)
-		h.ManualTarget.Store(data.ManualTarget)
+		h.setManualUntilLocked(&t)
+		h.ManualTarget = data.ManualTarget
 	case components.TemperatureModeUntilDate:
 		if data.ManualUntil == nil {
+			h.mu.Unlock()
 			return fmt.Errorf("components: homed_temperature: missing date")
 		}
-		h.ManualUntil.Store(data.ManualUntil)
-		h.ManualTarget.Store(data.ManualTarget)
+		h.setManualUntilLocked(data.ManualUntil)
+		h.ManualTarget = data.ManualTarget
 	case components.TemperatureModeUntilNextChange:
-		h.ManualUntil.Store(nil)
-		h.ManualTarget.Store(data.ManualTarget)
+		h.setManualUntilLocked(nil)
+		h.ManualTarget = data.ManualTarget
 	default:
+		h.mu.Unlock()
 		return nil
 	}
 
 	if data.Mode != components.TemperatureModeOnOff {
-		h.Mode.Store(string(data.Mode))
+		h.Mode = string(data.Mode)
 	}
+	h.mu.Unlock()
 
 	h.updateTemperatureMode()
 	return h.PublishState()
@@ -204,37 +240,61 @@ func (h *HomedTemperature) PublishState() error {
 
 // Update implements the Component interface
 func (h *HomedTemperature) Update(value []byte) error {
-	return json.Unmarshal(value, &h.Data)
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	data := h.Data
+	if data.ManualUntil != nil {
+		data.ManualUntil = copyTimePtr(data.ManualUntil)
+	}
+	if err := json.Unmarshal(value, &data); err != nil {
+		return err
+	}
+
+	data.ManualUntil = copyTimePtr(data.ManualUntil)
+	h.Data = data
+	return nil
 }
 
 // TemperatureTarget implements the TemperatureController interface
 func (h *HomedTemperature) TemperatureTarget() (float64, error) {
-	if h.Mode.Load() == string(components.TemperatureModeAuto) {
-		return h.Target.Load(), nil
-	}
+	h.mu.RLock()
+	defer h.mu.RUnlock()
 
-	return h.ManualTarget.Load(), nil
+	return h.temperatureTargetLocked(), nil
 }
 
 // IsHeating implements the TemperatureController interface
 func (h *HomedTemperature) IsHeating() bool {
-	return h.IsOn() && h.Heating.Load()
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	return h.On && h.Heating
 }
 
 // IsOn implements the Switch interface
 func (h *HomedTemperature) IsOn() bool {
-	return h.On.Load()
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	return h.On
 }
 
 // TurnOn implements the Switch interface
 func (h *HomedTemperature) TurnOn() error {
-	h.On.Store(true)
+	h.mu.Lock()
+	h.On = true
+	h.mu.Unlock()
+
 	return h.PublishState()
 }
 
 // TurnOff implements the Switch interface
 func (h *HomedTemperature) TurnOff() error {
-	h.On.Store(false)
+	h.mu.Lock()
+	h.On = false
+	h.mu.Unlock()
+
 	return h.PublishState()
 }
 

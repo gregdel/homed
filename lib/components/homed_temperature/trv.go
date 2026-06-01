@@ -1,28 +1,30 @@
 package homedtemperature
 
-import "log/slog"
+import "github.com/gregdel/homed/lib/components"
 
 func (h *HomedTemperature) handleBinaryTRV() {
-	if len(h.binTRVs) == 0 {
+	h.mu.RLock()
+	state := h.stateSnapshotLocked()
+	target := h.temperatureTargetLocked()
+	trvs := make([]components.Switch, 0, len(h.binTRVs))
+	for _, trv := range h.binTRVs {
+		trvs = append(trvs, trv)
+	}
+	h.mu.RUnlock()
+
+	if len(trvs) == 0 {
 		return
 	}
 
-	if !h.IsOn() {
-		for _, trv := range h.binTRVs {
+	if !state.On {
+		for _, trv := range trvs {
 			trv.TurnOff()
 		}
 		return
 	}
 
-	current := h.Current.Load()
-	target, err := h.TemperatureTarget()
-	if err != nil {
-		h.log.Warn("failed to get temperature target", slog.Any("error", err))
-		return
-	}
-
-	for _, trv := range h.binTRVs {
-		if current < target {
+	for _, trv := range trvs {
+		if state.Current < target {
 			trv.TurnOn()
 		} else {
 			trv.TurnOff()
