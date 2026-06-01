@@ -30,7 +30,7 @@ func (h *HomedTemperature) Run(ctx context.Context, logger *slog.Logger, invento
 		case <-ticker.C:
 		}
 
-		if h.Data.Current.Load() > 0 {
+		if h.hasCurrentTemperature() {
 			h.log.Info("homed temperature updated from retained data")
 			break
 		}
@@ -126,7 +126,9 @@ func (h *HomedTemperature) updateTemperature() {
 		value = math.Round(value*10) / 10
 	}
 
-	h.Current.Store(value)
+	h.mu.Lock()
+	h.Current = value
+	h.mu.Unlock()
 }
 
 func (h *HomedTemperature) updateTemperatureMode() {
@@ -136,38 +138,55 @@ func (h *HomedTemperature) updateTemperatureMode() {
 		return
 	}
 
+	schedule := h.Schedule()
+	scheduledTarget, opportunistic := schedule.Values()
+
+	h.mu.RLock()
+	mode := components.TemperatureMode(h.Mode)
+	h.mu.RUnlock()
+
+	var nextChange *time.Time
+	if mode == components.TemperatureModeUntilNextChange {
+		nextChange = schedule.NextChange()
+	}
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	h.updateTemperatureModeLocked(time.Now(), scheduledTarget, opportunistic, nextChange, log)
+}
+
+func (h *HomedTemperature) updateTemperatureModeLocked(now time.Time, scheduledTarget float64, opportunistic bool, nextChange *time.Time, log *slog.Logger) {
+	if !h.On {
+		return
+	}
+
 	// Unset manual until
-	manualUntil := h.ManualUntil.Load()
-	if manualUntil != nil && time.Now().After(*manualUntil) {
-		h.Mode.Store(string(components.TemperatureModeAuto))
-		h.ManualUntil.Store(nil)
+	if h.ManualUntil != nil && now.After(*h.ManualUntil) {
+		h.Mode = string(components.TemperatureModeAuto)
+		h.setManualUntilLocked(nil)
 	}
 
 	// Get the current schedule value
-	schedule := h.Schedule()
-	scheduledTarget, opportunistic := schedule.Values()
-	h.Target.Store(scheduledTarget)
+	h.Target = scheduledTarget
 
-	mode := components.TemperatureMode(h.Mode.Load())
+	mode := components.TemperatureMode(h.Mode)
 
 	// Only the mode auto can be opportunistic
 	if mode != components.TemperatureModeAuto {
 		opportunistic = false
 	}
-	h.Opportunistic.Store(opportunistic)
+	h.Opportunistic = opportunistic
 
 	// Transform until next change to manual until
-	if mode == components.TemperatureModeUntilNextChange {
-		nextChange := schedule.NextChange()
-		if nextChange != nil {
-			h.ManualUntil.Store(nextChange)
-		}
+	if mode == components.TemperatureModeUntilNextChange && nextChange != nil {
+		h.setManualUntilLocked(nextChange)
 	}
 
 	// Set the isHeating property
 	isHeating := false
-	current := h.Current.Load()
-	currentTarget, _ := h.TemperatureTarget()
+	current := h.Current
+	currentTarget := h.temperatureTargetLocked()
 	if (current < currentTarget) && !opportunistic {
 		isHeating = true
 	}
@@ -182,5 +201,12 @@ func (h *HomedTemperature) updateTemperatureMode() {
 		return
 	}
 
-	h.Heating.Store(isHeating)
+	h.Heating = isHeating
+}
+
+func (h *HomedTemperature) hasCurrentTemperature() bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	return h.Current > 0
 }

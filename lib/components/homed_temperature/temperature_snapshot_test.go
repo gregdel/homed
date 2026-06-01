@@ -11,13 +11,15 @@ import (
 
 func TestStateSnapshotJSONShape(t *testing.T) {
 	h := New().(*HomedTemperature)
-	h.Current.Store(19.5)
-	h.Target.Store(20.5)
-	h.Mode.Store(string(components.TemperatureModeFixed))
-	h.ManualTarget.Store(21)
-	h.Heating.Store(true)
-	h.Opportunistic.Store(false)
-	h.On.Store(true)
+	h.setStateForTest(Data{
+		Current:       19.5,
+		Target:        20.5,
+		Mode:          string(components.TemperatureModeFixed),
+		ManualTarget:  21,
+		Heating:       true,
+		Opportunistic: false,
+		On:            true,
+	})
 
 	data, err := json.Marshal(h.StateSnapshot())
 	if err != nil {
@@ -57,14 +59,16 @@ func TestComponentJSONUsesHomedTemperatureSnapshot(t *testing.T) {
 	})
 	h.SetDevice(components.NewDevice("thermostat", "living_room"))
 	h.UpdatedAt.Store(&updatedAt)
-	h.Current.Store(19.5)
-	h.Target.Store(20.5)
-	h.Mode.Store(string(components.TemperatureModeUntilDate))
-	h.ManualTarget.Store(21)
-	h.ManualUntil.Store(&manualUntil)
-	h.Heating.Store(true)
-	h.Opportunistic.Store(false)
-	h.On.Store(true)
+	h.setStateForTest(Data{
+		Current:       19.5,
+		Target:        20.5,
+		Mode:          string(components.TemperatureModeUntilDate),
+		ManualTarget:  21,
+		ManualUntil:   &manualUntil,
+		Heating:       true,
+		Opportunistic: false,
+		On:            true,
+	})
 
 	data, err := json.Marshal(components.NewComponentJSON(h, true))
 	if err != nil {
@@ -108,6 +112,125 @@ func TestComponentJSONUsesHomedTemperatureSnapshot(t *testing.T) {
 	device := decodeRawJSONMap(t, values["device"])
 	assertJSONValue(t, device, "name", "thermostat")
 	assertJSONValue(t, device, "room", "living_room")
+}
+
+func TestUpdateReplacesStateFromRetainedPayload(t *testing.T) {
+	h := New().(*HomedTemperature)
+	manualUntil := time.Date(2026, 6, 1, 14, 0, 0, 0, time.UTC)
+
+	payload := struct {
+		Current       float64    `json:"current"`
+		Target        float64    `json:"target"`
+		Mode          string     `json:"mode"`
+		ManualTarget  float64    `json:"manual_target"`
+		ManualUntil   *time.Time `json:"manual_until"`
+		Heating       bool       `json:"heating"`
+		Opportunistic bool       `json:"opportunistic"`
+		On            bool       `json:"on"`
+	}{
+		Current:       18.5,
+		Target:        19,
+		Mode:          string(components.TemperatureModeUntilDate),
+		ManualTarget:  21,
+		ManualUntil:   &manualUntil,
+		Heating:       true,
+		Opportunistic: false,
+		On:            true,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		t.Fatalf("failed to marshal payload: %s", err)
+	}
+
+	if err := h.Update(data); err != nil {
+		t.Fatalf("failed to update state: %s", err)
+	}
+
+	got := h.StateSnapshot()
+	if got.Current != 18.5 ||
+		got.Target != 19 ||
+		got.Mode != string(components.TemperatureModeUntilDate) ||
+		got.ManualTarget != 21 ||
+		got.ManualUntil == nil ||
+		!got.ManualUntil.Equal(manualUntil) ||
+		!got.Heating ||
+		got.Opportunistic ||
+		!got.On {
+		t.Fatalf("unexpected state snapshot: %#v", got)
+	}
+}
+
+func TestUpdatePreservesOmittedFields(t *testing.T) {
+	h := New().(*HomedTemperature)
+	manualUntil := time.Date(2026, 6, 1, 14, 0, 0, 0, time.UTC)
+	h.setStateForTest(Data{
+		Current:       18.5,
+		Target:        19,
+		Mode:          string(components.TemperatureModeUntilDate),
+		ManualTarget:  21,
+		ManualUntil:   &manualUntil,
+		Heating:       true,
+		Opportunistic: true,
+		On:            true,
+	})
+
+	if err := h.Update([]byte(`{"current":20}`)); err != nil {
+		t.Fatalf("failed to update state: %s", err)
+	}
+
+	got := h.StateSnapshot()
+	if got.Current != 20 ||
+		got.Target != 19 ||
+		got.Mode != string(components.TemperatureModeUntilDate) ||
+		got.ManualTarget != 21 ||
+		got.ManualUntil == nil ||
+		!got.ManualUntil.Equal(manualUntil) ||
+		!got.Heating ||
+		!got.Opportunistic ||
+		!got.On {
+		t.Fatalf("unexpected state snapshot: %#v", got)
+	}
+}
+
+func TestLockedAccessorsReadState(t *testing.T) {
+	h := New().(*HomedTemperature)
+	h.setStateForTest(Data{
+		Target:       19,
+		Mode:         string(components.TemperatureModeAuto),
+		ManualTarget: 21,
+		Heating:      true,
+		On:           true,
+	})
+
+	target, err := h.TemperatureTarget()
+	if err != nil {
+		t.Fatalf("unexpected target error: %s", err)
+	}
+	if target != 19 {
+		t.Fatalf("unexpected auto target: got %f, want %f", target, 19.0)
+	}
+	if !h.IsHeating() {
+		t.Fatal("expected heating to be true")
+	}
+	if !h.IsOn() {
+		t.Fatal("expected on to be true")
+	}
+
+	h.setStateForTest(Data{
+		Target:       19,
+		Mode:         string(components.TemperatureModeFixed),
+		ManualTarget: 21,
+		Heating:      true,
+		On:           true,
+	})
+
+	target, err = h.TemperatureTarget()
+	if err != nil {
+		t.Fatalf("unexpected target error: %s", err)
+	}
+	if target != 21 {
+		t.Fatalf("unexpected manual target: got %f, want %f", target, 21.0)
+	}
 }
 
 func decodeJSONMap(t *testing.T, data []byte) map[string]json.RawMessage {
@@ -167,4 +290,12 @@ func mustMarshalJSON(t *testing.T, value any) string {
 	}
 
 	return string(data)
+}
+
+func (h *HomedTemperature) setStateForTest(data Data) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	data.ManualUntil = copyTimePtr(data.ManualUntil)
+	h.Data = data
 }
