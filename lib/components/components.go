@@ -39,19 +39,30 @@ func New(dataPath string) *Components {
 
 // ComponentJSON represents the JSON structure of a Component
 type ComponentJSON struct {
-	Component `json:"values"`
-	Type      string `json:"type"`
-	ReadOnly  bool   `json:"read_only"`
-	HasGraph  bool   `json:"has_graph"`
+	Values   any    `json:"values"`
+	Type     string `json:"type"`
+	ReadOnly bool   `json:"read_only"`
+	HasGraph bool   `json:"has_graph"`
+}
+
+// Snapshotter is implemented by components with an explicit JSON state
+// snapshot.
+type Snapshotter interface {
+	Snapshot() any
 }
 
 // NewComponentJSON returns a ComponentJSON from a Component
 func NewComponentJSON(c Component, hasGraph bool) *ComponentJSON {
+	values := any(c)
+	if snapshotter, ok := c.(Snapshotter); ok {
+		values = snapshotter.Snapshot()
+	}
+
 	return &ComponentJSON{
-		Component: c,
-		Type:      string(c.Type()),
-		ReadOnly:  c.ReadOnly(),
-		HasGraph:  hasGraph,
+		Values:   values,
+		Type:     string(c.Type()),
+		ReadOnly: c.ReadOnly(),
+		HasGraph: hasGraph,
 	}
 }
 
