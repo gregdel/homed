@@ -54,7 +54,9 @@ func (v *VirtualSwitch) Update(payload []byte) error {
 	}
 
 	v.log.Debug("update called", slog.Int("switches", len(v.switches)))
-	v.Toggle()
+	if err := v.Toggle(); err != nil {
+		return err
+	}
 	v.incrementCounter()
 	return nil
 }
@@ -62,7 +64,9 @@ func (v *VirtualSwitch) Update(payload []byte) error {
 // TurnOn implements the switch interface
 func (v *VirtualSwitch) TurnOn() error {
 	for _, sw := range v.switches {
-		sw.TurnOn()
+		if err := sw.TurnOn(); err != nil {
+			return err
+		}
 	}
 
 	v.SetOn(true)
@@ -72,7 +76,9 @@ func (v *VirtualSwitch) TurnOn() error {
 // TurnOff implements the switch interface
 func (v *VirtualSwitch) TurnOff() error {
 	for _, sw := range v.switches {
-		sw.TurnOff()
+		if err := sw.TurnOff(); err != nil {
+			return err
+		}
 	}
 
 	v.SetOn(false)
@@ -111,8 +117,7 @@ func (v *VirtualSwitch) updateState() {
 // WriteCommand implements the Component interface
 func (v *VirtualSwitch) WriteCommand(data []byte) error {
 	// Called by the http app
-	v.Toggle()
-	return nil
+	return v.Toggle()
 }
 
 // Run implements the Component interface

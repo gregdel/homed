@@ -35,7 +35,9 @@ func loadSchedule(path string) (*schedule.Schedule, error) {
 
 		return nil, err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	return s, yaml.NewDecoder(file).Decode(s)
 }

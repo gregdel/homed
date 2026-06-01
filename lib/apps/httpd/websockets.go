@@ -2,6 +2,7 @@ package httpd
 
 import (
 	"log/slog"
+	"maps"
 	"sync"
 	"time"
 
@@ -26,7 +27,7 @@ func (h *httpd) unregisterWebsocket(ws *websocket.Conn) {
 		return
 	}
 
-	ws.Close()
+	_ = ws.Close()
 	delete(h.websockets, ws)
 	h.logger.Info("websocket unregistered", slog.String("remote", remote))
 }
@@ -41,9 +42,7 @@ func (h *httpd) publishToWebsocket(id string) {
 
 	conns := map[*websocket.Conn]string{}
 	h.mu.RLock()
-	for ws, remote := range h.websockets {
-		conns[ws] = remote
-	}
+	maps.Copy(conns, h.websockets)
 	h.mu.RUnlock()
 
 	var wg sync.WaitGroup
@@ -53,7 +52,16 @@ func (h *httpd) publishToWebsocket(id string) {
 		go func(ws *websocket.Conn, remote string) {
 			defer wg.Done()
 
-			ws.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := ws.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				h.logger.Info(
+					"failed to set websocket write deadline",
+					slog.String("remote", remote),
+					slog.String("event_id", id),
+					slog.Any("error", err),
+				)
+				h.unregisterWebsocket(ws)
+				return
+			}
 			err := ws.WriteJSON(data)
 			if err != nil {
 				h.logger.Info(
@@ -63,8 +71,17 @@ func (h *httpd) publishToWebsocket(id string) {
 					slog.Any("error", err),
 				)
 				h.unregisterWebsocket(ws)
+				return
 			}
-			ws.SetWriteDeadline(time.Time{})
+			if err := ws.SetWriteDeadline(time.Time{}); err != nil {
+				h.logger.Info(
+					"failed to clear websocket write deadline",
+					slog.String("remote", remote),
+					slog.String("event_id", id),
+					slog.Any("error", err),
+				)
+				h.unregisterWebsocket(ws)
+			}
 		}(ws, remote)
 	}
 

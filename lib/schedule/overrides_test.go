@@ -275,10 +275,18 @@ func TestOverridesCleanup(t *testing.T) {
 	}
 
 	// With old and new stuff
-	overrides.Add(o1)
-	overrides.Add(o4)
-	overrides.Add(o3)
-	overrides.Add(o2)
+	if err := overrides.Add(o1); err != nil {
+		t.Fatal(err)
+	}
+	if err := overrides.Add(o4); err != nil {
+		t.Fatal(err)
+	}
+	if err := overrides.Add(o3); err != nil {
+		t.Fatal(err)
+	}
+	if err := overrides.Add(o2); err != nil {
+		t.Fatal(err)
+	}
 	overrides.cleanup()
 	expected = Overrides{o3, o4}
 	if !reflect.DeepEqual(expected, overrides) {

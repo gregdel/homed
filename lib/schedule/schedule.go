@@ -27,7 +27,7 @@ func New(dv float64, do bool) *Schedule {
 		Overrides:    NewOverrides(),
 	}
 
-	for i := 0; i < 7; i++ {
+	for i := range 7 {
 		ds := NewDailySchedule()
 		schedule.Days[time.Weekday(i)] = &ds
 	}
@@ -58,7 +58,7 @@ func (s *Schedule) nextTimeslot() (*TimeSlot, time.Weekday) {
 	weekday := now.Weekday()
 	currentDay := true
 
-	for i := 0; i < maxDaysSearch; i++ {
+	for i := range maxDaysSearch {
 		d := time.Weekday((int(weekday) + i) % 7)
 		ds := s.Days[d]
 

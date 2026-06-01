@@ -1,6 +1,10 @@
 package homedtemperature
 
-import "github.com/gregdel/homed/lib/components"
+import (
+	"log/slog"
+
+	"github.com/gregdel/homed/lib/components"
+)
 
 func (h *HomedTemperature) handleBinaryTRV() {
 	h.mu.RLock()
@@ -18,16 +22,22 @@ func (h *HomedTemperature) handleBinaryTRV() {
 
 	if !state.On {
 		for _, trv := range trvs {
-			trv.TurnOff()
+			if err := trv.TurnOff(); err != nil {
+				h.log.Warn("failed to turn off binary TRV", slog.Any("error", err))
+			}
 		}
 		return
 	}
 
 	for _, trv := range trvs {
 		if state.Current < target {
-			trv.TurnOn()
+			if err := trv.TurnOn(); err != nil {
+				h.log.Warn("failed to turn on binary TRV", slog.Any("error", err))
+			}
 		} else {
-			trv.TurnOff()
+			if err := trv.TurnOff(); err != nil {
+				h.log.Warn("failed to turn off binary TRV", slog.Any("error", err))
+			}
 		}
 	}
 }
