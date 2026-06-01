@@ -192,12 +192,10 @@ func (h *HomedTemperature) updateTemperatureModeLocked(now time.Time, scheduledT
 	}
 	if current == 0 {
 		log.Warn("the temperature is reported to be 0, this is unlikely, let's ignore this for now")
-		isHeating = false
 		return
 	}
 	if currentTarget == 0 {
 		log.Warn("the temperature target is 0, this is unlikely, let's ignore this for now")
-		isHeating = false
 		return
 	}
 

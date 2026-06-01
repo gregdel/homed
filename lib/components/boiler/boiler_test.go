@@ -149,7 +149,7 @@ func (c *fakeMQTTClient) Connect() mqtt.Token {
 
 func (c *fakeMQTTClient) Disconnect(uint) {}
 
-func (c *fakeMQTTClient) Publish(topic string, _ byte, _ bool, payload interface{}) mqtt.Token {
+func (c *fakeMQTTClient) Publish(topic string, _ byte, _ bool, payload any) mqtt.Token {
 	c.publishCount++
 	c.topic = topic
 	switch p := payload.(type) {

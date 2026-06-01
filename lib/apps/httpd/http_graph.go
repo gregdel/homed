@@ -50,7 +50,7 @@ type prometheusQueryRangeResponse struct {
 	Data   struct {
 		Result []struct {
 			Metric map[string]string `json:"metric"`
-			Values [][]interface{}   `json:"values"`
+			Values [][]any           `json:"values"`
 		} `json:"result"`
 	} `json:"data"`
 }
@@ -109,7 +109,9 @@ func (h *httpd) queryPrometheusGraph(componentID, rangeName string, graphRange g
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected prometheus status: %s", resp.Status)

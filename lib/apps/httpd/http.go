@@ -18,10 +18,10 @@ const pongWait = 15 * time.Second
 // Time allowed to write to a websocket
 const writeWait = 15 * time.Second
 
-func (h *httpd) httpRender(w http.ResponseWriter, status string, data interface{}) {
+func (h *httpd) httpRender(w http.ResponseWriter, status string, data any) {
 	o := struct {
-		Status string      `json:"status"`
-		Data   interface{} `json:"data"`
+		Status string `json:"status"`
+		Data   any    `json:"data"`
 	}{
 		Status: status,
 		Data:   data,
@@ -32,7 +32,7 @@ func (h *httpd) httpRender(w http.ResponseWriter, status string, data interface{
 	}
 }
 
-func (h *httpd) httpRenderJSON(w http.ResponseWriter, data interface{}) {
+func (h *httpd) httpRenderJSON(w http.ResponseWriter, data any) {
 	h.httpRender(w, "success", data)
 }
 
@@ -105,11 +105,7 @@ func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 	})
 
 	h.registerWebsocket(ws, net.JoinHostPort(host, port))
-	for {
-		if h.isExiting() {
-			break
-		}
-
+	for !h.isExiting() {
 		_, _, err := ws.ReadMessage()
 		if err != nil {
 			break

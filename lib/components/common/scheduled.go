@@ -48,7 +48,11 @@ func (c *ScheduledComponent) SaveSchedule() error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
 
-	return yaml.NewEncoder(file).Encode(c.schedule)
+	if err := yaml.NewEncoder(file).Encode(c.schedule); err != nil {
+		_ = file.Close()
+		return err
+	}
+
+	return file.Close()
 }

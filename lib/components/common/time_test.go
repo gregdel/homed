@@ -18,30 +18,26 @@ func TestUnmarshalTime(t *testing.T) {
 	t1 := time.Now()
 
 	tt := []struct {
-		time     *time.Time
-		expected Test
+		time *time.Time
+		name string
 	}{
 		{
 			time: nil,
-			expected: Test{
-				Name: "nil time",
-			},
+			name: "nil time",
 		},
 		{
 			time: &t1,
-			expected: Test{
-				Name: "non nil time",
-			},
+			name: "non nil time",
 		},
 	}
 
 	for _, tc := range tt {
-		t.Run(tc.expected.Name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			toEncode := struct {
 				Name string
 				Time *time.Time
 			}{
-				Name: tc.expected.Name,
+				Name: tc.name,
 				Time: tc.time,
 			}
 
@@ -52,7 +48,7 @@ func TestUnmarshalTime(t *testing.T) {
 			err = json.Unmarshal(data, &got)
 			require.Nil(t, err)
 
-			assert.Equal(t, got.Name, tc.expected.Name)
+			assert.Equal(t, got.Name, tc.name)
 
 			v := got.Time.Load()
 			if tc.time == nil {
@@ -68,7 +64,7 @@ func TestUnmarshalTime(t *testing.T) {
 func TestMarshalTime(t *testing.T) {
 	type Test struct {
 		Name string `json:"name"`
-		Time Time   `json:"time,omitempty"`
+		Time Time   `json:"time"`
 	}
 
 	t1 := time.Now()
@@ -124,10 +120,10 @@ func TestTimeConcurrentInitialLoadStore(t *testing.T) {
 	value := time.Now()
 	done := make(chan struct{})
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		go func() {
 			defer func() { done <- struct{}{} }()
-			for j := 0; j < 100; j++ {
+			for range 100 {
 				tm.Store(&value)
 				_ = tm.Load()
 				tm.Store(nil)
@@ -135,7 +131,7 @@ func TestTimeConcurrentInitialLoadStore(t *testing.T) {
 		}()
 	}
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		<-done
 	}
 }
