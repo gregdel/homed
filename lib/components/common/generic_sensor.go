@@ -4,7 +4,6 @@ import (
 	"math"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
@@ -28,12 +27,8 @@ type GenericSensor struct {
 }
 
 type GenericSensorSnapshot struct {
-	ID           string             `json:"id"`
-	UpdatedAt    *time.Time         `json:"updated_at"`
-	FriendlyName string             `json:"friendly_name"`
-	Hide         bool               `json:"hide"`
-	Device       *components.Device `json:"device"`
-	Value        float64            `json:"value"`
+	SnapshotBase
+	Value float64 `json:"value"`
 }
 
 // Type implements the Component interface
@@ -72,13 +67,9 @@ func (g *GenericSensor) SetSensorValue(value float64) {
 	g.value = value
 }
 
-func (g *GenericSensor) Snapshot() any {
+func (g *GenericSensor) ValuesSnapshot() any {
 	return GenericSensorSnapshot{
-		ID:           g.ID(),
-		UpdatedAt:    g.UpdatedAt.Load(),
-		FriendlyName: g.FriendlyName(),
-		Hide:         g.Hide,
-		Device:       g.Device(),
+		SnapshotBase: g.SnapshotBase(),
 		Value:        g.SensorValue(),
 	}
 }

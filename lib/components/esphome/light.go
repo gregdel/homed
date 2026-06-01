@@ -3,7 +3,6 @@ package esphome
 import (
 	"encoding/json"
 	"sync"
-	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
@@ -32,19 +31,15 @@ type Light struct {
 }
 
 type Snapshot struct {
-	ID           string             `json:"id"`
-	UpdatedAt    *time.Time         `json:"updated_at"`
-	FriendlyName string             `json:"friendly_name"`
-	Hide         bool               `json:"hide"`
-	Device       *components.Device `json:"device"`
-	On           bool               `json:"on"`
-	Brightness   uint32             `json:"brightness"`
-	ColorMode    string             `json:"color_mode"`
-	ColdWhite    uint32             `json:"cold_white"`
-	WarmWhite    uint32             `json:"warm_white"`
-	Red          uint32             `json:"red"`
-	Green        uint32             `json:"green"`
-	Blue         uint32             `json:"blue"`
+	common.SnapshotBase
+	On         bool   `json:"on"`
+	Brightness uint32 `json:"brightness"`
+	ColorMode  string `json:"color_mode"`
+	ColdWhite  uint32 `json:"cold_white"`
+	WarmWhite  uint32 `json:"warm_white"`
+	Red        uint32 `json:"red"`
+	Green      uint32 `json:"green"`
+	Blue       uint32 `json:"blue"`
 }
 
 // NewLight returns a new light
@@ -138,6 +133,7 @@ func (l *Light) Update(value []byte) error {
 	}
 
 	l.brightness = uint32(data.Brightness)
+	l.colorMode = data.ColorMode
 	l.warmWhite = uint32(data.Color.W)
 	l.coldWhite = uint32(data.Color.C)
 	l.red = uint32(data.Color.R)
@@ -147,24 +143,28 @@ func (l *Light) Update(value []byte) error {
 	return nil
 }
 
-func (l *Light) Snapshot() any {
+func (l *Light) ValuesSnapshot() any {
 	l.mu.RLock()
-	defer l.mu.RUnlock()
+	on := l.on
+	brightness := l.brightness
+	colorMode := l.colorMode
+	coldWhite := l.coldWhite
+	warmWhite := l.warmWhite
+	red := l.red
+	green := l.green
+	blue := l.blue
+	l.mu.RUnlock()
 
 	return Snapshot{
-		ID:           l.ID(),
-		UpdatedAt:    l.UpdatedAt.Load(),
-		FriendlyName: l.FriendlyName(),
-		Hide:         l.Hide,
-		Device:       l.Device(),
-		On:           l.on,
-		Brightness:   l.brightness,
-		ColorMode:    l.colorMode,
-		ColdWhite:    l.coldWhite,
-		WarmWhite:    l.warmWhite,
-		Red:          l.red,
-		Green:        l.green,
-		Blue:         l.blue,
+		SnapshotBase: l.SnapshotBase(),
+		On:           on,
+		Brightness:   brightness,
+		ColorMode:    colorMode,
+		ColdWhite:    coldWhite,
+		WarmWhite:    warmWhite,
+		Red:          red,
+		Green:        green,
+		Blue:         blue,
 	}
 }
 

@@ -43,11 +43,7 @@ type Data struct {
 
 // Snapshot represents the HTTP and websocket JSON values for Weather.
 type Snapshot struct {
-	ID           string             `json:"id"`
-	UpdatedAt    *time.Time         `json:"updated_at"`
-	FriendlyName string             `json:"friendly_name"`
-	Hide         bool               `json:"hide"`
-	Device       *components.Device `json:"device"`
+	common.SnapshotBase
 	Data
 }
 
@@ -234,13 +230,9 @@ func (w *Weather) dataSnapshot() Data {
 }
 
 // Snapshot returns the current HTTP and websocket JSON values shape.
-func (w *Weather) Snapshot() any {
+func (w *Weather) ValuesSnapshot() any {
 	return Snapshot{
-		ID:           w.ID(),
-		UpdatedAt:    w.UpdatedAt.Load(),
-		FriendlyName: w.FriendlyName(),
-		Hide:         w.Hide,
-		Device:       w.Device(),
+		SnapshotBase: w.SnapshotBase(),
 		Data:         w.dataSnapshot(),
 	}
 }

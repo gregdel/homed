@@ -3,7 +3,6 @@ package common
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
@@ -27,12 +26,8 @@ type BinarySensor struct {
 }
 
 type BinarySensorSnapshot struct {
-	ID           string             `json:"id"`
-	UpdatedAt    *time.Time         `json:"updated_at"`
-	FriendlyName string             `json:"friendly_name"`
-	Hide         bool               `json:"hide"`
-	Device       *components.Device `json:"device"`
-	On           bool               `json:"on"`
+	SnapshotBase
+	On bool `json:"on"`
 }
 
 // Type implements the Component interface
@@ -69,13 +64,9 @@ func (b *BinarySensor) Update(value []byte) error {
 	return nil
 }
 
-func (b *BinarySensor) Snapshot() any {
+func (b *BinarySensor) ValuesSnapshot() any {
 	return BinarySensorSnapshot{
-		ID:           b.ID(),
-		UpdatedAt:    b.UpdatedAt.Load(),
-		FriendlyName: b.FriendlyName(),
-		Hide:         b.Hide,
-		Device:       b.Device(),
+		SnapshotBase: b.SnapshotBase(),
 		On:           b.IsOn(),
 	}
 }

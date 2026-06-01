@@ -46,11 +46,7 @@ type StateSnapshot struct {
 
 // Snapshot represents the HTTP and websocket JSON values for HomedTemperature.
 type Snapshot struct {
-	ID           string             `json:"id"`
-	UpdatedAt    *time.Time         `json:"updated_at"`
-	FriendlyName string             `json:"friendly_name"`
-	Hide         bool               `json:"hide"`
-	Device       *components.Device `json:"device"`
+	common.SnapshotBase
 	StateSnapshot
 }
 
@@ -100,13 +96,9 @@ func (h *HomedTemperature) stateSnapshotLocked() StateSnapshot {
 }
 
 // Snapshot returns the current HTTP and websocket JSON values shape.
-func (h *HomedTemperature) Snapshot() any {
+func (h *HomedTemperature) ValuesSnapshot() any {
 	return Snapshot{
-		ID:            h.ID(),
-		UpdatedAt:     h.UpdatedAt.Load(),
-		FriendlyName:  h.FriendlyName(),
-		Hide:          h.Hide,
-		Device:        h.Device(),
+		SnapshotBase:  h.SnapshotBase(),
 		StateSnapshot: h.StateSnapshot(),
 	}
 }

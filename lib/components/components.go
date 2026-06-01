@@ -45,17 +45,17 @@ type ComponentJSON struct {
 	HasGraph bool   `json:"has_graph"`
 }
 
-// Snapshotter is implemented by components with an explicit JSON state
-// snapshot.
-type Snapshotter interface {
-	Snapshot() any
+// ValuesSnapshotter is implemented by components with an explicit HTTP and
+// websocket values JSON snapshot.
+type ValuesSnapshotter interface {
+	ValuesSnapshot() any
 }
 
 // NewComponentJSON returns a ComponentJSON from a Component
 func NewComponentJSON(c Component, hasGraph bool) *ComponentJSON {
 	values := any(c)
-	if snapshotter, ok := c.(Snapshotter); ok {
-		values = snapshotter.Snapshot()
+	if snapshotter, ok := c.(ValuesSnapshotter); ok {
+		values = snapshotter.ValuesSnapshot()
 	}
 
 	return &ComponentJSON{

@@ -3,7 +3,6 @@ package common
 import (
 	"bytes"
 	"sync"
-	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/prometheus/client_golang/prometheus"
@@ -21,12 +20,8 @@ type DeviceStatus struct {
 }
 
 type DeviceStatusSnapshot struct {
-	ID           string             `json:"id"`
-	UpdatedAt    *time.Time         `json:"updated_at"`
-	FriendlyName string             `json:"friendly_name"`
-	Hide         bool               `json:"hide"`
-	Device       *components.Device `json:"device"`
-	Online       bool               `json:"online"`
+	SnapshotBase
+	Online bool `json:"online"`
 }
 
 // NewDeviceStatus returns a new status component
@@ -81,13 +76,9 @@ func (ds *DeviceStatus) setOnline(online bool) {
 	ds.online = online
 }
 
-func (ds *DeviceStatus) Snapshot() any {
+func (ds *DeviceStatus) ValuesSnapshot() any {
 	return DeviceStatusSnapshot{
-		ID:           ds.ID(),
-		UpdatedAt:    ds.UpdatedAt.Load(),
-		FriendlyName: ds.FriendlyName(),
-		Hide:         ds.Hide,
-		Device:       ds.Device(),
+		SnapshotBase: ds.SnapshotBase(),
 		Online:       ds.IsOnline(),
 	}
 }
