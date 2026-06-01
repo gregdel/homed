@@ -39,6 +39,13 @@ const ranges: GraphRange[] = ["1h", "6h", "24h", "7d"];
 
 const colors = ["#5e81ac", "#a3be8c", "#bf616a", "#d08770", "#8fbcbb"];
 
+const preventChartMouseFocus = (
+  _data: unknown,
+  event: React.MouseEvent<SVGGraphicsElement>,
+) => {
+  event.preventDefault();
+};
+
 const tooltipStyle = {
   background: "var(--color-bg)",
   border: "1px solid var(--color-border)",
@@ -113,7 +120,7 @@ export const Graph: React.FC = () => {
       extra={
         <div
           role="group"
-          className="button-group button-group-sm graph-range-selector"
+          className="button-group button-group-sm graph-range-selector select-none"
           aria-label="Graph time range"
         >
           {ranges.map((item) => (
@@ -196,11 +203,12 @@ const LineChart: React.FC<{ color: string; series: GraphSeries }> = ({
           {formatValue(chart.minValue)} - {formatValue(chart.maxValue)}
         </span>
       </div>
-      <div className="graph-chart-frame">
+      <div className="graph-chart-frame select-none">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chart.points}
             margin={{ top: 16, right: 18, bottom: 8, left: 0 }}
+            onMouseDown={preventChartMouseFocus}
           >
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

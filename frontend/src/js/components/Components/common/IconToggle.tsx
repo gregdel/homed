@@ -23,9 +23,6 @@ export const IconToggle: React.FC<IconToggleProps> = ({
     justifyContent: "center",
     flexFlow: "column nowrap",
     height: "30vh",
-    WebkitTapHighlightColor: "transparent",
-    userSelect: "none",
-    outline: "none",
   };
 
   const iconStyle: CSSProperties = {
@@ -40,7 +37,7 @@ export const IconToggle: React.FC<IconToggleProps> = ({
   };
 
   return (
-    <div style={containerStyle}>
+    <div className="select-none" style={containerStyle}>
       <Icon
         name={on ? iconOn : iconOff}
         size={6}

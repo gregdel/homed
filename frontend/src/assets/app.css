@@ -212,6 +212,15 @@ body {
   box-shadow: var(--shadow);
 }
 
+.graph-chart-frame .recharts-surface:focus {
+  outline: none;
+}
+
+.graph-chart-frame .recharts-surface:focus-visible {
+  outline: 2px solid var(--color-primary-hover);
+  outline-offset: 2px;
+}
+
 @media (max-width: 575px) {
   .card-header:has(.graph-range-selector) {
     align-items: flex-start;
@@ -766,6 +775,13 @@ h4 { font-size: 20px; }
 /* Cursor */
 .cursor-pointer {
   cursor: pointer;
+}
+
+.select-none,
+.select-none * {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Flex utilities */

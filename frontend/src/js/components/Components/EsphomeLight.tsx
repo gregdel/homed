@@ -101,6 +101,7 @@ interface LightContainerProps {
 
 const LightContainer: React.FC<LightContainerProps> = ({ children }) => (
   <div
+    className="select-none"
     style={{
       display: "flex",
       justifyContent: "center",
