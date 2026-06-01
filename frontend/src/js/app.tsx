@@ -46,7 +46,9 @@ const AppContent: React.FC = () => {
       case "/sensors":
         return <Components typesFilter={["generic_sensor", "binary_sensor"]} />;
       case "/climate_sensors":
-        return <Components typesFilter={["zigbee_climate_sensor"]} />;
+        return (
+          <Components typesFilter={["zigbee_climate_sensor", "weather"]} />
+        );
       case `/components/${params.componentId}/schedule`:
         return <Schedule />;
       case `/components/${params.componentId}/graph`:

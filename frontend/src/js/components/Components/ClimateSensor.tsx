@@ -3,20 +3,18 @@ import { useComponents } from "../ComponentsContext";
 
 import { Icon } from "../ui/Icon";
 
-interface ZigbeeClimateSensorProps {
+interface ClimateSensorProps {
   id: string;
 }
 
-interface ZigbeeClimateSensorValues {
+interface ClimateSensorValues {
   humidity: number;
   pressure: number;
   temperature: number;
   [key: string]: unknown;
 }
 
-export const ZigbeeClimateSensor: React.FC<ZigbeeClimateSensorProps> = ({
-  id,
-}) => {
+export const ClimateSensor: React.FC<ClimateSensorProps> = ({ id }) => {
   const { getComponentById } = useComponents();
   const component = getComponentById(id);
   if (component === undefined) {
@@ -24,7 +22,7 @@ export const ZigbeeClimateSensor: React.FC<ZigbeeClimateSensorProps> = ({
   }
 
   const { humidity, pressure, temperature } =
-    component.values as unknown as ZigbeeClimateSensorValues;
+    component.values as unknown as ClimateSensorValues;
 
   const prettyTemperature = (t: number) => t.toFixed(2);
 

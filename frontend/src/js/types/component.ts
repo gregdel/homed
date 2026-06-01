@@ -89,6 +89,7 @@ export const ComponentTypes = {
   DEVICE_STATUS: "device_status",
   WIFI_SIGNAL: "wifi_signal",
   VIRTUAL_SWITCH: "virtual_switch",
+  WEATHER: "weather",
 } as const;
 
 export type ComponentType =
