@@ -6,6 +6,7 @@ interface SliderProps {
   max?: number;
   step?: number;
   value?: number;
+  disabled?: boolean;
   onChange?: (value: number) => void;
   onChangeComplete?: (value: number) => void;
   formatTooltip?: (value: number) => string;
@@ -16,6 +17,7 @@ export const Slider: React.FC<SliderProps> = ({
   max = 100,
   step = 1,
   value = min,
+  disabled = false,
   onChange,
   onChangeComplete,
   formatTooltip,
@@ -23,6 +25,10 @@ export const Slider: React.FC<SliderProps> = ({
   const [active, setActive] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) {
+      return;
+    }
+
     const newValue = Number.parseFloat(e.target.value);
     if (onChange) {
       onChange(newValue);
@@ -33,7 +39,7 @@ export const Slider: React.FC<SliderProps> = ({
     e: React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>,
   ) => {
     setActive(false);
-    if (onChangeComplete) {
+    if (!disabled && onChangeComplete) {
       const target = e.target as HTMLInputElement;
       const newValue = Number.parseFloat(target.value);
       onChangeComplete(newValue);
@@ -41,6 +47,10 @@ export const Slider: React.FC<SliderProps> = ({
   };
 
   const handleStart = () => {
+    if (disabled) {
+      return;
+    }
+
     setActive(true);
   };
 
@@ -58,6 +68,7 @@ export const Slider: React.FC<SliderProps> = ({
       <input
         type="range"
         className="slider"
+        disabled={disabled}
         min={min}
         max={max}
         step={step}

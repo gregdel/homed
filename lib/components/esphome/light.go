@@ -13,6 +13,11 @@ func init() {
 	components.Register(components.TypeEsphomeLight, NewLight)
 }
 
+const (
+	defaultColdWhite = 128
+	defaultWarmWhite = 127
+)
+
 // Light represents a esphome light.
 type Light struct {
 	common.Component
@@ -22,6 +27,7 @@ type Light struct {
 	on         bool
 	brightness uint32
 	colorMode  string
+	colorTemp  uint32
 
 	coldWhite uint32
 	warmWhite uint32
@@ -35,6 +41,7 @@ type Snapshot struct {
 	On         bool   `json:"on"`
 	Brightness uint32 `json:"brightness"`
 	ColorMode  string `json:"color_mode"`
+	ColorTemp  uint32 `json:"color_temp"`
 	ColdWhite  uint32 `json:"cold_white"`
 	WarmWhite  uint32 `json:"warm_white"`
 	Red        uint32 `json:"red"`
@@ -48,31 +55,57 @@ func NewLight() components.Component {
 }
 
 type color struct {
-	C uint8 `json:"c"`
-	W uint8 `json:"w"`
-	R uint8 `json:"r"`
-	G uint8 `json:"g"`
-	B uint8 `json:"b"`
+	C *uint8 `json:"c,omitempty"`
+	W *uint8 `json:"w,omitempty"`
+	R *uint8 `json:"r,omitempty"`
+	G *uint8 `json:"g,omitempty"`
+	B *uint8 `json:"b,omitempty"`
 }
 
 type payload struct {
-	State      string `json:"state"`
-	Brightness uint8  `json:"brightness"`
-	ColorMode  string `json:"color_mode"`
-	Color      color  `json:"color"`
+	State      string  `json:"state,omitempty"`
+	Brightness *uint8  `json:"brightness,omitempty"`
+	ColorMode  string  `json:"color_mode,omitempty"`
+	ColorTemp  *uint16 `json:"color_temp,omitempty"`
+	Color      *color  `json:"color,omitempty"`
+}
+
+func uint8Ptr(value uint8) *uint8 {
+	return &value
 }
 
 // TurnOn implements the switch interface
 func (l *Light) updateState(s string) error {
 	l.mu.RLock()
+	brightness := uint8(l.brightness)
+	colorMode := l.colorMode
+	coldWhite := uint8(l.coldWhite)
+	warmWhite := uint8(l.warmWhite)
+	if colorMode != "rgb" && colorMode != "cwww" {
+		colorMode = "cwww"
+	}
+	if coldWhite == 0 && warmWhite == 0 {
+		coldWhite = defaultColdWhite
+		warmWhite = defaultWarmWhite
+	}
+
 	data := payload{
 		State:      s,
-		Brightness: uint8(l.brightness),
-		ColorMode:  l.colorMode,
-		Color: color{
-			C: uint8(l.coldWhite),
-			W: uint8(l.warmWhite),
-		},
+		Brightness: &brightness,
+		ColorMode:  colorMode,
+	}
+	switch colorMode {
+	case "rgb":
+		data.Color = &color{
+			R: uint8Ptr(uint8(l.red)),
+			G: uint8Ptr(uint8(l.green)),
+			B: uint8Ptr(uint8(l.blue)),
+		}
+	default:
+		data.Color = &color{
+			C: uint8Ptr(coldWhite),
+			W: uint8Ptr(warmWhite),
+		}
 	}
 	l.mu.RUnlock()
 
@@ -128,17 +161,34 @@ func (l *Light) Update(value []byte) error {
 
 	if data.State != "" {
 		l.on = data.State == "ON"
-	} else {
-		l.on = false
 	}
 
-	l.brightness = uint32(data.Brightness)
-	l.colorMode = data.ColorMode
-	l.warmWhite = uint32(data.Color.W)
-	l.coldWhite = uint32(data.Color.C)
-	l.red = uint32(data.Color.R)
-	l.green = uint32(data.Color.G)
-	l.blue = uint32(data.Color.B)
+	if data.Brightness != nil {
+		l.brightness = uint32(*data.Brightness)
+	}
+	if data.ColorMode != "" {
+		l.colorMode = data.ColorMode
+	}
+	if data.ColorTemp != nil {
+		l.colorTemp = uint32(*data.ColorTemp)
+	}
+	if data.Color != nil {
+		if data.Color.W != nil {
+			l.warmWhite = uint32(*data.Color.W)
+		}
+		if data.Color.C != nil {
+			l.coldWhite = uint32(*data.Color.C)
+		}
+		if data.Color.R != nil {
+			l.red = uint32(*data.Color.R)
+		}
+		if data.Color.G != nil {
+			l.green = uint32(*data.Color.G)
+		}
+		if data.Color.B != nil {
+			l.blue = uint32(*data.Color.B)
+		}
+	}
 
 	return nil
 }
@@ -148,6 +198,7 @@ func (l *Light) ValuesSnapshot() any {
 	on := l.on
 	brightness := l.brightness
 	colorMode := l.colorMode
+	colorTemp := l.colorTemp
 	coldWhite := l.coldWhite
 	warmWhite := l.warmWhite
 	red := l.red
@@ -160,6 +211,7 @@ func (l *Light) ValuesSnapshot() any {
 		On:           on,
 		Brightness:   brightness,
 		ColorMode:    colorMode,
+		ColorTemp:    colorTemp,
 		ColdWhite:    coldWhite,
 		WarmWhite:    warmWhite,
 		Red:          red,
