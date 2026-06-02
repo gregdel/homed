@@ -96,3 +96,9 @@ type Component interface {
 type RunnableComponent interface {
 	Run(context.Context, *slog.Logger, *Components) error
 }
+
+// AvailabilityProvider is implemented by components that update their device's
+// online/offline state.
+type AvailabilityProvider interface {
+	ProvidesAvailability()
+}

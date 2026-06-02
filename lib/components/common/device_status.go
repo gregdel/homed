@@ -34,6 +34,8 @@ func (ds *DeviceStatus) Type() components.Type {
 	return components.TypeDeviceStatus
 }
 
+func (ds *DeviceStatus) ProvidesAvailability() {}
+
 // Collectors implements the Component interface
 func (ds *DeviceStatus) Collectors(labels prometheus.Labels) []prometheus.Collector {
 	return []prometheus.Collector{

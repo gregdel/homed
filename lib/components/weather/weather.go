@@ -73,6 +73,8 @@ func (w *Weather) Type() components.Type {
 	return components.TypeWeather
 }
 
+func (w *Weather) ProvidesAvailability() {}
+
 // Run implements the RunnableComponent interface.
 func (w *Weather) Run(ctx context.Context, logger *slog.Logger, _ *components.Components) error {
 	if err := w.setup(); err != nil {

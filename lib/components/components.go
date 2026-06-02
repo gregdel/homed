@@ -185,6 +185,9 @@ func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Com
 	// TODO: find a better solution
 	component.SetDevice(device)
 	component.SetConfig(&cfg)
+	if _, ok := component.(AvailabilityProvider); ok {
+		device.SetAvailabilityTracked()
+	}
 
 	if sc, ok := component.(Scheduled); ok {
 		if cfg.ScheduleName == "" {
@@ -214,6 +217,7 @@ func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Com
 		"id":             id,
 	}
 	collectors := component.Collectors(labels)
+	collectors = availabilityAwareCollectors(device, component.Type(), collectors)
 
 	c.mu.Lock()
 

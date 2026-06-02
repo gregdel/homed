@@ -10,10 +10,11 @@ import (
 type Device struct {
 	mu sync.Mutex
 
-	Name       string `json:"name"`
-	Room       string `json:"room"`
-	online     bool
-	Components map[string]Component `json:"-"`
+	Name                string `json:"name"`
+	Room                string `json:"room"`
+	online              bool
+	availabilityTracked bool
+	Components          map[string]Component `json:"-"`
 }
 
 type deviceJSON struct {
@@ -57,6 +58,23 @@ func (d *Device) SetOnline(online bool) {
 	defer d.mu.Unlock()
 
 	d.online = online
+}
+
+// SetAvailabilityTracked marks the device as having an explicit availability
+// source.
+func (d *Device) SetAvailabilityTracked() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.availabilityTracked = true
+}
+
+// MetricsAvailable tells if telemetry metrics should be exposed.
+func (d *Device) MetricsAvailable() bool {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	return !d.availabilityTracked || d.online
 }
 
 func (d *Device) MarshalJSON() ([]byte, error) {
