@@ -3,6 +3,7 @@
 export interface Device {
   name: string;
   room: string;
+  online: boolean;
 }
 
 export interface ComponentValues {
@@ -69,6 +70,20 @@ export interface WifiSignalValues extends ComponentValues {
 
 export interface DeviceStatusValues extends ComponentValues {
   value: string; // status text
+}
+
+export type EsphomeLightColorMode = "rgb" | "cwww";
+
+export interface EsphomeLightValues extends ComponentValues {
+  on: boolean;
+  brightness: number;
+  color_mode?: string;
+  color_temp?: number;
+  cold_white?: number;
+  warm_white?: number;
+  red?: number;
+  green?: number;
+  blue?: number;
 }
 
 // Component type registry
