@@ -14,6 +14,7 @@ import { ClimateSensor } from "./ClimateSensor";
 import { EsphomeLight } from "./EsphomeLight";
 import { HomedTemperature } from "./HomedTemperature";
 import { RollerShutter } from "./RollerShutter";
+import { Script } from "./Script";
 import { HeaderCard } from "./common/HeaderCard";
 
 interface ComponentProps {
@@ -79,6 +80,9 @@ export const Component: React.FC<ComponentProps> = ({
       break;
     case "weather":
       typedComponent = <ClimateSensor id={id} />;
+      break;
+    case "script":
+      typedComponent = <Script id={id} />;
       break;
     default:
       return <h3>Unknown component type: {type}</h3>;

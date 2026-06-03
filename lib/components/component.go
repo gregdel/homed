@@ -28,6 +28,7 @@ var (
 	TypeWifiSignal     Type = "wifi_signal"
 	TypeDeviceStatus   Type = "device_status"
 	TypeRollerShutter  Type = "roller_shutter"
+	TypeScript         Type = "script"
 
 	// Other components
 	TypeHomedTemperature       Type = "homed_temperature"
@@ -95,6 +96,11 @@ type Component interface {
 // RunnableComponent is implemented by components that need background work.
 type RunnableComponent interface {
 	Run(context.Context, *slog.Logger, *Components) error
+}
+
+// ConfigValidator is implemented by components that validate their own config.
+type ConfigValidator interface {
+	ValidateConfig() error
 }
 
 // AvailabilityProvider is implemented by components that update their device's

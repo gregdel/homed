@@ -41,6 +41,12 @@ const menuItems: MenuItem[] = [
     path: "/shutters",
   },
   { icon: "ruler", key: "sensors", label: "Sensors", path: "/sensors" },
+  {
+    icon: "automation",
+    key: "automations",
+    label: "Automations",
+    path: "/automations",
+  },
 ];
 
 const MOBILE_BREAKPOINT = 992;

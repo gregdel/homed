@@ -14,6 +14,7 @@ import (
 	_ "github.com/gregdel/homed/lib/components/homed_humidity"
 	_ "github.com/gregdel/homed/lib/components/homed_temperature"
 	_ "github.com/gregdel/homed/lib/components/roller_shutter"
+	_ "github.com/gregdel/homed/lib/components/script"
 	_ "github.com/gregdel/homed/lib/components/weather"
 	_ "github.com/gregdel/homed/lib/components/zigbee2mqtt/climate_sensor"
 

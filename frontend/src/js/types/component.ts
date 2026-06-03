@@ -86,6 +86,17 @@ export interface EsphomeLightValues extends ComponentValues {
   blue?: number;
 }
 
+export type ScriptStatus = "idle" | "running" | "success" | "error";
+
+export interface ScriptValues extends ComponentValues {
+  status: ScriptStatus;
+  last_started_at: string | null;
+  last_finished_at: string | null;
+  last_duration_ms: number;
+  last_exit_code: number | null;
+  last_error: string;
+}
+
 // Component type registry
 export const ComponentTypes = {
   GENERIC_SENSOR: "generic_sensor",
@@ -105,6 +116,7 @@ export const ComponentTypes = {
   WIFI_SIGNAL: "wifi_signal",
   VIRTUAL_SWITCH: "virtual_switch",
   WEATHER: "weather",
+  SCRIPT: "script",
 } as const;
 
 export type ComponentType =

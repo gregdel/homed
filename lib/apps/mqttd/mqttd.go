@@ -175,6 +175,11 @@ func (m *mqttd) handleCommand(c mqtt.Client, msg mqtt.Message) {
 
 	logger := component.LoggerWithFields(m.logger)
 
+	if msg.Retained() {
+		logger.Info("ignoring retained command message", slog.String("topic", msg.Topic()))
+		return
+	}
+
 	if err := component.ExecCommand(msg.Payload()); err != nil {
 		logger.Warn("failed to write component command", slog.Any("error", err))
 		return

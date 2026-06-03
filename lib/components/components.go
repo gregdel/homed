@@ -178,13 +178,19 @@ func (c *Components) Add(cfg config.Component, roomName, deviceName string) (Com
 
 	component.SetID(id)
 
+	// TODO: find a better solution
+	component.SetDevice(device)
+	component.SetConfig(&cfg)
+	if validator, ok := component.(ConfigValidator); ok {
+		if err := validator.ValidateConfig(); err != nil {
+			return nil, err
+		}
+	}
+
 	if err := device.AddComponent(component); err != nil {
 		return nil, err
 	}
 
-	// TODO: find a better solution
-	component.SetDevice(device)
-	component.SetConfig(&cfg)
 	if _, ok := component.(AvailabilityProvider); ok {
 		device.SetAvailabilityTracked()
 	}
