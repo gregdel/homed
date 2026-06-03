@@ -1,58 +1,21 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { BottomNav } from "./BottomNav";
+import { useComponents } from "./ComponentsContext";
 import { useNav } from "./Navigation";
-import { Icon, type IconName } from "./ui/Icon";
-
-interface MenuItem {
-  icon: IconName;
-  key: string;
-  label: string;
-  path: string;
-}
-
-const menuItems: MenuItem[] = [
-  {
-    icon: "homeThermometer",
-    key: "temperature",
-    label: "Temperature",
-    path: "/temperature",
-  },
-  { icon: "radiator", key: "trv", label: "Thermostatic valves", path: "/trv" },
-  {
-    icon: "thermometer",
-    key: "climate_sensors",
-    label: "Temperature sensors",
-    path: "/climate_sensors",
-  },
-  { icon: "lightbulb", key: "lights", label: "Lights", path: "/lights" },
-  {
-    icon: "lightningBolt",
-    key: "power_consumption",
-    label: "Power consumption",
-    path: "/power",
-  },
-  { icon: "power", key: "switches", label: "Switches", path: "/switches" },
-  { icon: "fan", key: "fans", label: "Fans", path: "/fans" },
-  {
-    icon: "windowShutter",
-    key: "shutters",
-    label: "Roller shutters",
-    path: "/shutters",
-  },
-  { icon: "ruler", key: "sensors", label: "Sensors", path: "/sensors" },
-  {
-    icon: "automation",
-    key: "automations",
-    label: "Automations",
-    path: "/automations",
-  },
-];
+import { getAvailableMenuItems } from "./navigationMenu";
+import { Icon } from "./ui/Icon";
 
 const MOBILE_BREAKPOINT = 992;
 
 const Sidebar: React.FC = () => {
   const { currentPath, navigate } = useNav();
+  const { components } = useComponents();
+  const menuItems = getAvailableMenuItems(components);
+
+  if (menuItems.length === 0) {
+    return null;
+  }
 
   return (
     <nav className="sidebar">

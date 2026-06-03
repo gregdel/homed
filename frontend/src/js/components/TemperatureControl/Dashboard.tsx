@@ -11,7 +11,9 @@ export const Dashboard: React.FC = () => {
   const { components } = useComponents();
 
   const findComponentByType = (type: string): ComponentJSON | undefined => {
-    return Object.values(components).find((c) => c.type === type);
+    return Object.values(components).find(
+      (c) => c.type === type && c.values.hide !== true,
+    );
   };
 
   const boiler = findComponentByType("boiler");

@@ -15,6 +15,7 @@ import { useNotifications } from "./NotificationsContext";
 interface ComponentsContextType {
   components: Record<string, ComponentJSON>;
   loading: boolean;
+  hasLoaded: boolean;
   error: string | null;
   lastUpdated: Date | null;
   updateComponent: (id: string, data: ComponentCommand) => Promise<void>;
@@ -49,6 +50,7 @@ export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
     {},
   );
   const [loading, setLoading] = useState<boolean>(false);
+  const [hasLoaded, setHasLoaded] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const loadingRef = useRef<boolean>(false);
@@ -70,6 +72,7 @@ export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
       }
 
       setComponents(c);
+      setHasLoaded(true);
       setLastUpdated(new Date());
       addNotificationOk("Components updated");
     } catch (err) {
@@ -133,6 +136,7 @@ export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
   const value: ComponentsContextType = {
     components,
     loading,
+    hasLoaded,
     error,
     lastUpdated,
     updateComponent,
