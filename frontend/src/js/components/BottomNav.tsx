@@ -22,6 +22,7 @@ const moreItems: NavItem[] = [
   { icon: "lightningBolt", label: "Power", path: "/power" },
   { icon: "radiator", label: "TRVs", path: "/trv" },
   { icon: "thermometer", label: "Climate", path: "/climate_sensors" },
+  { icon: "automation", label: "Automations", path: "/automations" },
 ];
 
 export const BottomNav: React.FC = () => {

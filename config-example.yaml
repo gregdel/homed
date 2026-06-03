@@ -200,6 +200,43 @@ devices:
     state_topic: zigbee2mqtt/virtual_switch_1/availability
 
 #############################
+# Automations
+#############################
+
+- name: automations
+  room: none
+  components:
+  - type: script
+    id: scan_page
+    friendly_name: Scan page
+    internal: true
+    state_topic: home/homed/scripts/scan_page/state
+    command_topic: home/homed/scripts/scan_page/command
+    params:
+      command: /usr/local/bin/scan-page
+      timeout: 5m
+  - type: script
+    id: wait_five_seconds
+    friendly_name: Wait five seconds
+    internal: true
+    state_topic: home/homed/scripts/wait_five_seconds/state
+    command_topic: home/homed/scripts/wait_five_seconds/command
+    params:
+      command: sleep
+      args:
+        - "5"
+      timeout: 10s
+  - type: script
+    id: wake_desktop
+    friendly_name: Wake desktop
+    internal: true
+    state_topic: home/homed/scripts/wake_desktop/state
+    command_topic: home/homed/scripts/wake_desktop/command
+    params:
+      command: /usr/local/bin/wake-desktop
+      timeout: 30s
+
+#############################
 # Bathroom
 #############################
 - name: bathroom_fan

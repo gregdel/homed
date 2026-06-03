@@ -1,4 +1,5 @@
 import type React from "react";
+import type { ReactNode } from "react";
 import type { CSSProperties } from "react";
 import type { IconName } from "../../ui/Icon";
 import { Icon } from "../../ui/Icon";
@@ -9,6 +10,12 @@ interface IconToggleProps {
   toggle: () => void;
   on: boolean;
   rotate?: boolean;
+  disabled?: boolean;
+  label?: ReactNode;
+  activeLabel?: ReactNode;
+  colorOn?: string;
+  colorOff?: string;
+  ariaLabel?: string;
 }
 
 export const IconToggle: React.FC<IconToggleProps> = ({
@@ -17,6 +24,12 @@ export const IconToggle: React.FC<IconToggleProps> = ({
   toggle,
   on,
   rotate = false,
+  disabled = false,
+  label = "Off",
+  activeLabel = "On",
+  colorOn = "var(--color-light-on)",
+  colorOff = "var(--color-icon-inactive)",
+  ariaLabel,
 }) => {
   const containerStyle: CSSProperties = {
     display: "flex",
@@ -26,26 +39,47 @@ export const IconToggle: React.FC<IconToggleProps> = ({
   };
 
   const iconStyle: CSSProperties = {
-    cursor: "pointer",
-    color: on ? "var(--color-light-on)" : "var(--color-icon-inactive)",
+    color: disabled ? "var(--color-icon-inactive)" : on ? colorOn : colorOff,
     transition: "color 0.3s ease-out 0s",
+  };
+
+  const buttonStyle: CSSProperties = {
     alignSelf: "center",
+    padding: 0,
+    border: 0,
+    background: "transparent",
+    color: "inherit",
+    cursor: disabled ? "not-allowed" : "pointer",
   };
 
   const textStyle: CSSProperties = {
     alignSelf: "center",
   };
+  const fallbackAriaLabel =
+    typeof (on ? activeLabel : label) === "string"
+      ? String(on ? activeLabel : label)
+      : undefined;
+  const buttonAriaLabel = ariaLabel ?? fallbackAriaLabel;
 
   return (
     <div className="select-none" style={containerStyle}>
-      <Icon
-        name={on ? iconOn : iconOff}
-        size={6}
+      <button
+        {...(buttonAriaLabel !== undefined
+          ? { "aria-label": buttonAriaLabel }
+          : {})}
+        disabled={disabled}
         onClick={toggle}
-        className={rotate ? "rotating" : "rotating paused"}
-        style={iconStyle}
-      />
-      <div style={textStyle}>{on ? "On" : "Off"}</div>
+        style={buttonStyle}
+        type="button"
+      >
+        <Icon
+          name={on ? iconOn : iconOff}
+          size={6}
+          className={rotate ? "rotating" : "rotating paused"}
+          style={iconStyle}
+        />
+      </button>
+      <div style={textStyle}>{on ? activeLabel : label}</div>
     </div>
   );
 };

@@ -39,6 +39,8 @@ const AppContent: React.FC = () => {
         return <Components typesFilter={["power_meter"]} />;
       case "/switches":
         return <Components typesFilter={["switch", "virtual_switch"]} />;
+      case "/automations":
+        return <Components typesFilter={["script"]} />;
       case "/fans":
         return <Components typesFilter={["binary_fan"]} />;
       case "/shutters":
