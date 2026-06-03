@@ -1,35 +1,21 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import { useComponents } from "./ComponentsContext";
 import { useNav } from "./Navigation";
-import { Icon, type IconName } from "./ui/Icon";
+import { getAvailableMenuItems } from "./navigationMenu";
+import { Icon } from "./ui/Icon";
 
-interface NavItem {
-  icon: IconName;
-  label: string;
-  path: string;
-}
-
-const primaryItems: NavItem[] = [
-  { icon: "homeThermometer", label: "Temperature", path: "/temperature" },
-  { icon: "lightbulb", label: "Lights", path: "/lights" },
-  { icon: "windowShutter", label: "Shutters", path: "/shutters" },
-  { icon: "power", label: "Switches", path: "/switches" },
-];
-
-const moreItems: NavItem[] = [
-  { icon: "fan", label: "Fans", path: "/fans" },
-  { icon: "ruler", label: "Sensors", path: "/sensors" },
-  { icon: "lightningBolt", label: "Power", path: "/power" },
-  { icon: "radiator", label: "TRVs", path: "/trv" },
-  { icon: "thermometer", label: "Climate", path: "/climate_sensors" },
-  { icon: "automation", label: "Automations", path: "/automations" },
-];
+const MOBILE_PRIMARY_LIMIT = 4;
 
 export const BottomNav: React.FC = () => {
   const [moreOpen, setMoreOpen] = useState(false);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const morePanelRef = useRef<HTMLElement>(null);
   const { currentPath, navigate } = useNav();
+  const { components } = useComponents();
+  const menuItems = getAvailableMenuItems(components);
+  const primaryItems = menuItems.slice(0, MOBILE_PRIMARY_LIMIT);
+  const moreItems = menuItems.slice(MOBILE_PRIMARY_LIMIT);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -77,6 +63,10 @@ export const BottomNav: React.FC = () => {
 
   const isMoreActive = moreItems.some((item) => currentPath === item.path);
 
+  if (menuItems.length === 0) {
+    return null;
+  }
+
   return (
     <>
       <nav className="bottom-nav">
@@ -88,23 +78,25 @@ export const BottomNav: React.FC = () => {
             type="button"
           >
             <Icon name={item.icon} size={1} />
-            <span>{item.label}</span>
+            <span>{item.mobileLabel}</span>
           </button>
         ))}
-        <button
-          ref={moreButtonRef}
-          aria-controls="mobile-more-nav"
-          aria-expanded={moreOpen}
-          className={`bottom-nav-item ${isMoreActive || moreOpen ? "active" : ""}`}
-          onClick={handleMoreClick}
-          type="button"
-        >
-          <Icon name="dotsHorizontal" size={1} />
-          <span>More</span>
-        </button>
+        {moreItems.length > 0 && (
+          <button
+            ref={moreButtonRef}
+            aria-controls="mobile-more-nav"
+            aria-expanded={moreOpen}
+            className={`bottom-nav-item ${isMoreActive || moreOpen ? "active" : ""}`}
+            onClick={handleMoreClick}
+            type="button"
+          >
+            <Icon name="dotsHorizontal" size={1} />
+            <span>More</span>
+          </button>
+        )}
       </nav>
 
-      {moreOpen && (
+      {moreOpen && moreItems.length > 0 && (
         <nav
           ref={morePanelRef}
           aria-label="More navigation"
@@ -122,7 +114,7 @@ export const BottomNav: React.FC = () => {
                   type="button"
                 >
                   <Icon name={item.icon} size={1.5} />
-                  <span>{item.label}</span>
+                  <span>{item.mobileLabel}</span>
                 </button>
               ))}
             </div>

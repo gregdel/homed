@@ -110,6 +110,7 @@ export const ComponentTypes = {
   BOILER: "boiler",
   BINARY_LIGHT: "binary_light",
   BINARY_FAN: "binary_fan",
+  ZIGBEE_TRV: "zigbee_trv",
   BINARY_TRV: "binary_trv",
   ZIGBEE_CLIMATE_SENSOR: "zigbee_climate_sensor",
   DEVICE_STATUS: "device_status",

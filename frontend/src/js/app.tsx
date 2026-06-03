@@ -1,4 +1,5 @@
 import type React from "react";
+import { useEffect, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 
 import { AppMenu } from "./components/Menu";
@@ -10,21 +11,69 @@ import {
 } from "./components/contexts";
 
 import { Components } from "./components/Components/Components";
+import { useComponents } from "./components/ComponentsContext";
 import { DataFetcher } from "./components/DataFetcher";
 import { Graph } from "./components/Graph";
 import { Notifications } from "./components/Notifications";
 import { Schedule } from "./components/Schedule/Schedule";
 import { Dashboard } from "./components/TemperatureControl/Dashboard";
+import {
+  categoryPaths,
+  getAvailableMenuItems,
+} from "./components/navigationMenu";
 
 import "../assets/app.css";
 
 const AppContent: React.FC = () => {
   const { currentPath, params, navigate } = useNav();
+  const { components, hasLoaded } = useComponents();
+  const availableMenuItems = useMemo(
+    () => getAvailableMenuItems(components),
+    [components],
+  );
+  const firstAvailablePath = availableMenuItems[0]?.path;
+  const path = currentPath.split("?")[0] ?? "";
+  const isCategoryPath = categoryPaths.has(path);
+
+  useEffect(() => {
+    if (!hasLoaded || !firstAvailablePath) {
+      return;
+    }
+
+    if (
+      isCategoryPath &&
+      !availableMenuItems.some((item) => item.path === path)
+    ) {
+      navigate(firstAvailablePath);
+      return;
+    }
+
+    if (
+      !isCategoryPath &&
+      path !== "/all" &&
+      params.componentId === undefined
+    ) {
+      navigate(firstAvailablePath);
+    }
+  }, [
+    availableMenuItems,
+    firstAvailablePath,
+    hasLoaded,
+    isCategoryPath,
+    navigate,
+    params.componentId,
+    path,
+  ]);
 
   // Route mapping function
   const getComponent = (): React.ReactNode => {
-    // Extract component paths for better matching
-    const path = currentPath.split("?")[0]; // Remove query parameters if any
+    if (hasLoaded && isCategoryPath && firstAvailablePath === undefined) {
+      return (
+        <div className="grid grid-cols-1 grid-cols-sm-2 grid-cols-lg-3">
+          <div>No visible components.</div>
+        </div>
+      );
+    }
 
     switch (path) {
       case "/all":
@@ -56,7 +105,13 @@ const AppContent: React.FC = () => {
       case `/components/${params.componentId}/graph`:
         return <Graph />;
       default:
-        navigate("/temperature");
+        if (hasLoaded && firstAvailablePath === undefined) {
+          return (
+            <div className="grid grid-cols-1 grid-cols-sm-2 grid-cols-lg-3">
+              <div>No visible components.</div>
+            </div>
+          );
+        }
         return null;
     }
   };
