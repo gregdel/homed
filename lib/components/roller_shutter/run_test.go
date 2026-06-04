@@ -1,7 +1,6 @@
 package rollershutter
 
 import (
-	"errors"
 	"testing"
 	"time"
 
@@ -166,6 +165,13 @@ func TestParseDailyWindows(t *testing.T) {
 			},
 		},
 		{
+			name: "midnight is a valid configured window bound",
+			params: Params{
+				OpenAfter:  "00:00",
+				OpenBefore: "07:00",
+			},
+		},
+		{
 			name: "invalid format",
 			params: Params{
 				OpenAfter: "7",
@@ -196,95 +202,7 @@ func TestParseDailyWindows(t *testing.T) {
 	}
 }
 
-func TestNextActionAfterAttemptAt(t *testing.T) {
-	errFailed := errors.New("failed")
-	standardParams := Params{
-		Location:    testLocation(),
-		OpenAfter:   "07:00",
-		OpenBefore:  "09:00",
-		CloseAfter:  "18:00",
-		CloseBefore: "22:30",
-	}
-
-	tt := []struct {
-		name            string
-		params          Params
-		now             time.Time
-		action          shutterAction
-		err             error
-		wantAction      shutterAction
-		wantRetryAt     time.Time
-		wantNoRetryTime bool
-	}{
-		{
-			name:       "advances after successful action",
-			params:     standardParams,
-			now:        time.Date(2026, 5, 29, 7, 30, 0, 0, time.FixedZone("CEST", 2*60*60)),
-			action:     openShutters,
-			wantAction: closeShutters,
-		},
-		{
-			name:        "retries failed open before deadline",
-			params:      standardParams,
-			now:         time.Date(2026, 5, 29, 7, 30, 0, 0, time.FixedZone("CEST", 2*60*60)),
-			action:      openShutters,
-			err:         errFailed,
-			wantAction:  openShutters,
-			wantRetryAt: time.Date(2026, 5, 29, 7, 30, 30, 0, time.FixedZone("CEST", 2*60*60)),
-		},
-		{
-			name:        "caps retry at deadline",
-			params:      standardParams,
-			now:         time.Date(2026, 5, 29, 8, 59, 45, 0, time.FixedZone("CEST", 2*60*60)),
-			action:      openShutters,
-			err:         errFailed,
-			wantAction:  openShutters,
-			wantRetryAt: time.Date(2026, 5, 29, 9, 0, 0, 0, time.FixedZone("CEST", 2*60*60)),
-		},
-		{
-			name:            "advances failed open after deadline",
-			params:          standardParams,
-			now:             time.Date(2026, 5, 29, 9, 0, 1, 0, time.FixedZone("CEST", 2*60*60)),
-			action:          openShutters,
-			err:             errFailed,
-			wantAction:      closeShutters,
-			wantNoRetryTime: true,
-		},
-		{
-			name: "retries failed close before deadline",
-			params: Params{
-				Location:    testLocation(),
-				CloseAfter:  "18:00",
-				CloseBefore: "23:00",
-			},
-			now:         time.Date(2026, 5, 29, 22, 45, 0, 0, time.FixedZone("CEST", 2*60*60)),
-			action:      closeShutters,
-			err:         errFailed,
-			wantAction:  closeShutters,
-			wantRetryAt: time.Date(2026, 5, 29, 22, 45, 30, 0, time.FixedZone("CEST", 2*60*60)),
-		},
-	}
-
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
-			rs := testRollerShutter(t, tc.params)
-			gotAction, gotRetryAt := rs.nextActionAfterAttemptAt(tc.now, tc.action, tc.err)
-			if gotAction != tc.wantAction {
-				t.Fatalf("expected action %s, got %s", tc.wantAction, gotAction)
-			}
-			if tc.wantNoRetryTime || tc.wantRetryAt.IsZero() {
-				if !gotRetryAt.IsZero() {
-					t.Fatalf("expected no retry time, got %s", gotRetryAt)
-				}
-				return
-			}
-
-			assertTimeEqual(t, gotRetryAt, tc.wantRetryAt)
-		})
-	}
-}
-
-func TestNextActionAndRunTimeAt(t *testing.T) {
+func TestNextScheduledEventAt(t *testing.T) {
 	standardParams := Params{
 		Location:    testLocation(),
 		OpenAfter:   "07:00",
@@ -297,7 +215,6 @@ func TestNextActionAndRunTimeAt(t *testing.T) {
 		name       string
 		params     Params
 		now        time.Time
-		action     shutterAction
 		wantAction shutterAction
 		wantRunAt  func(rs *RollerShutter, now time.Time) time.Time
 	}{
@@ -305,34 +222,40 @@ func TestNextActionAndRunTimeAt(t *testing.T) {
 			name:       "schedules normal morning open",
 			params:     standardParams,
 			now:        time.Date(2026, 5, 29, 6, 30, 0, 0, time.FixedZone("CEST", 2*60*60)),
-			action:     openShutters,
 			wantAction: openShutters,
 			wantRunAt: func(_ *RollerShutter, now time.Time) time.Time {
 				return time.Date(2026, 5, 29, 7, 0, 0, 0, now.Location())
 			},
 		},
 		{
-			name:       "catches up morning open before deadline",
+			name:       "runs open at exact open time",
 			params:     standardParams,
-			now:        time.Date(2026, 5, 29, 7, 30, 0, 0, time.FixedZone("CEST", 2*60*60)),
-			action:     openShutters,
+			now:        time.Date(2026, 5, 29, 7, 0, 0, 0, time.FixedZone("CEST", 2*60*60)),
 			wantAction: openShutters,
 			wantRunAt: func(_ *RollerShutter, now time.Time) time.Time {
 				return now
 			},
 		},
 		{
-			name:       "skips late morning open after deadline",
+			name:       "skips missed open before open_before",
 			params:     standardParams,
-			now:        time.Date(2026, 5, 29, 9, 30, 0, 0, time.FixedZone("CEST", 2*60*60)),
-			action:     closeShutters,
+			now:        time.Date(2026, 5, 29, 7, 30, 0, 0, time.FixedZone("CEST", 2*60*60)),
 			wantAction: closeShutters,
 			wantRunAt: func(rs *RollerShutter, now time.Time) time.Time {
 				return rs.scheduledCloseTimeAt(now)
 			},
 		},
 		{
-			name: "does not catch up morning open without deadline",
+			name:       "after open before close schedules close",
+			params:     standardParams,
+			now:        time.Date(2026, 5, 29, 9, 30, 0, 0, time.FixedZone("CEST", 2*60*60)),
+			wantAction: closeShutters,
+			wantRunAt: func(rs *RollerShutter, now time.Time) time.Time {
+				return rs.scheduledCloseTimeAt(now)
+			},
+		},
+		{
+			name: "does not catch up open without open_before",
 			params: Params{
 				Location:    testLocation(),
 				OpenAfter:   "07:00",
@@ -340,36 +263,58 @@ func TestNextActionAndRunTimeAt(t *testing.T) {
 				CloseBefore: "22:30",
 			},
 			now:        time.Date(2026, 5, 29, 7, 30, 0, 0, time.FixedZone("CEST", 2*60*60)),
-			action:     openShutters,
 			wantAction: closeShutters,
-			wantRunAt: func(_ *RollerShutter, now time.Time) time.Time {
-				nextDay := now.AddDate(0, 0, 1)
-				return time.Date(nextDay.Year(), nextDay.Month(), nextDay.Day(), 7, 0, 0, 0, now.Location())
+			wantRunAt: func(rs *RollerShutter, now time.Time) time.Time {
+				return rs.scheduledCloseTimeAt(now)
 			},
 		},
 		{
-			name: "catches up evening close within deadline",
+			name: "runs close at exact close time",
+			params: Params{
+				Location:    testLocation(),
+				CloseAfter:  "18:00",
+				CloseBefore: "23:00",
+			},
+			now:        time.Date(2026, 12, 29, 18, 0, 0, 0, time.FixedZone("CET", 1*60*60)),
+			wantAction: closeShutters,
+			wantRunAt: func(rs *RollerShutter, now time.Time) time.Time {
+				return rs.scheduledCloseTimeAt(now)
+			},
+		},
+		{
+			name: "skips missed close before close_before",
 			params: Params{
 				Location:    testLocation(),
 				CloseAfter:  "18:00",
 				CloseBefore: "23:00",
 			},
 			now:        time.Date(2026, 5, 29, 22, 45, 0, 0, time.FixedZone("CEST", 2*60*60)),
-			action:     closeShutters,
-			wantAction: closeShutters,
-			wantRunAt: func(_ *RollerShutter, now time.Time) time.Time {
-				return now
+			wantAction: openShutters,
+			wantRunAt: func(rs *RollerShutter, now time.Time) time.Time {
+				return rs.scheduledOpenTimeAt(now.AddDate(0, 0, 1))
 			},
 		},
 		{
-			name: "does not catch up after close_before",
+			name: "does not catch up close without close_before",
+			params: Params{
+				Location:   testLocation(),
+				OpenAfter:  "07:00",
+				CloseAfter: "18:00",
+			},
+			now:        time.Date(2026, 12, 29, 19, 0, 0, 0, time.FixedZone("CET", 1*60*60)),
+			wantAction: openShutters,
+			wantRunAt: func(rs *RollerShutter, now time.Time) time.Time {
+				return rs.scheduledOpenTimeAt(now.AddDate(0, 0, 1))
+			},
+		},
+		{
+			name: "after close schedules tomorrow open",
 			params: Params{
 				Location:    testLocation(),
 				CloseAfter:  "18:00",
 				CloseBefore: "21:30",
 			},
 			now:        time.Date(2026, 5, 29, 21, 31, 0, 0, time.FixedZone("CEST", 2*60*60)),
-			action:     openShutters,
 			wantAction: openShutters,
 			wantRunAt: func(rs *RollerShutter, now time.Time) time.Time {
 				return rs.scheduledOpenTimeAt(now.AddDate(0, 0, 1))
@@ -380,12 +325,13 @@ func TestNextActionAndRunTimeAt(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			rs := testRollerShutter(t, tc.params)
-			if got := rs.nextActionAt(tc.now); got != tc.wantAction {
-				t.Fatalf("expected nextActionAt to be %s, got %s", tc.wantAction, got)
+
+			gotEvent := rs.nextEvent(tc.now)
+			if gotEvent.action != tc.wantAction {
+				t.Fatalf("expected action %s, got %s", tc.wantAction, gotEvent.action)
 			}
 
-			got := rs.nextRunTimeAt(tc.now, tc.action)
-			assertTimeEqual(t, got, tc.wantRunAt(rs, tc.now))
+			assertTimeEqual(t, gotEvent.scheduledAt, tc.wantRunAt(rs, tc.now))
 		})
 	}
 }
