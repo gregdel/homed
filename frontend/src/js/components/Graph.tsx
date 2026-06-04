@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -14,6 +14,7 @@ import { useComponents } from "./ComponentsContext";
 import { useNav } from "./Navigation";
 import { Card } from "./ui/Card";
 import { Icon } from "./ui/Icon";
+import { useResumeRefresh } from "./useResumeRefresh";
 
 type GraphRange = "1h" | "6h" | "24h" | "7d";
 
@@ -62,43 +63,64 @@ export const Graph: React.FC = () => {
   const [data, setData] = useState<GraphData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestIDRef = useRef(0);
+  const activeRequestRef = useRef<AbortController | null>(null);
 
   const componentId = params.componentId || "";
   const component = getComponentById(componentId);
   const titleText = component?.values.friendly_name || componentId;
 
-  useEffect(() => {
+  const fetchGraph = useCallback(async () => {
     if (!componentId) {
       return;
     }
 
-    let cancelled = false;
-    const loadGraph = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await apiGet<GraphData>(
-          `/components/${componentId}/graph?range=${range}`,
-        );
-        if (!cancelled) {
-          setData(response.data);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
+    activeRequestRef.current?.abort();
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
 
-    void loadGraph();
-    return () => {
-      cancelled = true;
-    };
+    const requestID = requestIDRef.current + 1;
+    requestIDRef.current = requestID;
+
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiGet<GraphData>(
+        `/components/${componentId}/graph?range=${range}`,
+        { cache: "no-store", signal: controller.signal },
+      );
+      if (requestIDRef.current === requestID) {
+        setData(response.data);
+      }
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
+
+      if (requestIDRef.current === requestID) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    } finally {
+      if (activeRequestRef.current === controller) {
+        activeRequestRef.current = null;
+      }
+
+      if (requestIDRef.current === requestID && !controller.signal.aborted) {
+        setLoading(false);
+      }
+    }
   }, [componentId, range]);
+
+  useResumeRefresh(fetchGraph);
+
+  useEffect(() => {
+    void fetchGraph();
+    return () => {
+      activeRequestRef.current?.abort();
+      activeRequestRef.current = null;
+      requestIDRef.current += 1;
+    };
+  }, [fetchGraph]);
 
   const series = data?.series ?? [];
 

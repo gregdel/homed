@@ -18,6 +18,9 @@ const pongWait = 15 * time.Second
 // Time allowed to write to a websocket
 const writeWait = 15 * time.Second
 
+// Send pings before the read deadline expires.
+const pingPeriod = (pongWait * 9) / 10
+
 func (h *httpd) httpRender(w http.ResponseWriter, status string, data any) {
 	o := struct {
 		Status string `json:"status"`
@@ -99,17 +102,43 @@ func (h *httpd) websocketEvents(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	// The pong handler only postpone the read deadline
+	_ = ws.SetReadDeadline(time.Now().Add(pongWait))
 	ws.SetPongHandler(func(string) error {
 		_ = ws.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
 
-	h.registerWebsocket(ws, net.JoinHostPort(host, port))
+	client := h.registerWebsocket(ws, net.JoinHostPort(host, port))
+	done := make(chan struct{})
+	defer h.unregisterWebsocket(ws)
+	defer close(done)
+
+	go func() {
+		ticker := time.NewTicker(pingPeriod)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				if err := h.pingWebsocket(ws, client); err != nil {
+					h.logger.Info(
+						"failed to ping websocket",
+						slog.String("remote", client.remote),
+						slog.Any("error", err),
+					)
+					h.unregisterWebsocket(ws)
+					return
+				}
+			}
+		}
+	}()
+
 	for !h.isExiting() {
 		_, _, err := ws.ReadMessage()
 		if err != nil {
 			break
 		}
 	}
-	h.unregisterWebsocket(ws)
 }

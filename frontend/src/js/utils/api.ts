@@ -32,8 +32,11 @@ const apiRequest = async <T>(
 /**
  * GET request
  */
-export const apiGet = async <T>(url: string): Promise<APIResponse<T>> => {
-  return apiRequest<T>(url, { method: "GET" });
+export const apiGet = async <T>(
+  url: string,
+  options: RequestInit = {},
+): Promise<APIResponse<T>> => {
+  return apiRequest<T>(url, { method: "GET", ...options });
 };
 
 /**

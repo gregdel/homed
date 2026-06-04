@@ -30,13 +30,13 @@ type httpd struct {
 	prometheusURL string
 
 	mu         sync.RWMutex
-	websockets map[*websocket.Conn]string
+	websockets map[*websocket.Conn]*websocketClient
 	exiting    bool
 }
 
 func app() *httpd {
 	return &httpd{
-		websockets: map[*websocket.Conn]string{},
+		websockets: map[*websocket.Conn]*websocketClient{},
 		render:     render.New(),
 	}
 }
