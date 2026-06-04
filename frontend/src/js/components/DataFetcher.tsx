@@ -1,9 +1,10 @@
 import type React from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
 import { useComponents } from "./ComponentsContext";
 import { WsHandler } from "./Websocket";
+import { resumeRefreshEvent } from "./useResumeRefresh";
 
 interface DataFetcherProps {
   children?: ReactNode;
@@ -11,39 +12,48 @@ interface DataFetcherProps {
 
 export const DataFetcher: React.FC<DataFetcherProps> = ({ children }) => {
   const { refresh } = useComponents();
+  const lastResumeRef = useRef(0);
 
-  const handleVisibilityChange = useCallback(() => {
-    if (document.visibilityState === "visible") {
-      refresh();
+  const handleResume = useCallback(() => {
+    if (document.visibilityState !== "visible") {
+      return;
     }
+
+    const now = Date.now();
+    if (now - lastResumeRef.current < 500) {
+      return;
+    }
+    lastResumeRef.current = now;
+
+    window.dispatchEvent(new Event(resumeRefreshEvent));
+    refresh({ force: true, silent: true });
   }, [refresh]);
 
   useEffect(() => {
     // Initial fetch
-    refresh();
+    refresh({ silent: true });
 
-    // Handle webpage focus
-    window.addEventListener("focus", refresh);
+    window.addEventListener("focus", handleResume);
+    window.addEventListener("online", handleResume);
+    window.addEventListener("pageshow", handleResume);
+    document.addEventListener("resume", handleResume);
 
     // Handle visibility change (works for both tab switching and PWA)
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Optional: Handle PWA-specific resume event for iOS
-    const handlePageShow = (event: PageTransitionEvent) => {
-      // When navigating to the page from browser cache
-      if (event.persisted) {
-        refresh();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        handleResume();
       }
     };
-
-    window.addEventListener("pageshow", handlePageShow);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.removeEventListener("focus", refresh);
+      window.removeEventListener("focus", handleResume);
+      window.removeEventListener("online", handleResume);
+      window.removeEventListener("pageshow", handleResume);
+      document.removeEventListener("resume", handleResume);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("pageshow", handlePageShow);
     };
-  }, [refresh, handleVisibilityChange]);
+  }, [refresh, handleResume]);
 
   return (
     <>

@@ -19,9 +19,14 @@ interface ComponentsContextType {
   error: string | null;
   lastUpdated: Date | null;
   updateComponent: (id: string, data: ComponentCommand) => Promise<void>;
-  refresh: () => void;
+  refresh: (options?: RefreshOptions) => void;
   getComponentById: (id: string) => ComponentJSON | undefined;
   replaceComponent: (component: ComponentJSON) => void;
+}
+
+interface RefreshOptions {
+  force?: boolean;
+  silent?: boolean;
 }
 
 // Create context
@@ -54,46 +59,72 @@ export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const loadingRef = useRef<boolean>(false);
+  const hasLoadedRef = useRef<boolean>(false);
+  const activeRequestRef = useRef<AbortController | null>(null);
 
-  const fetchComponents = useCallback(async () => {
-    if (loadingRef.current) {
-      return;
-    }
-
-    try {
-      loadingRef.current = true;
-      setLoading(true);
-      setError(null);
-
-      const data = await apiGet("/components");
-      const c: Record<string, ComponentJSON> = {};
-      for (const component of data.data as ComponentJSON[]) {
-        c[component.values.id] = component;
+  const fetchComponents = useCallback(
+    async (options: RefreshOptions = {}) => {
+      if (loadingRef.current && !options.force) {
+        return;
       }
 
-      setComponents(c);
-      setHasLoaded(true);
-      setLastUpdated(new Date());
-      addNotificationOk("Components updated");
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.toString() : String(err);
-      setError(errorMessage);
-      console.error("Error fetching components:", err);
-      addNotificationError("Error while fetching components");
-    } finally {
-      loadingRef.current = false;
-      setLoading(false);
-    }
-  }, [addNotificationOk, addNotificationError]);
+      if (options.force) {
+        activeRequestRef.current?.abort();
+      }
+
+      const controller = new AbortController();
+      activeRequestRef.current = controller;
+
+      try {
+        loadingRef.current = true;
+        setLoading(!hasLoadedRef.current);
+        setError(null);
+
+        const data = await apiGet<ComponentJSON[]>("/components", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const c: Record<string, ComponentJSON> = {};
+        for (const component of data.data) {
+          c[component.values.id] = component;
+        }
+
+        setComponents(c);
+        setHasLoaded(true);
+        hasLoadedRef.current = true;
+        setLastUpdated(new Date());
+        if (!options.silent) {
+          addNotificationOk("Components updated");
+        }
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+
+        const errorMessage =
+          err instanceof Error ? err.toString() : String(err);
+        setError(errorMessage);
+        console.error("Error fetching components:", err);
+        addNotificationError("Error while fetching components");
+      } finally {
+        if (activeRequestRef.current === controller) {
+          activeRequestRef.current = null;
+          loadingRef.current = false;
+          setLoading(false);
+        }
+      }
+    },
+    [addNotificationOk, addNotificationError],
+  );
 
   // Don't refresh more than one per 100ms - use useMemo to keep it stable
   const refresh = useMemo(() => {
     const lastCall = { current: 0 };
-    return () => {
+    return (options: RefreshOptions = {}) => {
       const now = Date.now();
-      if (now - lastCall.current > 100) {
+      if (options.force || now - lastCall.current > 100) {
         lastCall.current = now;
-        void fetchComponents();
+        void fetchComponents(options);
       }
     };
   }, [fetchComponents]);
@@ -131,6 +162,7 @@ export const ComponentsProvider: React.FC<ComponentsProviderProps> = ({
       ...prevComponents,
       [component.values.id]: component,
     }));
+    setLastUpdated(new Date());
   }, []);
 
   const value: ComponentsContextType = {

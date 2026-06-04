@@ -1,11 +1,12 @@
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { prettyName } from "../../utils";
 import { useNav } from "./../Navigation";
 
 import type { Schedule as ScheduleType } from "../../types";
 import { apiGet } from "../../utils/api";
 import { Icon } from "../ui/Icon";
+import { useResumeRefresh } from "../useResumeRefresh";
 
 import { DailySchedule } from "./DailySchedule";
 import { DefaultValue } from "./DefaultValue";
@@ -42,24 +43,44 @@ export const Schedule: React.FC = () => {
   >(undefined);
   const [name, setName] = useState<string>("");
   const { params } = useNav();
+  const activeRequestRef = useRef<AbortController | null>(null);
 
   const [open, setOpen] = useState<boolean>(false);
 
   const fetchSchedule = useCallback(async () => {
+    activeRequestRef.current?.abort();
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
+
     try {
       const response = await apiGet<ScheduleData>(
         `/components/${params.componentId}/schedule`,
+        { cache: "no-store", signal: controller.signal },
       );
       setName(response.data.schedule_name);
       setSchedule(response.data.schedule);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
+
       console.error("Error fetching schedule:", err);
+    } finally {
+      if (activeRequestRef.current === controller) {
+        activeRequestRef.current = null;
+      }
     }
-  }, [params]);
+  }, [params.componentId]);
 
   useEffect(() => {
     void fetchSchedule();
+    return () => {
+      activeRequestRef.current?.abort();
+      activeRequestRef.current = null;
+    };
   }, [fetchSchedule]);
+
+  useResumeRefresh(fetchSchedule);
 
   if (schedule === undefined) {
     return null;

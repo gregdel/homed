@@ -1,13 +1,17 @@
 package httpd
 
 import (
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gorilla/websocket"
 	"github.com/gregdel/homed/lib/components"
 	_ "github.com/gregdel/homed/lib/components/script"
 	"github.com/gregdel/homed/lib/config"
@@ -62,6 +66,65 @@ func TestUpdateComponentPublishesInternalScriptCommandToMQTT(t *testing.T) {
 	if string(client.payload) != "{}" {
 		t.Fatalf("unexpected payload: got %q", string(client.payload))
 	}
+}
+
+func TestWebsocketEventsRegistersAndUnregistersClient(t *testing.T) {
+	h := &httpd{
+		logger:     slogDiscard(),
+		websockets: map[*websocket.Conn]*websocketClient{},
+		render:     render.New(),
+	}
+
+	router := httprouter.New()
+	router.GET("/events", h.websocketEvents)
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	u, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to parse test server URL: %s", err)
+	}
+	u.Scheme = "ws"
+	u.Path = "/events"
+
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		t.Fatalf("failed to connect websocket: %s", err)
+	}
+
+	eventuallyWebsocketCount(t, h, 1)
+
+	if err := conn.Close(); err != nil {
+		t.Fatalf("failed to close websocket: %s", err)
+	}
+
+	eventuallyWebsocketCount(t, h, 0)
+}
+
+func eventuallyWebsocketCount(t *testing.T, h *httpd, want int) {
+	t.Helper()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		h.mu.RLock()
+		got := len(h.websockets)
+		h.mu.RUnlock()
+
+		if got == want {
+			return
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	h.mu.RLock()
+	got := len(h.websockets)
+	h.mu.RUnlock()
+	t.Fatalf("unexpected websocket count: got %d, want %d", got, want)
+}
+
+func slogDiscard() *slog.Logger {
+	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }
 
 type fakeMQTTClient struct {
