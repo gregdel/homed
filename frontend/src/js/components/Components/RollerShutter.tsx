@@ -9,14 +9,18 @@ interface RollerShutterProps {
   id: string;
 }
 
+const formatNextEventTime = (scheduledAt: string): string =>
+  new Date(scheduledAt).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
 export const RollerShutter: React.FC<RollerShutterProps> = ({ id }) => {
   const { getComponentById, updateComponent } = useComponents();
 
   const component = getComponentById(id);
-  const percentOpen =
-    component === undefined
-      ? 0
-      : (component.values as RollerShutterValues).value;
+  const values = component?.values as RollerShutterValues | undefined;
+  const percentOpen = values?.value ?? 0;
   const roundedPercentOpen = Math.round(
     Math.max(0, Math.min(100, percentOpen)),
   );
@@ -67,8 +71,17 @@ export const RollerShutter: React.FC<RollerShutterProps> = ({ id }) => {
           />
         </div>
       </div>
-      <div className="flex justify-center mt-sm text-secondary">
+      <div className="flex flex-col items-center mt-sm gap-xs text-secondary">
         <span>{statusLabel()}</span>
+        {values?.next_event !== null && values?.next_event !== undefined && (
+          <div>
+            <span>Next {values.next_event.action}</span>
+            <span className="font-semibold">
+              {" "}
+              {formatNextEventTime(values.next_event.scheduled_at)}
+            </span>
+          </div>
+        )}
       </div>
     </>
   );
