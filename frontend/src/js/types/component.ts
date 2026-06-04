@@ -43,6 +43,10 @@ export interface PowerMeterValues extends ComponentValues {
 
 export interface RollerShutterValues extends ComponentValues {
   value: number; // 0-100 percent open
+  next_event: {
+    action: "open" | "close";
+    scheduled_at: string;
+  } | null;
 }
 
 export type TemperatureMode =

@@ -2,6 +2,7 @@ package rollershutter
 
 import (
 	"log/slog"
+	"time"
 
 	"github.com/gregdel/homed/lib/components"
 	"github.com/gregdel/homed/lib/components/common"
@@ -23,6 +24,17 @@ type Params struct {
 	CloseBefore string          `yaml:"close_before"`
 }
 
+type Snapshot struct {
+	common.SnapshotBase
+	Value     float64            `json:"value"`
+	NextEvent *NextEventSnapshot `json:"next_event"`
+}
+
+type NextEventSnapshot struct {
+	Action      string    `json:"action"`
+	ScheduledAt time.Time `json:"scheduled_at"`
+}
+
 // RollerShutter represents a generic roller shutter
 type RollerShutter struct {
 	common.GenericSensor
@@ -40,6 +52,34 @@ func NewRollerShutter() components.Component {
 // Type implements the Component interface
 func (rs *RollerShutter) Type() components.Type {
 	return components.TypeRollerShutter
+}
+
+func (rs *RollerShutter) ValidateConfig() error {
+	return rs.setup()
+}
+
+func (rs *RollerShutter) ValuesSnapshot() any {
+	return rs.valuesSnapshotAt(time.Now())
+}
+
+func (rs *RollerShutter) valuesSnapshotAt(now time.Time) Snapshot {
+	return Snapshot{
+		SnapshotBase: rs.SnapshotBase(),
+		Value:        rs.SensorValue(),
+		NextEvent:    rs.nextEventSnapshotAt(now),
+	}
+}
+
+func (rs *RollerShutter) nextEventSnapshotAt(now time.Time) *NextEventSnapshot {
+	if !rs.Params.Enabled {
+		return nil
+	}
+
+	nextEvent := rs.nextEvent(now)
+	return &NextEventSnapshot{
+		Action:      nextEvent.action.String(),
+		ScheduledAt: nextEvent.scheduledAt,
+	}
 }
 
 // Collectors implements the Component interface

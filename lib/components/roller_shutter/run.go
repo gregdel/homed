@@ -11,13 +11,6 @@ import (
 
 // Run implements the component interface
 func (rs *RollerShutter) Run(ctx context.Context, logger *slog.Logger, _ *components.Components) error {
-	if err := rs.YAMLParams.Decode(&rs.Params); err != nil {
-		return err
-	}
-	if err := rs.parseDailyWindows(); err != nil {
-		return err
-	}
-
 	log := logger.With(slog.String("component_id", rs.ID()))
 	rs.logger = log
 
@@ -49,6 +42,7 @@ func (rs *RollerShutter) Run(ctx context.Context, logger *slog.Logger, _ *compon
 					slog.Any("error", err),
 				)
 			}
+			rs.Notify()
 		}
 	}
 }
@@ -114,6 +108,14 @@ func (rs *RollerShutter) scheduledCloseTimeAt(now time.Time) time.Time {
 	_, sunset := rs.getSunriseSunset(now)
 
 	return clampToDailyWindow(sunset.In(now.Location()), now, rs.closeWindow)
+}
+
+func (rs *RollerShutter) setup() error {
+	if err := rs.YAMLParams.Decode(&rs.Params); err != nil {
+		return err
+	}
+
+	return rs.parseDailyWindows()
 }
 
 func (rs *RollerShutter) parseDailyWindows() error {

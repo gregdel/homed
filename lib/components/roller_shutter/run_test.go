@@ -1,10 +1,12 @@
 package rollershutter
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/gregdel/homed/lib/config"
+	"gopkg.in/yaml.v3"
 )
 
 func TestScheduledOpenTimeAt(t *testing.T) {
@@ -336,6 +338,74 @@ func TestNextScheduledEventAt(t *testing.T) {
 	}
 }
 
+func TestValuesSnapshotIncludesNextEvent(t *testing.T) {
+	now := time.Date(2026, 5, 29, 6, 30, 0, 0, time.FixedZone("CEST", 2*60*60))
+	rs := testRollerShutter(t, Params{
+		Enabled:     true,
+		Location:    testLocation(),
+		OpenAfter:   "07:00",
+		OpenBefore:  "09:00",
+		CloseAfter:  "18:00",
+		CloseBefore: "22:30",
+	})
+	rs.SetSensorValue(42.5)
+
+	snapshot := rs.valuesSnapshotAt(now)
+	if snapshot.Value != 42.5 {
+		t.Fatalf("expected value 42.5, got %f", snapshot.Value)
+	}
+	if snapshot.NextEvent == nil {
+		t.Fatal("expected next event")
+	}
+	if snapshot.NextEvent.Action != "open" {
+		t.Fatalf("expected action open, got %q", snapshot.NextEvent.Action)
+	}
+	assertTimeEqual(t, snapshot.NextEvent.ScheduledAt, time.Date(2026, 5, 29, 7, 0, 0, 0, now.Location()))
+
+	data, err := json.Marshal(snapshot)
+	if err != nil {
+		t.Fatalf("failed to marshal snapshot: %s", err)
+	}
+	values := map[string]json.RawMessage{}
+	if err := json.Unmarshal(data, &values); err != nil {
+		t.Fatalf("failed to unmarshal snapshot: %s", err)
+	}
+	if _, ok := values["value"]; !ok {
+		t.Fatal("expected value key")
+	}
+	if _, ok := values["next_event"]; !ok {
+		t.Fatal("expected next_event key")
+	}
+}
+
+func TestValuesSnapshotOmitsNextEventWhenDisabled(t *testing.T) {
+	rs := testRollerShutter(t, Params{
+		Enabled:  false,
+		Location: testLocation(),
+	})
+
+	snapshot := rs.valuesSnapshotAt(time.Date(2026, 5, 29, 6, 30, 0, 0, time.FixedZone("CEST", 2*60*60)))
+	if snapshot.NextEvent != nil {
+		t.Fatalf("expected no next event, got %+v", snapshot.NextEvent)
+	}
+}
+
+func TestValidateConfigParsesDailyWindows(t *testing.T) {
+	rs := &RollerShutter{}
+	rs.YAMLParams = yamlNode(t, `
+enabled: true
+location:
+  latitude: 50.62955091282183
+  longitude: 3.055823770700181
+open_after: "09:00"
+open_before: "07:00"
+`)
+
+	if err := rs.ValidateConfig(); err == nil {
+		t.Fatal("expected invalid daily window error")
+	}
+}
+
 func testRollerShutter(t *testing.T, params Params) *RollerShutter {
 	t.Helper()
 
@@ -345,6 +415,17 @@ func testRollerShutter(t *testing.T, params Params) *RollerShutter {
 	}
 
 	return rs
+}
+
+func yamlNode(t *testing.T, value string) yaml.Node {
+	t.Helper()
+
+	var node yaml.Node
+	if err := yaml.Unmarshal([]byte(value), &node); err != nil {
+		t.Fatalf("failed to build yaml node: %s", err)
+	}
+
+	return node
 }
 
 func testLocation() config.Location {
