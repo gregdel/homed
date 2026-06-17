@@ -30,13 +30,7 @@ jobs:
         shell: sh
         run: |
           sudo apt-get update
-          sudo apt-get install -y imagemagick librsvg2-bin
-          if ! command -v magick >/dev/null 2>&1; then
-            mkdir -p /tmp/imagemagick-bin
-            printf '#!/bin/sh\nexec convert "$@"\n' > /tmp/imagemagick-bin/magick
-            chmod +x /tmp/imagemagick-bin/magick
-            echo /tmp/imagemagick-bin >> "$GITHUB_PATH"
-          fi
+          sudo apt-get install -y librsvg2-bin
 
       - name: Build
         env:

@@ -4,7 +4,7 @@
 // Or use the package.json script which sets it automatically
 
 import { copyFileSync, mkdirSync, rmSync, existsSync } from "fs";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { join } from "path";
 
 const args = process.argv.slice(2);
@@ -34,16 +34,33 @@ for (const asset of assets) {
   }
 }
 
-// Generate icon.png from icon.svg via ImageMagick.
-// Force librsvg instead of the Inkscape delegate to avoid headless build warnings.
-execSync([
-  "magick -density 1200 -background none",
-  `RSVG:${join(outdir, "icon.svg")}`,
-  "-trim +repage -resize 350x350",
-  '-gravity center -background "#eceff4" -extent 512x512',
-  "-flatten -depth 8",
-  join(outdir, "icon.png"),
-].join(" "));
+// Generate icon.png from icon.svg via librsvg.
+try {
+  execFileSync("rsvg-convert", [
+    "--width",
+    "371",
+    "--height",
+    "371",
+    "--page-width",
+    "512",
+    "--page-height",
+    "512",
+    "--left",
+    "70",
+    "--top",
+    "54",
+    "--background-color",
+    "#eceff4",
+    "--format",
+    "png",
+    "--output",
+    join(outdir, "icon.png"),
+    join(outdir, "icon.svg"),
+  ]);
+} catch (error) {
+  console.error("Failed to generate icon.png. Is rsvg-convert installed?");
+  throw error;
+}
 
 // Build JavaScript/TypeScript with Bun's bundler
 // Bun automatically handles .ts/.tsx files
